@@ -134,6 +134,55 @@ details.more p:first-of-type { margin-top: 0; }
   margin: .2rem 0 .8rem;
 }
 
+/* per-concept multiple-choice quiz with instant feedback */
+.quiz {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  margin: 1.25rem 0;
+}
+.quiz .q { font-weight: 600; margin: 0 0 .75rem; }
+.quiz .q::before { content: "❓ "; }
+.quiz .opt {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: var(--code-bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: .6rem .9rem;
+  margin: .4rem 0;
+  cursor: pointer;
+  font: inherit;
+  font-size: .95rem;
+  transition: border-color .15s, background .15s;
+}
+.quiz .opt:hover:not(:disabled) { border-color: var(--accent); }
+.quiz .opt:disabled { cursor: not-allowed; }
+.quiz .opt.correct {
+  border-color: var(--accent2);
+  background: rgba(63, 185, 80, .18);
+}
+.quiz .opt.correct::after { content: "  ✓ 정답!"; color: var(--accent2); font-weight: 700; }
+.quiz .opt.wrong {
+  border-color: #f85149;
+  background: rgba(248, 81, 73, .15);
+  opacity: .8;
+}
+.quiz .opt.wrong::after { content: "  ✗ 다시"; color: #f85149; font-weight: 700; }
+.quiz .explain {
+  display: none;
+  margin: .7rem 0 0;
+  padding: .6rem .9rem;
+  border-left: 3px solid var(--accent2);
+  background: rgba(63, 185, 80, .08);
+  border-radius: 0 8px 8px 0;
+  font-size: .9rem;
+}
+.quiz.solved .explain { display: block; }
+
 .mermaid {
   background: #ffffff;
   border-radius: 8px;
