@@ -14,11 +14,14 @@
     #result { min-height: 40px; }
     #email-output { display: none; border-left: 4px solid #4a90d9; }
     #copy-status { margin-left: 8px; color: green; font-size: 14px; }
+    footer { margin-top: 28px; padding-top: 14px; border-top: 1px solid #eee;
+             font-size: 13px; color: #777; }
   </style>
 </head>
 <body>
   <h1>Instructor Job Post Extractor</h1>
-  <p>Paste an instructor job post (from email, KakaoTalk, etc.) below and click [Extract].</p>
+  <p>Paste an instructor job post (from email, KakaoTalk, etc.) below and click [Extract].
+     Need something to try? <a href="/examples" target="_blank" rel="noopener">Open example texts ↗</a></p>
 
   <textarea id="input" placeholder="Paste the instructor job post here..."></textarea>
   <button id="extract-btn">Extract</button>
@@ -29,6 +32,11 @@
 
   <div id="result">Results will appear here.</div>
   <div id="email-output"></div>
+
+  <footer>
+    Want the code or to run it yourself?
+    <a href="https://github.com/bookseal/llm-app-lab" target="_blank" rel="noopener">github.com/bookseal/llm-app-lab</a>
+  </footer>
 
   <script>
     const button = document.getElementById("extract-btn");

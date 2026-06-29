@@ -1,4 +1,6 @@
-from flask import Flask, render_template, request, jsonify
+import os
+
+from flask import Flask, render_template, request, jsonify, send_file
 from anthropic import Anthropic
 from dotenv import load_dotenv
 
@@ -42,6 +44,12 @@ Return null for any field that is not stated, rather than guessing.
 @app.route("/")
 def index():
 	return render_template("index.html")
+
+
+@app.route("/examples")
+def examples():
+	# example_email_text.html lives next to app.py (app.root_path), not in templates/
+	return send_file(os.path.join(app.root_path, "example_email_text.html"))
 
 
 @app.route("/api/extract", methods=["POST"])
