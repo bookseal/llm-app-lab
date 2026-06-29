@@ -103,6 +103,36 @@ pre code { background: none; padding: 0; }
   background: rgba(63, 185, 80, .08);
 }
 .callout strong { color: var(--text); }
+.callout.analogy {
+  border-left-color: #d29922;
+  background: rgba(210, 153, 34, .1);
+}
+
+/* opt-in deeper explanation — hidden by default so the page stays light */
+details.more {
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: .5rem 1rem;
+  margin: 1rem 0;
+}
+details.more summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: .9rem;
+  font-weight: 600;
+  list-style: none;
+}
+details.more summary::before { content: "▸ "; }
+details.more[open] summary::before { content: "▾ "; }
+details.more[open] summary { margin-bottom: .6rem; }
+details.more p:first-of-type { margin-top: 0; }
+
+.tldr {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: .2rem 0 .8rem;
+}
 
 .mermaid {
   background: #ffffff;
