@@ -5,9 +5,19 @@ export default function App() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // TODO(human): fetch GET /api/hello on mount.
-    // On success, store the returned `message` via setMessage(...).
-    // On failure, store something via setError(...).
+    // fetch는 네트워크 실패에서만 reject하므로 res.ok로 HTTP 에러도 잡는다.
+    async function loadMessage() {
+      try {
+        const res = await fetch("/api/hello");
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        setMessage(data.message);
+      } catch (err) {
+        setError(err.message);
+      }
+    }
+
+    loadMessage();
   }, []);
 
   return (
