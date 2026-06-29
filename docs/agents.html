@@ -142,5 +142,25 @@ flowchart LR
         <p>llm-app-lab · Module 5 · Architecture &amp; Agents · 원본 <a href="https://ksetp.netlify.app/agents" target="_blank" rel="noopener">슬라이드 덱(21)</a></p>
       </footer>
     </div>
+    <!-- 퀴즈 채점: 정답 누르면 초록 + 해설, 오답은 빨강 + 다시 시도 가능 -->
+    <script>
+      document.querySelectorAll(".quiz").forEach((quiz) => {
+        const answer = Number(quiz.dataset.answer);
+        const opts = quiz.querySelectorAll(".opt");
+        opts.forEach((opt, i) => {
+          opt.addEventListener("click", () => {
+            if (quiz.classList.contains("solved")) return;
+            if (i === answer) {
+              opt.classList.add("correct");
+              quiz.classList.add("solved");
+            } else {
+              opt.classList.add("wrong");
+              opt.disabled = true; // 틀린 보기는 다시 못 누르게
+            }
+          });
+        });
+      });
+    </script>
   </body>
+
 </html>
