@@ -11,19 +11,32 @@ client = Anthropic()  # reads ANTHROPIC_API_KEY from the environment
 # Stage 3: start the tool with a SINGLE field (location).
 # Grow it one field at a time so failures stay easy to trace.
 EXTRACT_TOOL = {
-	"name": "record_posting",
-	"description": "Record the structured fields of an instructor job posting.",
-	"input_schema": {
-		"type": "object",
-		"properties": {
-			"location": {"type": ["string", "null"]},
-		},
-		"required": ["location"],
-	},
+      "name": "record_posting",
+      "description": "Record the structured fields of an instructor job posting.",
+      "input_schema": {
+              "type": "object",
+              "properties": {
+                      "course_title": {"type": ["string", "null"]},
+                      "location":     {"type": ["string", "null"]},
+                      "datetime":     {"type": ["string", "null"]},
+                      "pay":          {"type": ["string", "null"]},
+                      "contact":      {"type": ["string", "null"]},
+              },
+              "required": ["course_title", "location", "datetime", "pay", "contact"],
+      },
 }
 
 SYSTEM_PROMPT = """Extract the listed fields from the instructor job posting.
-Return null for any field that is not stated, rather than guessing."""
+
+Fields:
+- course_title: the subject or title of the class being taught
+- location: the venue or address where the class is held; null if online or not stated
+- datetime: when the class happens (date and/or time), copied as written
+- pay: the instructor's pay/compensation, copied as written (e.g. "시급 5만원")
+- contact: how to reach the organizer (email, phone, or name)
+
+Return null for any field that is not stated, rather than guessing.
+"""
 
 
 @app.route("/")
