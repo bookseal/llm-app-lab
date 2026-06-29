@@ -64,5 +64,22 @@ def extract():
 	return jsonify(block.input)
 
 
+@app.route("/api/draft-email", methods=["POST"])
+def draft_email():
+	data = request.json.get("data", {})
+	# Mockup: return a hardcoded English draft. Real Claude generation comes next.
+	draft = (
+		"Subject: Quick question about the instructor posting\n\n"
+		"Hi,\n\n"
+		"Thank you for the opportunity. Before I confirm, could you share a few\n"
+		"missing details so I can finalize — specifically the pay and the best\n"
+		"point of contact for follow-up?\n\n"
+		"Looking forward to your reply.\n\n"
+		"Best regards,\n"
+		"Jungmin Hong"
+	)
+	return jsonify({"email": draft})
+
+
 if __name__ == "__main__":
 	app.run(port=5001, debug=True)
