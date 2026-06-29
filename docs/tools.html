@@ -3,37 +3,206 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ksept-lab — Module 3 · Tools &amp; Structure — 출력 구조화</title>
+    <title>ksept-lab — Module 3 · Tools &amp; Structure</title>
     <link rel="stylesheet" href="./style.css" />
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({ startOnLoad: true, theme: "neutral" });
+    </script>
   </head>
   <body>
     <div class="wrap">
       <header class="hero">
-        <p class="muted"><a href="./index.html">← 개념 지도</a></p>
-        <h1>Module 3 · Tools &amp; Structure — 출력 구조화</h1>
-        <p class="muted">LLM의 답을 자유 텍스트가 아니라 프로그램이 쓸 수 있는 구조로 받아냅니다.</p>
+        <p class="muted"><a href="./index.html">← 개념 지도</a> · Module 3 · 43 slides</p>
+        <h1>Module 3 · Tools &amp; Structure</h1>
+        <p class="muted">
+          LLM의 답을 자유 텍스트가 아니라 <strong>프로그램이 바로 쓸 수 있는 구조</strong>로
+          받아내는 4단계(Level 1→4). 느슨한 규칙에서 출발해, 검증 → 도구 호출 → 표준 프로토콜(MCP)로
+          올라갑니다.
+        </p>
         <div class="callout">
-          🚧 <strong>준비 중입니다.</strong> 이 모듈의 개념 노트는 아직 작성 전이에요.
-          전체 흐름에서 이 자리에 무엇이 들어올지 미리 적어 둡니다.
+          📊 원본 슬라이드: <a href="https://ksetp.netlify.app/tools" target="_blank" rel="noopener">ksetp.netlify.app/tools</a>
+          · 칩(<span class="slide">슬라이드 N</span>)이 덱의 번호와 같습니다.
+        </div>
+        <div class="callout cs">
+          🔌 <strong>42 연결:</strong> "출력을 구조로 강제 → 검증 → 실패 시 재시도"는
+          파서/프로토콜을 다뤄 본 사람에겐 익숙한 그림이에요. LLM을 <em>믿을 수 없는 입력원</em>으로
+          보고 경계에서 검증한다는 점만 새롭습니다.
         </div>
       </header>
 
-      <section>
-        <h2>이 모듈에서 배울 것</h2>
+      <nav class="toc">
+        <strong>목차</strong>
+        <ul>
+          <li><a href="#demo">Live demo (SQL)</a></li>
+          <li><a href="#levels">4 Levels 개요</a></li>
+          <li><a href="#level1">Level 1 · Parseable</a></li>
+          <li><a href="#level2">Level 2 · Structured</a></li>
+          <li><a href="#level3">Level 3 · Tool use</a></li>
+          <li><a href="#level4">Level 4 · MCP</a></li>
+          <li><a href="#project">Project</a></li>
+        </ul>
+      </nav>
+
+      <!-- ───────── DEMO ───────── -->
+      <section id="demo">
+        <h2>Live demo: SQL Code Generation for BigQuery <a class="slide" href="https://ksetp.netlify.app/tools" target="_blank" rel="noopener">슬라이드 3–5</a></h2>
+        <p class="tldr">"자연어 → SQL" 데모 하나로, 진짜 앱이 풀어야 했던 6가지 고민을 끌어냅니다.</p>
+        <p class="entitle">What that app had to solve (슬라이드 6–11)</p>
         <div class="concept">
-          <span class="tag">미리보기</span>
+          <span class="tag">Structure · Context · Prompting · Defense · Architecture · Cost</span>
           <ul>
-            <li><strong>function / tool calling</strong> — 모델이 함수를 부르게 하기</li>
-            <li><strong>structured output</strong> — 정해진 형식(JSON)으로 받기</li>
-            <li><strong>JSON schema</strong> — 출력의 모양을 강제</li>
-            <li><strong>MCP</strong> — 도구를 표준 방식으로 연결</li>
+            <li><strong>Structure</strong> — 출력이 항상 같은 모양이어야 기계가 받아 쓴다</li>
+            <li><strong>Context</strong> — 어떤 테이블·컬럼이 있는지 모델에 알려줘야 한다</li>
+            <li><strong>Prompting</strong> — 규칙(코드펜스 금지 등)을 명확히 지시</li>
+            <li><strong>Defense</strong> — 모델이 규칙을 어겼을 때 후처리로 방어</li>
+            <li><strong>Architecture</strong> — 단발 호출이냐, 도구 루프냐</li>
+            <li><strong>Cost</strong> — 토큰·재시도 비용 관리</li>
           </ul>
         </div>
-        <p class="muted">← 이전: <a href="./chat-app.html">2편 LLM 채팅앱</a> · 다음: <a href="./context.html">Module 4 →</a></p>
+      </section>
+
+      <!-- ───────── LEVELS OVERVIEW ───────── -->
+      <section id="levels">
+        <h2>What you'll learn: 4 Levels <a class="slide" href="https://ksetp.netlify.app/tools" target="_blank" rel="noopener">슬라이드 12–17</a></h2>
+        <p class="tldr">출력을 "구조화"하는 강도가 점점 세집니다. 필요에 맞는 가장 낮은 레벨을 고르세요.</p>
+        <div class="mermaid">
+flowchart LR
+    L1["Level 1<br/>Parseable text"] --> L2["Level 2<br/>Structured (JSON schema)"]
+    L2 --> L3["Level 3<br/>Tool use (agent loop)"]
+    L3 --> L4["Level 4<br/>MCP"]
+        </div>
+        <div class="quiz" data-answer="0">
+          <p class="q">"이메일에서 이름·금액 하나만 뽑아 DB에 넣기" — 가장 알맞은 레벨은?</p>
+          <button class="opt">Level 2 — JSON schema로 모양을 강제하고 검증</button>
+          <button class="opt">Level 3 — 에이전트가 도구를 돌려가며 알아서</button>
+          <button class="opt">Level 4 — MCP 서버부터 세운다</button>
+          <p class="explain">
+            정해진 한 가지 모양을 단발로 뽑는 일엔 Level 2가 딱 맞아요. 도구 루프(3)나
+            MCP(4)는 더 복잡한 상황을 위한 것 — <strong>가장 낮은 레벨로 충분하면 그걸 쓰는 게</strong> 정석입니다.
+          </p>
+        </div>
+      </section>
+
+      <!-- ───────── LEVEL 1 ───────── -->
+      <section id="level1">
+        <h2>Level 1 · Parseable output <a class="slide" href="https://ksetp.netlify.app/tools" target="_blank" rel="noopener">슬라이드 14, 18–21</a></h2>
+        <p class="tldr">포맷 규칙이 있는 <strong>단순 텍스트</strong>. system prompt로 규칙을 강제하고, 방어적으로 후처리.</p>
+        <div class="callout analogy">
+          ✉️ <strong>비유:</strong> "답장은 한 줄로, 인사말 빼고, 코드블록 쓰지 말고"라고 미리 일러두는 것.
+          상대가 대체로 지키지만, 가끔 어기니 받는 쪽에서 한 번 더 다듬습니다.
+        </div>
+        <p>
+          예: SQL 생성기에서 "<code>```</code> 코드펜스 금지, <code>SELECT</code>로 시작" 같은 규칙을
+          system prompt에 넣고, 응답에서 혹시 붙은 코드펜스를 잘라내는 후처리를 둡니다.
+          <strong>싸고 빠르지만</strong>, 기계가 검증해 주는 보장은 없어요.
+        </p>
+      </section>
+
+      <!-- ───────── LEVEL 2 ───────── -->
+      <section id="level2">
+        <h2>Level 2 · True structured output <a class="slide" href="https://ksetp.netlify.app/tools" target="_blank" rel="noopener">슬라이드 15, 22–27</a></h2>
+        <p class="tldr">
+          <strong>JSON schema</strong>로 출력 모양을 강제하고 검증. 실패하면 그 에러를 모델에 되먹여
+          스스로 고치게 합니다(자기 교정 재시도).
+        </p>
+        <div class="callout analogy">
+          📋 <strong>비유:</strong> 빈칸이 정해진 <em>양식</em>을 주는 것. "이름/금액/날짜 칸을 채워" →
+          틀린 칸이 있으면 "여기 형식 틀렸어요, 다시"라고 돌려보냅니다. 통과하면 깨끗한 데이터 보장.
+        </div>
+        <pre><code>검증 루프:
+  1) tool use로 JSON 강제 → 2) Pydantic 등으로 검증
+  3) 실패 시 에러 메시지를 모델에 피드백 → 4) 자기 교정 재시도
+  → 검증된 데이터 또는 구조화된 422 보장</code></pre>
+        <p class="muted">
+          chat-app의 "결함 찾기"에서 본 <strong>경계 검증</strong>과 같은 정신이에요 —
+          모델 출력을 믿지 말고, 쓰기 전에 형식을 확인.
+        </p>
+      </section>
+
+      <!-- ───────── LEVEL 3 ───────── -->
+      <section id="level3">
+        <h2>Level 3 · Tool use (the agent loop) <a class="slide" href="https://ksetp.netlify.app/tools" target="_blank" rel="noopener">슬라이드 16, 28–33</a></h2>
+        <p class="tldr">
+          모델이 <strong>반복 루프</strong>를 주도합니다. 정보를 모으거나 행동하려고 도구를 호출하고,
+          그 결과를 보고 다음 도구를 부르길 <code>end_turn</code>까지 반복.
+        </p>
+        <div class="callout analogy">
+          🔧 <strong>비유:</strong> 견습생에게 "필요하면 자, 줄자, 계산기 꺼내 써"라고 맡기는 것.
+          무엇을 언제 쓸지 <em>순서는 모델이 결정</em>합니다.
+        </div>
+        <pre><code># 에이전트 루프의 뼈대 (~20줄)
+while True:
+    resp = client.messages.create(model=..., messages=messages, tools=tools)
+    if resp.stop_reason == "end_turn":
+        break
+    # 모델이 부른 도구 실행 → 결과를 messages에 append → 루프
+    messages.append({"role": "assistant", "content": resp.content})
+    messages.append({"role": "user", "content": tool_results})</code></pre>
+        <p class="muted">
+          이 ~20줄이 Claude Code·Cursor를 포함한 거의 모든 에이전트의 <strong>엔진</strong>입니다
+          (Module 5에서 더 깊이). "모델이 규칙을 벗어날 때(off-script)" 대비도 함께 다뤄요(슬라이드 33).
+        </p>
+      </section>
+
+      <!-- ───────── LEVEL 4 ───────── -->
+      <section id="level4">
+        <h2>Level 4 · MCP — Model Context Protocol <a class="slide" href="https://ksetp.netlify.app/tools" target="_blank" rel="noopener">슬라이드 17, 34–42</a></h2>
+        <p class="tldr">
+          벤더가 도구 스키마를 <strong>한 번 publish</strong>하면, MCP 호환 클라이언트(Claude Desktop·Cursor·IDE
+          에이전트)가 손으로 배선하지 않고 그 도구를 발견해 씁니다.
+        </p>
+        <div class="callout analogy">
+          🔌 <strong>비유 — USB:</strong> 기기마다 전용 케이블을 만들던 세상(N×M)에서, 표준 포트
+          하나로 통일(N+M)된 것. <code>N</code>개 앱 × <code>M</code>개 도구를 일일이 잇던 문제가
+          "각자 표준만 따르면 끝"으로 바뀝니다.
+        </div>
+        <pre><code>Before MCP: 모든 통합을 손으로 배선 → N × M 개의 연결
+After  MCP: 도구가 표준 스키마를 publish → 클라이언트가 자동 발견 → N + M</code></pre>
+        <p class="muted">
+          15줄짜리 파이썬 서버로 도구를 publish하고(슬라이드 38), 클라이언트가 그걸 발견해(39)
+          LLM에 꽂는(40) 흐름을 봅니다. <strong>언제 MCP가 이득이고 아닌지</strong>(42)도 함께 —
+          작은 단일 앱엔 과하고, 여러 클라이언트가 같은 도구를 쓸 때 빛납니다.
+        </p>
+        <div class="quiz" data-answer="2">
+          <p class="q">MCP가 푸는 핵심 문제는?</p>
+          <button class="opt">모델을 더 빠르게 만든다</button>
+          <button class="opt">JSON을 더 작게 압축한다</button>
+          <button class="opt">N×M 통합 폭발을 N+M으로 줄인다 (표준 인터페이스)</button>
+          <p class="explain">
+            MCP는 "도구↔클라이언트"를 표준화해, 매 조합마다 따로 배선하던 비용을 없앱니다.
+            USB가 케이블 난립을 끝낸 것과 같은 아이디어예요.
+          </p>
+        </div>
+      </section>
+
+      <!-- ───────── PROJECT ───────── -->
+      <section id="project">
+        <h2>Project: single-turn structured extractor <a class="slide" href="https://ksetp.netlify.app/tools" target="_blank" rel="noopener">슬라이드 43</a></h2>
+        <p class="tldr">제공 문서에서 정보를 뽑는 <strong>단발(single-turn) 구조화 추출기</strong>를 만듭니다(= Level 2 실습).</p>
+        <div class="concept">
+          <span class="tag">할 일</span>
+          <ul>
+            <li>JSON schema 정의</li>
+            <li>system prompt 규칙 작성</li>
+            <li>tool-choice로 출력 강제</li>
+            <li><strong>Pydantic</strong>으로 검증</li>
+            <li>실패 모드 처리 + 샘플 전반 테스트</li>
+          </ul>
+        </div>
+        <p class="muted">
+          스타터: <code>extract-starter.zip</code> —
+          <a href="https://ksetp.netlify.app/assets/tools/extract-starter.zip" target="_blank" rel="noopener">다운로드</a>
+        </p>
       </section>
 
       <footer>
-        <p>ksept-lab · <a href="./index.html">개념 지도로 돌아가기</a></p>
+        <p>
+          <a href="./index.html">← 개념 지도</a> ·
+          이전: <a href="./chat-app.html">2-2편 chat-app</a> ·
+          다음: <a href="./context.html">Module 4 · Context →</a>
+        </p>
+        <p>ksept-lab · Module 3 · Tools &amp; Structure · 원본 <a href="https://ksetp.netlify.app/tools" target="_blank" rel="noopener">슬라이드 덱(43)</a></p>
       </footer>
     </div>
   </body>

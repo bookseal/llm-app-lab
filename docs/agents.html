@@ -3,38 +3,143 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ksept-lab — Module 5 · Architecture &amp; Agents — agent loop</title>
+    <title>ksept-lab — Module 5 · Architecture &amp; Agents</title>
     <link rel="stylesheet" href="./style.css" />
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({ startOnLoad: true, theme: "neutral" });
+    </script>
   </head>
   <body>
     <div class="wrap">
       <header class="hero">
-        <p class="muted"><a href="./index.html">← 개념 지도</a></p>
-        <h1>Module 5 · Architecture &amp; Agents — agent loop</h1>
-        <p class="muted">한 번의 호출을 넘어, 스스로 도구를 골라 반복하는 에이전트 구조를 봅니다.</p>
+        <p class="muted"><a href="./index.html">← 개념 지도</a> · Module 5 · 21 slides</p>
+        <h1>Module 5 · Architecture &amp; Agents</h1>
+        <p class="muted">
+          모든 에이전트 시스템의 핵심은 <strong>~20줄 agent loop</strong> 하나. 나머지(Claude Code,
+          Cursor, 커스텀)는 그 위에 얹은 "두꺼운 하니스"입니다. 이 모듈은 그 패턴들의 서베이예요.
+        </p>
         <div class="callout">
-          🚧 <strong>준비 중입니다.</strong> 이 모듈의 개념 노트는 아직 작성 전이에요.
-          전체 흐름에서 이 자리에 무엇이 들어올지 미리 적어 둡니다.
+          📊 원본 슬라이드: <a href="https://ksetp.netlify.app/agents" target="_blank" rel="noopener">ksetp.netlify.app/agents</a>
+          · 칩(<span class="slide">슬라이드 N</span>)이 덱의 번호와 같습니다.
         </div>
       </header>
 
+      <!-- the engine -->
       <section>
-        <h2>이 모듈에서 배울 것</h2>
+        <h2>The agent loop — the engine <a class="slide" href="https://ksetp.netlify.app/agents" target="_blank" rel="noopener">슬라이드 5–6</a></h2>
+        <p class="tldr">Claude에 messages+tools 전송 → tool call 디스패치 → 결과 append → <code>end_turn</code>까지 반복.</p>
+        <div class="mermaid">
+flowchart LR
+    A["messages + tools<br/>→ Claude"] --> B{"stop_reason?"}
+    B -->|tool_use| C["도구 실행"]
+    C --> D["결과를 messages에 append"]
+    D --> A
+    B -->|end_turn| E["완료"]
+        </div>
+        <p class="muted">
+          Module 3의 Level 3에서 본 그 루프예요. <strong>이 ~20줄이 엔진</strong>이고, 모든 화려한
+          에이전트는 이 위에 UI·권한·도구를 덧댄 것입니다.
+        </p>
+      </section>
+
+      <!-- claude code -->
+      <section>
+        <h2>What is Claude Code, actually? <a class="slide" href="https://ksetp.netlify.app/agents" target="_blank" rel="noopener">슬라이드 7</a></h2>
+        <p class="tldr">기본 루프 + UI 레이어 + 권한 게이트 + ~25개 내장 도구 + MCP 도구 레지스트리 + 멀티스코프 메모리.</p>
+        <div class="callout analogy">
+          🏗️ <strong>비유:</strong> 엔진(agent loop)은 같고, Claude Code는 그 위에 계기판(UI),
+          안전벨트(권한 게이트), 공구함(25개 도구)을 붙인 완성차예요. 지금 당신이 타고 있는 그 차.
+        </div>
+      </section>
+
+      <!-- subagents -->
+      <section>
+        <h2>Subagents — recursion for agents <a class="slide" href="https://ksetp.netlify.app/agents" target="_blank" rel="noopener">슬라이드 8</a></h2>
+        <p class="tldr">제한된 도구셋·전용 system prompt로 <strong>자식 Claude 세션</strong>을 띄움 → 컨텍스트 격리·전문화.</p>
+        <p class="muted">
+          부모는 <em>요약만</em> 받습니다 → 병렬 처리 + 재귀적 분해. 큰 일을 작은 독립 작업으로 쪼개
+          여럿에게 동시에 맡기는 셈이에요(42의 fork/프로세스 분할과 비슷한 감각).
+        </p>
+      </section>
+
+      <!-- memory -->
+      <section>
+        <h2>Memory — what persists, where <a class="slide" href="https://ksetp.netlify.app/agents" target="_blank" rel="noopener">슬라이드 9</a></h2>
+        <p class="tldr">"무엇을 어디까지 기억하나"를 5단계 스코프로 나눕니다.</p>
         <div class="concept">
-          <span class="tag">미리보기</span>
+          <span class="tag">Memory Scopes (5)</span>
           <ul>
-            <li><strong>agent loop</strong> — 생각 → 도구 → 관찰 반복</li>
-            <li><strong>Claude Code 내부</strong> — 우리가 쓰는 이 도구의 구조</li>
-            <li><strong>subagents</strong> — 일을 나눠 맡기기</li>
-            <li><strong>memory scope</strong> — 무엇을 어디까지 기억할까</li>
-            <li><strong>멀티모델</strong> — 작업별로 모델 골라 쓰기</li>
+            <li><strong>conversation</strong> — 현재 세션</li>
+            <li><strong>session</strong> — 로그인 지속</li>
+            <li><strong>user</strong> — 영속 선호</li>
+            <li><strong>project</strong> — 레포 컨벤션(<code>CLAUDE.md</code>)</li>
+            <li><strong>world</strong> — 벡터 스토어·지식베이스(= Module 4 RAG)</li>
           </ul>
         </div>
-        <p class="muted">← 이전: <a href="./context.html">Module 4</a> · 다음: <a href="./production.html">Module 6 →</a></p>
+        <p class="muted">
+          2편에서 "API는 stateless"라 했죠 — 이 스코프들이 바로 <em>그 stateless 위에 우리가 얹는
+          기억 장치</em>들입니다.
+        </p>
+      </section>
+
+      <!-- patterns -->
+      <section>
+        <h2>Patterns: routing · caching · async · progress <a class="slide" href="https://ksetp.netlify.app/agents" target="_blank" rel="noopener">슬라이드 10–13</a></h2>
+        <ul>
+          <li><strong>Multi-Model Routing</strong> — 싼 모델(Haiku)을 분류기로 써서 적절히 비싼 모델로 라우팅 → 비용 한정</li>
+          <li><strong>Prompt Caching</strong> — 정적 system prefix를 cacheable로 표시 → 5분 윈도우 내 반복 비용 ~90%↓</li>
+          <li><strong>Long-Running Tasks</strong> — 백그라운드 잡·예약 wake-up·webhook으로 비동기. 일시정지 중 상태를 어디 둘지 결정</li>
+          <li><strong>Progress Streaming</strong> — 각 단계서 사람이 읽을 이벤트 emit, 전송계층과 분리, 종료는 <code>done</code>/<code>error</code></li>
+        </ul>
+      </section>
+
+      <!-- computer use + safety -->
+      <section>
+        <h2>Computer use &amp; Safety <a class="slide" href="https://ksetp.netlify.app/agents" target="_blank" rel="noopener">슬라이드 14–16</a></h2>
+        <p class="tldr">화면이 곧 API. 스크린샷 + 마우스/키보드로 API 없는 자동화. 단, 권한·한도가 필수.</p>
+        <div class="callout cs">
+          🛡️ <strong>Safety = 권한 게이트 + 하드 리밋.</strong> 읽기는 항상 허용, 파괴적 작업은 확인,
+          실행은 샌드박스. 그리고 스텝 예산·토큰 캡·시간 데드라인·scope 제한으로 폭주를 막습니다.
+        </div>
+        <div class="quiz" data-answer="2">
+          <p class="q">에이전트가 무한 루프로 비용 폭탄이 되는 걸 막는 1차 방어선은?</p>
+          <button class="opt">더 똑똑한 모델로 바꾼다</button>
+          <button class="opt">프롬프트를 더 정중하게 쓴다</button>
+          <button class="opt">스텝 예산·토큰 캡·시간 데드라인 같은 하드 리밋을 건다</button>
+          <p class="explain">
+            능력(자율성)과 안전은 트레이드오프예요. 모델을 믿기보다, <strong>코드로 강제하는 한도</strong>가
+            폭주를 막습니다. 파괴적 작업엔 사람 확인(human-in-the-loop)도 함께.
+          </p>
+        </div>
+      </section>
+
+      <!-- project -->
+      <section>
+        <h2>Project: build a data-analyst agent <a class="slide" href="https://ksetp.netlify.app/agents" target="_blank" rel="noopener">슬라이드 17–20</a></h2>
+        <p class="tldr">SQLite 위 <strong>read-only SQL 도구 3개</strong>로 agent loop를 시연하는 스타터(안전 패턴 2개 기구현).</p>
+        <ul>
+          <li>구조적으로 read-only인 DB(안전 패턴 1)</li>
+          <li>max-steps 예산(안전 패턴 2)</li>
+        </ul>
+        <div class="callout cs">
+          🚀 <strong>Beyond — Managed Agents (beta, 슬라이드 20):</strong> 소유 모델 역전 — Anthropic이
+          루프를 실행하고, 당신은 도구 정의 + 이벤트 스트림 반응만. 수동 메시지 리스트 관리가 사라지고
+          멀티턴 세션이 무료로 제공됩니다.
+        </div>
+        <p class="muted">
+          스타터: <code>agent-app.zip</code> —
+          <a href="https://ksetp.netlify.app/assets/agents/agent-app.zip" target="_blank" rel="noopener">다운로드</a>
+        </p>
       </section>
 
       <footer>
-        <p>ksept-lab · <a href="./index.html">개념 지도로 돌아가기</a></p>
+        <p>
+          <a href="./index.html">← 개념 지도</a> ·
+          이전: <a href="./context.html">Module 4 · Context</a> ·
+          다음: <a href="./production.html">Module 6 · Production →</a>
+        </p>
+        <p>ksept-lab · Module 5 · Architecture &amp; Agents · 원본 <a href="https://ksetp.netlify.app/agents" target="_blank" rel="noopener">슬라이드 덱(21)</a></p>
       </footer>
     </div>
   </body>

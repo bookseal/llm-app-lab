@@ -134,6 +134,32 @@ details.more p:first-of-type { margin-top: 0; }
   margin: .2rem 0 .8rem;
 }
 
+/* slide-number chip — links a note section to the official deck slide */
+.slide {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: .72rem;
+  font-weight: 600;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  padding: .02rem .5rem;
+  margin-left: .5rem;
+  vertical-align: middle;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.slide:hover { background: rgba(88, 166, 255, .15); }
+h2 .slide, h3 .slide { letter-spacing: 0; }
+
+/* english title shown above a localized note heading */
+.entitle {
+  font-family: var(--mono);
+  font-size: .8rem;
+  color: var(--muted);
+  margin: 1.5rem 0 -.2rem;
+}
+
 /* per-concept multiple-choice quiz with instant feedback */
 .quiz {
   background: var(--panel);

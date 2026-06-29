@@ -3,38 +3,231 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ksept-lab — Module 4 · Context Management — Indexing / RAG</title>
+    <title>ksept-lab — Module 4 · Context Management (RAG)</title>
     <link rel="stylesheet" href="./style.css" />
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({ startOnLoad: true, theme: "neutral" });
+    </script>
   </head>
   <body>
     <div class="wrap">
       <header class="hero">
-        <p class="muted"><a href="./index.html">← 개념 지도</a></p>
+        <p class="muted"><a href="./index.html">← 개념 지도</a> · Module 4 · 42 slides</p>
         <h1>Module 4 · Context Management — Indexing / RAG</h1>
-        <p class="muted">거대한 문서를 모델에게 통째로 주는 대신, 필요한 조각만 찾아 붙입니다.</p>
+        <p class="muted">
+          거대한 문서 더미를 모델에게 통째로 주는 대신, 질문에 <strong>관련 있는 조각만 찾아 붙여</strong>
+          답하게 합니다. 두 축: ① <em>Indexing</em>(미리 쪼개 벡터로 저장) ② <em>RAG</em>(검색→붙이기→생성).
+        </p>
         <div class="callout">
-          🚧 <strong>준비 중입니다.</strong> 이 모듈의 개념 노트는 아직 작성 전이에요.
-          전체 흐름에서 이 자리에 무엇이 들어올지 미리 적어 둡니다.
+          📊 원본 슬라이드: <a href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">ksetp.netlify.app/context</a>
+          · 칩(<span class="slide">슬라이드 N</span>)이 덱의 번호와 같습니다.
         </div>
       </header>
 
-      <section>
-        <h2>이 모듈에서 배울 것</h2>
+      <nav class="toc">
+        <strong>목차</strong>
+        <ul>
+          <li><a href="#why">왜 거대 컨텍스트로 안 하나</a></li>
+          <li><a href="#pipeline">Indexing 파이프라인</a></li>
+          <li><a href="#embed">Embeddings</a></li>
+          <li><a href="#chunk">Chunking</a></li>
+          <li><a href="#store">Vector stores</a></li>
+          <li><a href="#rag">RAG in 30 lines</a></li>
+          <li><a href="#cite">Citations &amp; 실패</a></li>
+          <li><a href="#project">Project</a></li>
+        </ul>
+      </nav>
+
+      <!-- demo + why -->
+      <section id="why">
+        <h2>First, the obvious question: why not a giant context window? <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">슬라이드 3–9</a></h2>
+        <p class="tldr">"그냥 문서 전부를 프롬프트에 넣으면 안 되나?" — 4가지 이유로 안 됩니다.</p>
+        <p class="entitle">Live demo: Solutions Manager — indexed Drive + cited chat (슬라이드 3–6)</p>
         <div class="concept">
-          <span class="tag">미리보기</span>
+          <span class="tag">왜 검색이 필요한가 (4가지)</span>
+          <ol>
+            <li><strong>Scale</strong> — 실제 코퍼스는 수천만~수억 토큰. 다 못 넣음</li>
+            <li><strong>Cost</strong> — 큰 버퍼를 매번 재전송하면 타겟 검색보다 비쌈</li>
+            <li><strong>Latency</strong> — 입력이 클수록 느려짐</li>
+            <li><strong>Accuracy</strong> — 아주 긴 컨텍스트에서 성능 저하("lost in the middle")</li>
+          </ol>
+        </div>
+        <div class="callout analogy">
+          📚 <strong>비유:</strong> 시험 볼 때 도서관 전체를 책상에 쌓는 대신, <em>필요한 몇 페이지만 복사해</em>
+          옆에 두는 것. 빠르고 싸고, 헷갈리지도 않아요.
+        </div>
+      </section>
+
+      <!-- pipeline -->
+      <section id="pipeline">
+        <h2>Indexing: documents → chunks → vectors → store <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">슬라이드 11–15</a></h2>
+        <p class="tldr">질문이 오기 <strong>전에</strong> 문서를 쪼개고 의미 벡터로 바꿔 저장해 둡니다.</p>
+        <div class="mermaid">
+flowchart LR
+    S["Source<br/>PDF·docs·sheets"] --> E["Extract<br/>(MIME별 텍스트)"]
+    E --> C["Chunk<br/>(N자 + overlap)"]
+    C --> V["Embed<br/>(청크→벡터)"]
+    V --> St["Store<br/>(vec+meta+ANN)"]
+        </div>
+        <div class="callout cs">
+          ♻️ <strong>Idempotency rule (슬라이드 15):</strong> 한 문서를 다시 인덱싱했을 때 옛 청크가
+          중복·잔존하면 안 됩니다. <strong>delete-then-insert</strong>(먼저 지우고 다시 넣기)가 가장 단순·정확.
+        </div>
+      </section>
+
+      <!-- embeddings -->
+      <section id="embed">
+        <h2>What is an embedding model? <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">슬라이드 16–18, 21–23</a></h2>
+        <p class="tldr">텍스트를 <strong>고정 길이 숫자 벡터</strong>로 바꿉니다. 뜻이 비슷하면 공간적으로 가까워져요.</p>
+        <pre><code>embedder.embed([
+  "the cat sat on the mat",
+  "a feline rested on a rug",      # 위 문장과 매우 가까움
+  "Python is a programming language",  # 멀리 떨어짐
+])
+# → [[0.012, -0.034, ...],   # 768 floats
+#    [0.014, -0.030, ...],   # row 1과 근접
+#    [0.412,  0.107, ...]]   # row 1·2와 멀다</code></pre>
+        <ul>
+          <li>키워드 매칭이 아니라 <strong>의미</strong> 유사 — "feline"과 "cat"이 가까움</li>
+          <li>차원: 384 / 768 / 1536 / 3072 (높을수록 정밀하지만 저장·검색 비용↑)</li>
+          <li>근접 측정은 <strong>cosine similarity</strong></li>
+          <li>⚠️ <strong>가장 흔한 침묵의 RAG 버그:</strong> 인덱싱과 쿼리에 <em>같은 임베딩 모델</em>을 안 쓰는 것. 제공자마다 좌표계가 달라 섞으면 비교 불가.</li>
+        </ul>
+        <p class="muted">놀거리: <a href="https://projector.tensorflow.org" target="_blank" rel="noopener">TensorFlow Embedding Projector</a>로 임베딩을 3D로 탐색.</p>
+      </section>
+
+      <!-- chunking -->
+      <section id="chunk">
+        <h2>Chunking is a design decision <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">슬라이드 19–20</a></h2>
+        <p class="tldr">문서를 어떻게 쪼개느냐가 검색 품질을 좌우합니다. <strong>검색을 튜닝하기 전에 청킹부터</strong>.</p>
+        <div class="concept">
+          <span class="tag">전략 (슬라이드 20)</span>
           <ul>
-            <li><strong>embeddings</strong> — 의미를 숫자 벡터로</li>
-            <li><strong>vector DB</strong> — 벡터로 가장 가까운 조각 검색</li>
-            <li><strong>chunking</strong> — 문서를 알맞게 쪼개기</li>
-            <li><strong>RAG</strong> — 검색 → 붙이기 → 생성</li>
-            <li><strong>memory</strong> — 세션을 넘어 기억하기</li>
+            <li><strong>Fixed-size</strong>(N자/토큰) — 빠른 시작, 균일 문서. 단점: 문장 중간 절단</li>
+            <li><strong>Sentence/paragraph 경계</strong> — 산문·기사. 단점: 크기 가변</li>
+            <li><strong>Semantic</strong>(모델이 결정) — 긴 기술 문서. 단점: $$ 추가 패스</li>
+            <li><strong>Document-as-chunk</strong> — 짧은 문서. 단점: 검색 페이로드↑</li>
           </ul>
         </div>
-        <p class="muted">← 이전: <a href="./tools.html">Module 3</a> · 다음: <a href="./agents.html">Module 5 →</a></p>
+        <div class="callout cs">
+          📐 <strong>권고 시작점:</strong> <code>1500자 / 200자 overlap</code>. 나쁜 청크면 아무리 영리한
+          랭킹도 못 구합니다. overlap은 경계에서 잘린 문맥을 이웃 청크가 일부 겹쳐 보완하는 장치예요.
+        </div>
+        <pre><code>def chunk_text(text, target=1500, overlap=200):
+    # 길면 target 창으로 자르되, 뒤쪽 절반에서 문단 경계(\n\n, \n, ". ")를
+    # 만나면 거기서 끊어 문장 중간 절단을 피한다. 이웃 청크는 overlap만큼 겹침.
+    ...</code></pre>
+      </section>
+
+      <!-- store -->
+      <section id="store">
+        <h2>Vector stores &amp; batch economics <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">슬라이드 24–27</a></h2>
+        <p class="tldr">벡터를 저장하고 "가장 가까운 K개"를 빠르게 찾는 곳. 규모에 맞춰 고릅니다.</p>
+        <div class="concept">
+          <span class="tag">선택지</span>
+          <ul>
+            <li><strong>numpy/in-memory</strong> — 프로토타입(&lt;100K). 재시작 시 소실</li>
+            <li><strong>Postgres + pgvector</strong> — 기존 Postgres에 메타 SQL join. ~1M 편함</li>
+            <li><strong>Managed</strong>(Pinecone·Weaviate·Qdrant) — 스케일·하이브리드. 비용·락인</li>
+            <li><strong>SQLite + sqlite-vec</strong> — 단일 사용자·로컬·임베디드</li>
+          </ul>
+        </div>
+        <p class="muted">
+          프로토타입은 모든 레코드를 훑는 O(n) 검색으로 충분하지만, 프로덕션은
+          <strong>HNSW 같은 ANN</strong>(근사 최근접)으로 O(log n)에 찾습니다.
+          배치 경제성: 임베더는 요청당 하드 캡이 있어, 캡 에러를 캐치해 배치를 절반으로 줄여 재시도하는
+          적응형 폴백을 둡니다.
+        </p>
+      </section>
+
+      <!-- rag -->
+      <section id="rag">
+        <h2>RAG in 30 lines: retrieve · augment · generate <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">슬라이드 28–31</a></h2>
+        <p class="tldr">검색(Retrieve) → 번호 붙여 붙이기(Augment) → Claude 한 번 호출(Generate). 끝.</p>
+        <pre><code># 1. RETRIEVE — 질문을 임베딩해 가장 가까운 K개 청크
+query_vec = embedder.embed([question])[0]
+hits = vector_store.search(query_vec, k=10)
+
+# 2. AUGMENT — 청크를 번호 매긴 컨텍스트 블록으로
+context = "\n\n".join(f"[{i+1}] {h['text']}" for i, h in enumerate(hits))
+system_prompt = '''You answer using only the provided context.
+Cite each factual claim with a bracket number, e.g. "Sales grew 20% [3]".
+If the context doesn't contain the answer, say so.'''
+user_prompt = f"CONTEXT:\n{context}\n\nQUESTION:\n{question}"
+
+# 3. GENERATE — Claude 한 번
+answer = client.messages.create(
+    model="claude-sonnet-4-6", max_tokens=2048,
+    system=system_prompt,
+    messages=[{"role": "user", "content": user_prompt}],
+).content[0].text</code></pre>
+        <p class="entitle">The retrieval failures (슬라이드 32–35)</p>
+        <ul>
+          <li><strong>다양성 부족</strong> — verbose 문서 하나가 top-K 독점 → 그룹별 예산·MMR 다양화</li>
+          <li><strong>관련은 있으나 무의미</strong> — 텍스트만 비슷한 청크 → reranker·하이브리드(벡터+키워드)</li>
+          <li><strong>비특정 검색</strong> — "그들 매출은?"이 광범위 → 대화 히스토리로 self-contained 쿼리 재작성</li>
+          <li><strong>과도한 컨텍스트</strong> — K=50이 100K+ 토큰 → 청크 예산으로 가차없이 트림</li>
+        </ul>
+      </section>
+
+      <!-- citations -->
+      <section id="cite">
+        <h2>Citations — why and how <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">슬라이드 36–38</a></h2>
+        <p class="tldr">모든 사실 주장에 <code>[n]</code> 번호로 출처를 강제 → 사용자 검증·디버깅·hallucination 방어.</p>
+        <pre><code># 모델이 쓴 인용 번호 파싱; 범위 밖 번호는 제거
+import re
+used  = [int(n) for n in re.findall(r"\[(\d+)\]", answer)]
+valid = [n for n in used if 1 &lt;= n &lt;= len(retrieved_chunks)]</code></pre>
+        <p class="muted">
+          흔한 실패: 없는 번호 발명, 순서 뒤섞임, 필요한 곳 인용 누락, 인용–주장 불일치.
+          그래서 <strong>받은 뒤 검증</strong>합니다(범위 밖 번호 제거).
+        </p>
+        <div class="callout cs">
+          ⚖️ <strong>Single-turn vs Agentic RAG (슬라이드 38):</strong> 기본은 <strong>single-turn</strong>
+          (1 검색 + 1 LLM, 예측 가능). 개방형 리서치·multi-hop처럼 single-turn이 <em>증명적으로 불가능</em>할
+          때만 agentic(여러 턴 검색)으로 올립니다.
+        </div>
+        <div class="quiz" data-answer="1">
+          <p class="q">RAG에서 인용 <code>[3]</code>을 강제하는 가장 큰 이유는?</p>
+          <button class="opt">답을 더 길어 보이게 하려고</button>
+          <button class="opt">사용자가 출처로 검증할 수 있고, 모델이 근거 없이 지어내기 어려워져서</button>
+          <button class="opt">토큰을 아끼려고</button>
+          <p class="explain">
+            인용은 <strong>귀속 강제 = hallucination 방어</strong>예요. 컨텍스트에 없으면 "모른다"고 하게
+            만들고, 받은 답의 번호가 실제 청크 범위 안인지 코드로 한 번 더 검증합니다.
+          </p>
+        </div>
+      </section>
+
+      <!-- project -->
+      <section id="project">
+        <h2>Project: index a corpus, then add RAG to your chat app <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">슬라이드 39–42</a></h2>
+        <p class="tldr">작은 코퍼스를 인덱싱하고, 2편 chat-app에 RAG + 인용을 얹습니다.</p>
+        <div class="concept">
+          <span class="tag">순서대로</span>
+          <ol>
+            <li><strong>Index</strong> — 청크/임베드/저장</li>
+            <li><strong>Retrieve</strong> — top-K</li>
+            <li><strong>Augment</strong> — <code>[n]</code> 블록 + 인용 규칙</li>
+            <li><strong>Generate</strong> — Claude 단일 호출 유지</li>
+            <li><strong>Report</strong> — 질문 5개로 답 품질·인용 정확도 점검(강점 2/약점 2)</li>
+          </ol>
+        </div>
+        <p class="muted">
+          스타터: <code>rag-starter.zip</code> —
+          <a href="https://ksetp.netlify.app/assets/context/rag-starter.zip" target="_blank" rel="noopener">다운로드</a>
+          (<code>documents/</code>, <code>indexer.py</code>, RAG 스텁 backend, 인용 표시 UI 포함)
+        </p>
       </section>
 
       <footer>
-        <p>ksept-lab · <a href="./index.html">개념 지도로 돌아가기</a></p>
+        <p>
+          <a href="./index.html">← 개념 지도</a> ·
+          이전: <a href="./tools.html">Module 3 · Tools</a> ·
+          다음: <a href="./agents.html">Module 5 · Agents →</a>
+        </p>
+        <p>ksept-lab · Module 4 · Context Management · 원본 <a href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">슬라이드 덱(42)</a></p>
       </footer>
     </div>
   </body>
