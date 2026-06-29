@@ -1,0 +1,102 @@
+예시 A — 꽉 찬 글 (5개 필드 다 있음), 이메일 스타일
+Subject: Guest Instructor Needed — Intro to Data Science
+
+Hi,
+
+We're looking for an instructor to teach a 3-hour "Introduction to Data
+Science with Python" workshop at the Seattle Public Library, Central Branch
+(Room 204) on Saturday, August 15, 2026, from 1:00–4:00 PM.
+
+Compensation is $400 for the session. If interested, please email Priya at
+priya@learnhub.example or call (206) 555-0142.
+
+Thanks,
+Priya
+→ 기대: 5개 다 채워짐
+
+예시 B — 일부 누락 (pay·contact 불명확), 캐주얼 메일
+Hi team,
+
+Quick one — we need someone to run a beginner "Watercolor Basics" class
+this
+coming Friday evening at our DUMBO studio (68 Jay St, 2nd floor). Time
+TBD but
+probably around 6:30pm.
+
+Not sure on the budget yet, will confirm later.
+→ 기대: course_title·pay·contact는 ⚠️missing
+
+예시 C — 온라인이라 location 없음
+(Zoom)
+evening classes, weekSend your resume to
+careers@speakeasy.example.
+→ 기대: location은 ⚠️ 워짐
+
+예시 D — 매우 빈약한
+Anyone free to give a short guitar lesson next week? Will pay cash.
+→ 기대: course_title·location·contact는 ⚠️missing
+
+
+========================================
+ADDITIONAL EXAMPLES (clean English)
+========================================
+
+--- Example E — full (all 5 fields present) ---
+Subject: Yoga Instructor Wanted — Sunrise Vinyasa
+
+Hello,
+
+Our studio is hiring a certified yoga instructor to lead a 60-minute
+Sunrise Vinyasa class at Lotus Wellness Center, 220 Maple Ave, Austin, TX,
+every Tuesday and Thursday at 6:30 AM starting March 3, 2026.
+
+Pay is $75 per class. To apply, email Dana at dana@lotuswellness.example.
+
+Best,
+Dana
+→ expect: all 5 fields filled
+
+--- Example F — missing pay ---
+Hi,
+
+We'd love to have a guest instructor for a 2-hour "Intro to React" session
+for our coding bootcamp on Wednesday, April 8 at 7 PM. It will be held at
+TechHub Co-working, 14 Market St, Floor 5. Please reach out to me at
+marcus@codecamp.example if you're interested.
+
+Marcus
+→ expect: pay ⚠️ missing; the rest filled
+
+--- Example G — missing datetime and contact ---
+Subject: Looking for a sourdough baking instructor
+
+Hi all,
+
+We want to run a hands-on sourdough baking workshop in our community
+kitchen at 88 Baker Lane, Portland. Budget is around $250 for a half-day
+session. Dates are flexible — still working that out.
+
+Let me know if you'd be a good fit!
+→ expect: datetime ⚠️ missing, contact ⚠️ missing; course_title/location/pay filled
+
+--- Example H — online, location missing ---
+Subject: Remote Photography Course Instructor
+
+We're hiring an instructor for a live online "Smartphone Photography Basics"
+course, held over Zoom on Saturday mornings (10 AM–12 PM) throughout May.
+Compensation is $50/hour. Apply by emailing hiring@snaplearn.example.
+→ expect: location ⚠️ missing (online); the rest filled
+
+--- Example I — missing pay and contact, vague ---
+Hey,
+
+Anyone know someone who could teach a beginner Spanish conversation class?
+We meet Monday evenings at the Riverside Community Center. Thinking of
+starting next month.
+
+Thanks!
+→ expect: pay ⚠️ missing, contact ⚠️ missing; datetime is vague ("Monday evenings, next month")
+
+--- Example J — very sparse ---
+Need a DJ workshop instructor sometime soon. Will discuss rate.
+→ expect: course_title filled (DJ workshop), most others ⚠️ missing
