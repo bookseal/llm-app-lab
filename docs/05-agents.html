@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>llm-app-lab — Module 5 · Architecture &amp; Agents</title>
     <link rel="stylesheet" href="./style.css?v=2" />
-    <script src="./nav.js?v=4" defer></script>
+    <script src="./nav.js?v=5" defer></script>
     <script type="module">
       import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
       mermaid.initialize({ startOnLoad: true, theme: "neutral" });
@@ -29,8 +29,8 @@
       <nav class="toc">
         <strong>목차</strong>
         <ul>
-          <li><a href="#loop">5.1 · The agent loop — 엔진</a></li>
-          <li><a href="#claude-code">5.2 · Claude Code의 정체</a></li>
+          <li><a href="#loop">5.1 · The agent loop — engine</a></li>
+          <li><a href="#claude-code">5.2 · What is Claude Code</a></li>
           <li><a href="#subagents">5.3 · Subagents</a></li>
           <li><a href="#memory">5.4 · Memory scopes</a></li>
           <li><a href="#patterns">5.5 · Patterns (routing·caching·async·progress)</a></li>
@@ -41,7 +41,7 @@
 
       <!-- 5.1 the engine -->
       <section id="loop">
-        <h2>5.1 · The agent loop — the engine <a class="slide" href="https://ksetp.netlify.app/agents" target="_blank" rel="noopener">슬라이드 5</a></h2>
+        <h2>5.1 · The agent loop — the engine <a class="slide" href="https://ksetp.netlify.app/agents" target="_blank" rel="noopener">Slide 5</a></h2>
         <p class="tldr">Claude에 messages+tools 전송 → tool call 디스패치 → 결과 append → <code>end_turn</code>까지 반복.</p>
         <p class="entitle">The whole engine — a single while-loop</p>
         <div class="mermaid">
@@ -86,7 +86,7 @@ while True:
 
       <!-- 5.2 claude code -->
       <section id="claude-code">
-        <h2>5.2 · What is Claude Code, actually? <a class="slide" href="https://ksetp.netlify.app/agents" target="_blank" rel="noopener">슬라이드 6</a></h2>
+        <h2>5.2 · What is Claude Code, actually? <a class="slide" href="https://ksetp.netlify.app/agents" target="_blank" rel="noopener">Slide 6</a></h2>
         <p class="tldr">기본 루프 + UI 레이어 + 권한 게이트 + ~25개 내장 도구 + MCP 도구 레지스트리 + 멀티스코프 메모리.</p>
         <div class="callout analogy">
           🏗️ <strong>비유:</strong> 엔진(agent loop)은 같고, Claude Code는 그 위에 계기판(UI), 안전벨트(권한
@@ -119,7 +119,7 @@ flowchart TB
 
       <!-- 5.3 subagents -->
       <section id="subagents">
-        <h2>5.3 · Subagents — recursion for agents <a class="slide" href="https://ksetp.netlify.app/agents" target="_blank" rel="noopener">슬라이드 7</a></h2>
+        <h2>5.3 · Subagents — recursion for agents <a class="slide" href="https://ksetp.netlify.app/agents" target="_blank" rel="noopener">Slide 7</a></h2>
         <p class="tldr">제한된 도구셋·전용 system prompt로 <strong>자식 Claude 세션</strong>을 띄움 → 컨텍스트 격리·전문화.</p>
         <p class="muted">
           부모는 자식이 한 일의 <em>요약만</em> 받습니다 → 병렬 처리 + 재귀적 분해. 큰 일을 작은 독립 작업으로
@@ -155,7 +155,7 @@ flowchart TB
 
       <!-- 5.4 memory -->
       <section id="memory">
-        <h2>5.4 · Memory — what persists, where <a class="slide" href="https://ksetp.netlify.app/agents" target="_blank" rel="noopener">슬라이드 8</a></h2>
+        <h2>5.4 · Memory — what persists, where <a class="slide" href="https://ksetp.netlify.app/agents" target="_blank" rel="noopener">Slide 8</a></h2>
         <p class="tldr">"무엇을 어디까지 기억하나"를 <strong>5단계 스코프</strong>로 나눕니다 — 좁은 휘발성부터 넓은 영속까지.</p>
         <div class="concept">
           <span class="tag">Memory Scopes (5)</span>
@@ -195,10 +195,10 @@ flowchart LR
 
       <!-- 5.5 patterns -->
       <section id="patterns">
-        <h2>5.5 · Patterns: routing · caching · async · progress <a class="slide" href="https://ksetp.netlify.app/agents" target="_blank" rel="noopener">슬라이드 9–12</a></h2>
+        <h2>5.5 · Patterns: routing · caching · async · progress <a class="slide" href="https://ksetp.netlify.app/agents" target="_blank" rel="noopener">Slide 9–12</a></h2>
         <p class="tldr">프로덕션 에이전트가 비용·지연·신뢰성을 잡는 네 가지 반복 패턴.</p>
         <div class="concept">
-          <span class="tag">네 가지 패턴</span>
+          <span class="tag">Four patterns</span>
           <ul>
             <li><strong>Multi-Model Routing</strong> — 싼 모델(Haiku)을 분류기로 써서 적절한 모델로 라우팅 → 비용 한정</li>
             <li><strong>Prompt Caching</strong> — 정적 system prefix를 cacheable로 표시 → 5분 윈도우 내 반복 비용 ~90%↓</li>
@@ -252,7 +252,7 @@ flowchart LR
 
       <!-- 5.6 computer use + safety -->
       <section id="safety">
-        <h2>5.6 · Computer use &amp; Safety <a class="slide" href="https://ksetp.netlify.app/agents" target="_blank" rel="noopener">슬라이드 13–14</a></h2>
+        <h2>5.6 · Computer use &amp; Safety <a class="slide" href="https://ksetp.netlify.app/agents" target="_blank" rel="noopener">Slide 13–14</a></h2>
         <p class="tldr">화면이 곧 API. 스크린샷 + 마우스/키보드로 API 없는 자동화. 단, 권한·한도가 필수.</p>
         <p class="entitle">Computer use — the screen is the API</p>
         <div class="mermaid">
@@ -303,10 +303,10 @@ flowchart TB
 
       <!-- 5.7 project -->
       <section id="project">
-        <h2>5.7 · Project: build a data-analyst agent <a class="slide" href="https://ksetp.netlify.app/agents" target="_blank" rel="noopener">슬라이드 17–21</a></h2>
+        <h2>5.7 · Project: build a data-analyst agent <a class="slide" href="https://ksetp.netlify.app/agents" target="_blank" rel="noopener">Slide 17–21</a></h2>
         <p class="tldr">SQLite 위 <strong>read-only SQL 도구 3개</strong>로 agent loop를 시연하는 스타터(안전 패턴 2개 기구현).</p>
         <div class="concept">
-          <span class="tag">스타터에 이미 들어간 안전 패턴</span>
+          <span class="tag">Safety patterns already in the starter</span>
           <ul>
             <li>구조적으로 read-only인 DB(안전 패턴 1) — 쓰기 도구를 아예 안 줌</li>
             <li>max-steps 예산(안전 패턴 2) — 루프가 N스텝 넘으면 강제 종료</li>
@@ -350,7 +350,7 @@ flowchart LR
           이전: <a href="./04-context.html">Module 4 · Context</a> ·
           다음: <a href="./06-production.html">Module 6 · Production →</a>
         </p>
-        <p>llm-app-lab · Module 5 · Architecture &amp; Agents · 원본 <a href="https://ksetp.netlify.app/agents" target="_blank" rel="noopener">슬라이드 덱(25)</a></p>
+        <p>llm-app-lab · Module 5 · Architecture &amp; Agents · 원본 <a href="https://ksetp.netlify.app/agents" target="_blank" rel="noopener">Slide deck(25)</a></p>
       </footer>
     </div>
     <!-- 퀴즈 채점: 정답 누르면 초록 + 해설, 오답은 빨강 + 다시 시도 가능 -->

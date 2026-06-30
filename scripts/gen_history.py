@@ -68,16 +68,16 @@ def render(commits):
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>llm-app-lab — 변경 이력</title>
+    <title>llm-app-lab — Change log</title>
     <link rel="stylesheet" href="./style.css?v=2" />
   </head>
   <body>
     <div class="wrap">
       <header class="hero">
-        <h1>변경 이력</h1>
+        <h1>Change log</h1>
         <p class="muted">
-          커밋 {count}개 · 이 페이지는 push마다 <code>git log</code>로부터
-          자동 생성됩니다. ← <a href="./index.html">개념 노트로 돌아가기</a>
+          {count} commits · this page is auto-generated from <code>git log</code>
+          on every push. ← <a href="./index.html">Start here</a>
         </p>
       </header>
 {chr(10).join(cards)}

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>llm-app-lab — Module 1 · Setup</title>
     <link rel="stylesheet" href="./style.css?v=2" />
-    <script src="./nav.js?v=4" defer></script>
+    <script src="./nav.js?v=5" defer></script>
     <script type="module">
       import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
       mermaid.initialize({ startOnLoad: true, theme: "neutral" });
@@ -55,7 +55,7 @@ flowchart LR
       </nav>
 
       <section id="vscode">
-        <h2>1.1 · Install VSCode <a class="slide" href="https://ksetp.netlify.app/setup" target="_blank" rel="noopener">슬라이드 1</a></h2>
+        <h2>1.1 · Install VSCode <a class="slide" href="https://ksetp.netlify.app/setup" target="_blank" rel="noopener">Slide 1</a></h2>
         <p class="tldr">코드를 들여다보고 편집하는 에디터(IDE). 필수는 아니지만 곧 필요해집니다.</p>
         <pre><code># macOS
 brew install --cask visual-studio-code
@@ -70,7 +70,7 @@ code --version</code></pre>
       </section>
 
       <section id="git">
-        <h2>1.2 · Install Git <a class="slide" href="https://ksetp.netlify.app/setup" target="_blank" rel="noopener">슬라이드 2</a></h2>
+        <h2>1.2 · Install Git <a class="slide" href="https://ksetp.netlify.app/setup" target="_blank" rel="noopener">Slide 2</a></h2>
         <p class="tldr">변경을 한 커밋씩 추적 → 발표 때 "diff를 따라 걷기". 42에서 매일 쓰던 그 git이에요.</p>
         <pre><code># macOS (보통 Xcode CLT로 이미 있음)
 brew install git
@@ -95,7 +95,7 @@ git --version</code></pre>
       </section>
 
       <section id="node">
-        <h2>1.3 · Install Node.js (LTS) <a class="slide" href="https://ksetp.netlify.app/setup" target="_blank" rel="noopener">슬라이드 3</a></h2>
+        <h2>1.3 · Install Node.js (LTS) <a class="slide" href="https://ksetp.netlify.app/setup" target="_blank" rel="noopener">Slide 3</a></h2>
         <p class="tldr">React 프론트엔드를 빌드·실행하는 도구(<code>npm</code> 포함).</p>
         <pre><code># macOS
 brew install node
@@ -108,7 +108,7 @@ npm --version</code></pre>
       </section>
 
       <section id="python">
-        <h2>1.4 · Install Python 3.11 <a class="slide" href="https://ksetp.netlify.app/setup" target="_blank" rel="noopener">슬라이드 4</a></h2>
+        <h2>1.4 · Install Python 3.11 <a class="slide" href="https://ksetp.netlify.app/setup" target="_blank" rel="noopener">Slide 4</a></h2>
         <p class="tldr">Flask 백엔드를 돌리는 언어. 버전을 3.11로 맞춥니다.</p>
         <pre><code># macOS
 brew install python@3.11
@@ -125,7 +125,7 @@ py -3.11 --version      # Windows: py 런처로 특정 버전 선택</code></pre
       </section>
 
       <section id="venv">
-        <h2>1.5 · Create your project folder and venv <a class="slide" href="https://ksetp.netlify.app/setup" target="_blank" rel="noopener">슬라이드 5</a></h2>
+        <h2>1.5 · Create your project folder and venv <a class="slide" href="https://ksetp.netlify.app/setup" target="_blank" rel="noopener">Slide 5</a></h2>
         <p class="tldr">프로젝트 폴더를 만들고, 그 안에 <strong>격리된 파이썬 환경(venv)</strong>을 켭니다.</p>
         <pre><code># macOS
 mkdir ~/ksept-lab && cd ~/ksept-lab
@@ -172,7 +172,7 @@ flowchart TB
       </section>
 
       <section id="cli">
-        <h2>1.6 · Install the Claude Code CLI <a class="slide" href="https://ksetp.netlify.app/setup" target="_blank" rel="noopener">슬라이드 6</a></h2>
+        <h2>1.6 · Install the Claude Code CLI <a class="slide" href="https://ksetp.netlify.app/setup" target="_blank" rel="noopener">Slide 6</a></h2>
         <p class="tldr">앱을 대신 스캐폴딩해 주는 AI 코딩 어시스턴트(지금 당신이 쓰는 그것).</p>
         <pre><code># macOS
 npm install -g @anthropic-ai/claude-code
@@ -196,7 +196,7 @@ claude     # 통합 터미널에서 실행 — 첫 실행 시 로그인 안내</
       </section>
 
       <section id="apikey">
-        <h2>1.7 · Get an Anthropic API key <a class="slide" href="https://ksetp.netlify.app/setup" target="_blank" rel="noopener">슬라이드 7</a></h2>
+        <h2>1.7 · Get an Anthropic API key <a class="slide" href="https://ksetp.netlify.app/setup" target="_blank" rel="noopener">Slide 7</a></h2>
         <p class="tldr">
           <strong>당신의 앱</strong>이 Claude를 호출할 때 쓰는 열쇠. Claude Code 자체는 자기 로그인이
           있어 필요 없고, 이 키는 <em>예제 앱</em>용이에요.
@@ -246,7 +246,7 @@ flowchart TB
           <a href="./index.html">← Start here</a> ·
           다음: <a href="./02-1-foundations.html">Module 2 · Foundations (2A편) →</a>
         </p>
-        <p>llm-app-lab · Module 1 · Setup · 원본 <a href="https://ksetp.netlify.app/setup" target="_blank" rel="noopener">슬라이드 덱</a></p>
+        <p>llm-app-lab · Module 1 · Setup · 원본 <a href="https://ksetp.netlify.app/setup" target="_blank" rel="noopener">Slide 덱</a></p>
       </footer>
     </div>
     <!-- 퀴즈 채점: 정답 누르면 초록 + 해설, 오답은 빨강 + 다시 시도 가능 -->

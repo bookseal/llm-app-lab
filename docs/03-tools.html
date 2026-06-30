@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>llm-app-lab — Module 3 · Tools &amp; Structure</title>
     <link rel="stylesheet" href="./style.css?v=2" />
-    <script src="./nav.js?v=4" defer></script>
+    <script src="./nav.js?v=5" defer></script>
     <script type="module">
       import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
       mermaid.initialize({ startOnLoad: true, theme: "neutral" });
@@ -36,7 +36,7 @@
         <strong>목차</strong>
         <ul>
           <li><a href="#demo">3.1 · Live demo (SQL)</a></li>
-          <li><a href="#levels">3.2 · 4 Levels 개요</a></li>
+          <li><a href="#levels">3.2 · 4 Levels overview</a></li>
           <li><a href="#level1">3.3 · Level 1 · Parseable</a></li>
           <li><a href="#level2">3.4 · Level 2 · Structured</a></li>
           <li><a href="#level3">3.5 · Level 3 · Tool use</a></li>
@@ -47,9 +47,9 @@
 
       <!-- ───────── DEMO ───────── -->
       <section id="demo">
-        <h2>3.1 · Live demo: SQL Code Generation for BigQuery <a class="slide" href="https://ksetp.netlify.app/tools" target="_blank" rel="noopener">슬라이드 3–5</a></h2>
+        <h2>3.1 · Live demo: SQL Code Generation for BigQuery <a class="slide" href="https://ksetp.netlify.app/tools" target="_blank" rel="noopener">Slide 3–5</a></h2>
         <p class="tldr">"자연어 → SQL" 데모 하나로, 진짜 앱이 풀어야 했던 6가지 고민을 끌어냅니다.</p>
-        <p class="entitle">What that app had to solve (슬라이드 6–11)</p>
+        <p class="entitle">What that app had to solve (Slide 6–11)</p>
         <div class="concept">
           <span class="tag">Structure · Context · Prompting · Defense · Architecture · Cost</span>
           <ul>
@@ -65,7 +65,7 @@
 
       <!-- ───────── LEVELS OVERVIEW ───────── -->
       <section id="levels">
-        <h2>3.2 · What you'll learn: 4 Levels <a class="slide" href="https://ksetp.netlify.app/tools" target="_blank" rel="noopener">슬라이드 12–17</a></h2>
+        <h2>3.2 · What you'll learn: 4 Levels <a class="slide" href="https://ksetp.netlify.app/tools" target="_blank" rel="noopener">Slide 12–17</a></h2>
         <p class="tldr">출력을 "구조화"하는 강도가 점점 세집니다. 필요에 맞는 가장 낮은 레벨을 고르세요.</p>
         <div class="mermaid">
 flowchart LR
@@ -101,7 +101,7 @@ flowchart TD
 
       <!-- ───────── LEVEL 1 ───────── -->
       <section id="level1">
-        <h2>3.3 · Level 1 · Parseable output <a class="slide" href="https://ksetp.netlify.app/tools" target="_blank" rel="noopener">슬라이드 14, 18–21</a></h2>
+        <h2>3.3 · Level 1 · Parseable output <a class="slide" href="https://ksetp.netlify.app/tools" target="_blank" rel="noopener">Slide 14, 18–21</a></h2>
         <p class="tldr">포맷 규칙이 있는 <strong>단순 텍스트</strong>. system prompt로 규칙을 강제하고, 방어적으로 후처리.</p>
         <div class="callout analogy">
           ✉️ <strong>비유:</strong> "답장은 한 줄로, 인사말 빼고, 코드블록 쓰지 말고"라고 미리 일러두는 것.
@@ -116,7 +116,7 @@ flowchart TD
 
       <!-- ───────── LEVEL 2 ───────── -->
       <section id="level2">
-        <h2>3.4 · Level 2 · True structured output <a class="slide" href="https://ksetp.netlify.app/tools" target="_blank" rel="noopener">슬라이드 15, 22–27</a></h2>
+        <h2>3.4 · Level 2 · True structured output <a class="slide" href="https://ksetp.netlify.app/tools" target="_blank" rel="noopener">Slide 15, 22–27</a></h2>
         <p class="tldr">
           <strong>JSON schema</strong>로 출력 모양을 강제하고 검증. 실패하면 그 에러를 모델에 되먹여
           스스로 고치게 합니다(자기 교정 재시도).
@@ -137,7 +137,7 @@ flowchart TD
 
       <!-- ───────── LEVEL 3 ───────── -->
       <section id="level3">
-        <h2>3.5 · Level 3 · Tool use (the agent loop) <a class="slide" href="https://ksetp.netlify.app/tools" target="_blank" rel="noopener">슬라이드 16, 28–33</a></h2>
+        <h2>3.5 · Level 3 · Tool use (the agent loop) <a class="slide" href="https://ksetp.netlify.app/tools" target="_blank" rel="noopener">Slide 16, 28–33</a></h2>
         <p class="tldr">
           모델이 <strong>반복 루프</strong>를 주도합니다. 정보를 모으거나 행동하려고 도구를 호출하고,
           그 결과를 보고 다음 도구를 부르길 <code>end_turn</code>까지 반복.
@@ -162,7 +162,7 @@ while True:
 
       <!-- ───────── LEVEL 4 ───────── -->
       <section id="level4">
-        <h2>3.6 · Level 4 · MCP — Model Context Protocol <a class="slide" href="https://ksetp.netlify.app/tools" target="_blank" rel="noopener">슬라이드 17, 34–42</a></h2>
+        <h2>3.6 · Level 4 · MCP — Model Context Protocol <a class="slide" href="https://ksetp.netlify.app/tools" target="_blank" rel="noopener">Slide 17, 34–42</a></h2>
         <p class="tldr">
           벤더가 도구 스키마를 <strong>한 번 publish</strong>하면, MCP 호환 클라이언트(Claude Desktop·Cursor·IDE
           에이전트)가 손으로 배선하지 않고 그 도구를 발견해 씁니다.
@@ -193,14 +193,14 @@ After  MCP: 도구가 표준 스키마를 publish → 클라이언트가 자동 
 
       <!-- ───────── PROJECT ───────── -->
       <section id="project">
-        <h2>3.7 · Project: single-turn structured extractor <a class="slide" href="https://ksetp.netlify.app/tools" target="_blank" rel="noopener">슬라이드 43</a></h2>
+        <h2>3.7 · Project: single-turn structured extractor <a class="slide" href="https://ksetp.netlify.app/tools" target="_blank" rel="noopener">Slide 43</a></h2>
         <p class="tldr">제공 문서에서 정보를 뽑는 <strong>단발(single-turn) 구조화 추출기</strong>를 만듭니다(= Level 2 실습). 자유 형식 글 →  타입이 정해진 객체.</p>
         <div class="callout analogy">
           📋 <strong>비유:</strong> 사람이 자유롭게 쓴 글을 받아 <strong>정해진 양식의 빈칸</strong>(제목·회사·연봉…)에
           옮겨 적는 일입니다. 빈칸의 모양(타입)을 미리 정해두고, 모델이 그 칸에만 답을 채우도록 강제하는 게 이 프로젝트의 전부예요.
         </div>
 
-        <h3>스타터 zip 안에 뭐가 들어있나</h3>
+        <h3>What's in the starter zip</h3>
         <p>다운로드한 <code>extract-starter.zip</code>을 풀면 이 구조가 나옵니다(레포의 <code>extract-starter/</code>와 동일):</p>
         <pre><code>extract-starter/
 ├── extract.py          # 추출 로직 — 여기만 고치면 됨
@@ -218,7 +218,7 @@ After  MCP: 도구가 표준 스키마를 publish → 클라이언트가 자동 
           · 레포에선 <code>extract-starter/README.md</code> 참고
         </p>
 
-        <h3>핵심 패턴: 강제 <code>tool_use</code></h3>
+        <h3>Key pattern: forced <code>tool_use</code></h3>
         <p>
           "JSON으로 답해줘"라고 부탁만 하면 모델이 가끔 설명을 덧붙이거나 형식을 어겨서, 응답 텍스트를
           직접 파싱해야 합니다. 이 스타터는 대신 <strong>도구 호출을 강제</strong>합니다:
@@ -238,10 +238,10 @@ return block.input   # 이미 input_schema를 통과한 dict</code></pre>
           <strong>파싱이 필요 없는 dict</strong>로 바로 옵니다 — 정규식도, "혹시 ```json 블록인가" 걱정도 없습니다.
         </div>
 
-        <h3>고치는 곳은 딱 세 군데 (한 몸으로 움직임)</h3>
+        <h3>You only fix three places (they move as one)</h3>
         <p><code>extract.py</code> 상단의 세 블록은 <strong>같은 필드를 세 가지 시선</strong>으로 적은 것입니다. 하나를 바꾸면 셋 다 맞춰야 해요:</p>
         <div class="concept">
-          <span class="tag">세 블록</span>
+          <span class="tag">three blocks</span>
           <ul>
             <li><code>EXTRACT_TOOL</code> — 모델에게 주는 <strong>JSON schema</strong>(어떤 칸이 있고 무엇이 필수인지)</li>
             <li><code>Job(BaseModel)</code> — 받은 dict를 <strong>Pydantic 타입으로 재검증</strong>(2차 안전망)</li>
@@ -254,7 +254,7 @@ return block.input   # 이미 input_schema를 통과한 dict</code></pre>
           허용해도, Pydantic <code>float | None</code>이 다시 한 번 타입을 보증해 줍니다.
         </div>
 
-        <h3>일부러 깨지는 샘플들 — 거기가 학습 포인트</h3>
+        <h3>Intentionally broken samples — that's the lesson</h3>
         <p>
           스타터는 <strong>구인공고 전용</strong>입니다. <code>job_posting*.txt</code>엔 title·company·salary가 있어 깔끔히 통과하지만,
           <code>recipe.txt</code>(재료·조리시간)나 <code>email.txt</code>엔 그런 필드가 없습니다. 그래서 모델이 빈 값을 지어내거나
@@ -273,7 +273,7 @@ return block.input   # 이미 input_schema를 통과한 dict</code></pre>
         </details>
 
         <div class="concept">
-          <span class="tag">할 일</span>
+          <span class="tag">to do</span>
           <ul>
             <li>대상 문서 타입 하나 고르기(비-구인 샘플 또는 직접 작성)</li>
             <li>세 블록(<code>EXTRACT_TOOL</code> · <code>Job</code> · <code>SYSTEM_PROMPT</code>)을 그 타입에 맞게 교체</li>
@@ -282,7 +282,7 @@ return block.input   # 이미 input_schema를 통과한 dict</code></pre>
           </ul>
         </div>
 
-        <h3>실제로 확장해 본 예제: <code>instructor-extractor</code></h3>
+        <h3>A real extension: <code>instructor-extractor</code></h3>
         <p>
           이 패턴을 <strong>실제 웹앱</strong>으로 키운 예제가 레포의 <code>instructor-extractor/</code>입니다.
           강사 구인 글(이메일·카톡 복붙)을 붙여넣으면 구조화 필드로 추출하고, 빈 필드는 <strong>⚠️ 누락</strong>으로
@@ -314,7 +314,7 @@ return block.input   # 이미 input_schema를 통과한 dict</code></pre>
           이전: <a href="./02-2-chat-app.html">2B편 chat-app</a> ·
           다음: <a href="./04-context.html">Module 4 · Context →</a>
         </p>
-        <p>llm-app-lab · Module 3 · Tools &amp; Structure · 원본 <a href="https://ksetp.netlify.app/tools" target="_blank" rel="noopener">슬라이드 덱(43)</a></p>
+        <p>llm-app-lab · Module 3 · Tools &amp; Structure · 원본 <a href="https://ksetp.netlify.app/tools" target="_blank" rel="noopener">Slide deck(43)</a></p>
       </footer>
     </div>
     <!-- 퀴즈 채점: 정답 누르면 초록 + 해설, 오답은 빨강 + 다시 시도 가능 -->

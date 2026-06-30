@@ -3,9 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>llm-app-lab — 2A편 기초 (hello-world)</title>
+    <title>llm-app-lab — Module 2A · Foundations (hello-world)</title>
     <link rel="stylesheet" href="./style.css?v=2" />
-    <script src="./nav.js?v=4" defer></script>
+    <script src="./nav.js?v=5" defer></script>
     <script type="module">
       import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
       mermaid.initialize({ startOnLoad: true, theme: "neutral" });
@@ -14,8 +14,8 @@
   <body>
     <div class="wrap">
       <header class="hero">
-        <p class="muted"><a href="./index.html">← Start here</a> · Module 2 · Foundations (2A편)</p>
-        <h1>개념 노트 — 쉽게</h1>
+        <p class="muted"><a href="./index.html">← Start here</a> · Module 2A · Foundations (hello-world)</p>
+        <h1>Module 2A · Foundations (hello-world)</h1>
         <p class="muted">
           Flask + React(Vite) hello-world에 나오는 개념들을 <strong>비유부터</strong>
           차근차근. 각 항목은 ① 한 줄 요약 → ② 비유 → ③ 이 앱에서는 →
@@ -47,22 +47,22 @@
       <nav class="toc">
         <strong>목차</strong>
         <ul>
-          <li><a href="#overview">2A.1 · 전체 그림</a></li>
+          <li><a href="#overview">2A.1 · Big picture</a></li>
           <li><a href="#flask">2A.2 · Flask</a></li>
-          <li><a href="#endpoint">2A.3 · 엔드포인트</a></li>
+          <li><a href="#endpoint">2A.3 · Endpoints</a></li>
           <li><a href="#cors">2A.4 · CORS</a></li>
           <li><a href="#react">2A.5 · React</a></li>
           <li><a href="#vite">2A.6 · Vite</a></li>
           <li><a href="#jsx">2A.7 · JSX</a></li>
           <li><a href="#mount">2A.8 · Mount</a></li>
           <li><a href="#stateless">2A.9 · Stateless</a></li>
-          <li><a href="#selfcheck">2A.10 · 스스로 점검</a></li>
+          <li><a href="#selfcheck">2A.10 · Self-check</a></li>
         </ul>
       </nav>
 
       <!-- ───────────────── OVERVIEW ───────────────── -->
       <section id="overview">
-        <h2>2A.1 · 전체 그림</h2>
+        <h2>2A.1 · The big picture</h2>
         <p class="tldr">
           프로그램이 <strong>두 개</strong> 돕니다. 화면 담당(프론트)과
           데이터 담당(백). 둘은 서로 다른 문(포트)으로 들어갑니다.
@@ -137,7 +137,7 @@ def hello():               # 이 함수를 실행하고
 
       <!-- ───────────────── ENDPOINT ───────────────── -->
       <section id="endpoint">
-        <h2>2A.3 · 엔드포인트 (endpoint)</h2>
+        <h2>2A.3 · Endpoints</h2>
         <p class="tldr">"주소(경로) + 방법(메서드)" 한 쌍. 우리에겐 <code>GET /api/hello</code> 하나뿐.</p>
         <div class="callout analogy">
           📋 <strong>메뉴판 비유:</strong> 엔드포인트는 메뉴판의 항목 하나예요.
@@ -321,7 +321,7 @@ React.createElement("p", null, message)</code></pre>
 
       <!-- ───────────────── MOUNT ───────────────── -->
       <section id="mount">
-        <h2>2A.8 · Mount (마운트)</h2>
+        <h2>2A.8 · Mount</h2>
         <p class="tldr">컴포넌트가 화면에 <strong>처음 나타나는 순간</strong>. "fetch on mount" = 화면 뜨자마자 한 번 데이터 가져오기.</p>
         <div class="callout analogy">
           🏪 <strong>개점 비유:</strong> 가게 문을 처음 여는 순간(마운트)에
@@ -410,7 +410,7 @@ sequenceDiagram
 
       <!-- ───────────────── SELF-CHECK ───────────────── -->
       <section id="selfcheck">
-        <h2>2A.10 · 스스로 점검 (코드 읽기)</h2>
+        <h2>2A.10 · Self-check (read the code)</h2>
         <p class="muted">
           위 퀴즈가 개념이었다면, 이건 <strong>실제 코드</strong>를 보고 답하는 문제입니다.
           정답은 접어 뒀어요 — 먼저 생각해 보고 펼치세요.
@@ -436,10 +436,10 @@ sequenceDiagram
       <footer>
         <p>
           <a href="./index.html">← Start here</a> ·
-          다음: <a href="./02-2-chat-app.html">2B편 · LLM 채팅앱 →</a>
+          다음: <a href="./02-2-chat-app.html">2B · chat-app →</a>
         </p>
         <p>
-          llm-app-lab · Module 2 · Foundations (2A편 hello-world) ·
+          llm-app-lab · Module 2 · Foundations (2A · hello-world) ·
           이 페이지는 <code>docs/</code>에서 GitHub Pages로 서빙됩니다.
         </p>
       </footer>

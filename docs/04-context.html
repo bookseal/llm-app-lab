@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>llm-app-lab — Module 4 · Context Management (RAG)</title>
     <link rel="stylesheet" href="./style.css?v=2" />
-    <script src="./nav.js?v=4" defer></script>
+    <script src="./nav.js?v=5" defer></script>
     <script type="module">
       import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
       mermaid.initialize({ startOnLoad: true, theme: "neutral" });
@@ -29,25 +29,25 @@
       <nav class="toc">
         <strong>목차</strong>
         <ul>
-          <li><a href="#why">4.1 · 왜 거대 컨텍스트로 안 하나</a></li>
+          <li><a href="#why">4.1 · Why not a giant context</a></li>
           <li><a href="#embed">4.2 · Embeddings</a></li>
-          <li><a href="#pipeline">4.3 · Indexing 파이프라인</a></li>
+          <li><a href="#pipeline">4.3 · Indexing pipeline</a></li>
           <li><a href="#chunk">4.4 · Chunking</a></li>
           <li><a href="#store">4.5 · Vector stores</a></li>
           <li><a href="#rag">4.6 · RAG in 30 lines</a></li>
-          <li><a href="#cite">4.7 · Citations &amp; 실패</a></li>
-          <li><a href="#memory">4.8 · Memory (장기 기억)</a></li>
+          <li><a href="#cite">4.7 · Citations &amp; failures</a></li>
+          <li><a href="#memory">4.8 · Memory (long-term)</a></li>
           <li><a href="#project">4.9 · Project</a></li>
         </ul>
       </nav>
 
       <!-- demo + why -->
       <section id="why">
-        <h2>4.1 · First, the obvious question: why not a giant context window? <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">슬라이드 4</a></h2>
+        <h2>4.1 · First, the obvious question: why not a giant context window? <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">Slide 4</a></h2>
         <p class="tldr">"그냥 문서 전부를 프롬프트에 넣으면 안 되나?" — 4가지 이유로 안 됩니다.</p>
-        <p class="entitle">Live demo: Solutions Manager — indexed Drive + cited chat (슬라이드 2)</p>
+        <p class="entitle">Live demo: Solutions Manager — indexed Drive + cited chat (Slide 2)</p>
         <div class="concept">
-          <span class="tag">왜 검색이 필요한가 (4가지)</span>
+          <span class="tag">Why retrieval (4 reasons)</span>
           <ol>
             <li><strong>Scale</strong> — 실제 코퍼스는 수천만~수억 토큰. 다 못 넣음</li>
             <li><strong>Cost</strong> — 큰 버퍼를 매번 재전송하면 타겟 검색보다 비쌈</li>
@@ -59,7 +59,7 @@
           📚 <strong>비유:</strong> 시험 볼 때 도서관 전체를 책상에 쌓는 대신, <em>필요한 몇 페이지만 복사해</em>
           옆에 두는 것. 빠르고 싸고, 헷갈리지도 않아요.
         </div>
-        <p class="entitle">두 갈래 — 전부 넣기 vs 검색해서 넣기</p>
+        <p class="entitle">Two paths — stuff everything vs retrieve then add</p>
         <div class="mermaid">
 flowchart TB
     Q(["one user question"])
@@ -90,7 +90,7 @@ flowchart TB
 
       <!-- embeddings -->
       <section id="embed">
-        <h2>4.2 · What is an embedding model? <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">슬라이드 6–7</a></h2>
+        <h2>4.2 · What is an embedding model? <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">Slide 6–7</a></h2>
         <p class="tldr">텍스트를 <strong>고정 길이 숫자 벡터</strong>로 바꿉니다. 뜻이 비슷하면 공간적으로 가까워져요.</p>
         <pre><code>embedder.embed([
   "the cat sat on the mat",
@@ -106,7 +106,7 @@ flowchart TB
           <li>근접 측정은 <strong>cosine similarity</strong></li>
           <li>⚠️ <strong>가장 흔한 침묵의 RAG 버그:</strong> 인덱싱과 쿼리에 <em>같은 임베딩 모델</em>을 안 쓰는 것. 제공자마다 좌표계가 달라 섞으면 비교 불가.</li>
         </ul>
-        <p class="entitle">의미 공간에서의 거리 — 뜻이 가까우면 벡터도 가깝다</p>
+        <p class="entitle">Distance in meaning space — closer meaning, closer vectors</p>
         <div class="mermaid">
 graph LR
     cat(["🐱 the cat sat on the mat"])
@@ -121,7 +121,7 @@ graph LR
           "뜻"만 비교할 수 있어요. 검색은 결국 "쿼리 벡터와 cosine이 가장 큰 K개 청크 찾기"입니다.
         </div>
         <div class="concept">
-          <span class="tag">🧪 직접 해보기 — <code>embedding-similarity/similarity.py</code></span>
+          <span class="tag">🧪 Try it yourself — <code>embedding-similarity/similarity.py</code></span>
           <p>
             두 문장을 입력하면 <strong>cosine similarity</strong>를 찍어주는 작은 콘솔 앱이에요.
             로컬 <strong>multilingual</strong> 임베딩 모델을 써서 <em>API 키가 필요 없고</em>, 서로 다른
@@ -158,7 +158,7 @@ python similarity.py "cat" "고양이"      # 한 방 모드</code></pre>
             그래서 cosine을 <em>감정 분석기</em>로 오해하면 안 돼요 — 그건 "의미적 유사"이지 "같은 입장"이 아닙니다.
           </p>
         </div>
-        <p class="entitle">차원 수의 트레이드오프</p>
+        <p class="entitle">The dimension-count trade-off</p>
         <div class="mermaid">
 flowchart LR
     d1["384 dims<br/>light & fast"] --> d2["768 / 1536"] --> d3["3072 dims<br/>more precise<br/>higher storage & search cost"]
@@ -179,7 +179,7 @@ flowchart LR
 
       <!-- pipeline -->
       <section id="pipeline">
-        <h2>4.3 · Indexing: documents → chunks → vectors → store <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">슬라이드 8</a></h2>
+        <h2>4.3 · Indexing: documents → chunks → vectors → store <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">Slide 8</a></h2>
         <p class="tldr">질문이 오기 <strong>전에</strong> 문서를 쪼개고 의미 벡터로 바꿔 저장해 둡니다.</p>
         <div class="mermaid">
 flowchart LR
@@ -199,7 +199,7 @@ flowchart TB
     rec --> v["vector: [0.01, -0.03, ...]"]
     rec --> m["metadata:<br/>doc_id · source · position · user_id"]
         </div>
-        <p class="entitle">왜 idempotent해야 하나 — 재인덱싱의 함정</p>
+        <p class="entitle">Why it must be idempotent — the re-indexing trap</p>
         <div class="mermaid">
 flowchart LR
     D["doc#42 content changes"] --> Q{"how to handle old chunks?"}
@@ -216,10 +216,10 @@ flowchart LR
 
       <!-- chunking -->
       <section id="chunk">
-        <h2>4.4 · Chunking is a design decision <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">슬라이드 9</a></h2>
+        <h2>4.4 · Chunking is a design decision <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">Slide 9</a></h2>
         <p class="tldr">문서를 어떻게 쪼개느냐가 검색 품질을 좌우합니다. <strong>검색을 튜닝하기 전에 청킹부터</strong>.</p>
         <div class="concept">
-          <span class="tag">전략 (슬라이드 9)</span>
+          <span class="tag">Strategies (Slide 9)</span>
           <ul>
             <li><strong>Fixed-size</strong>(N자/토큰) — 빠른 시작, 균일 문서. 단점: 문장 중간 절단</li>
             <li><strong>Sentence/paragraph 경계</strong> — 산문·기사. 단점: 크기 가변</li>
@@ -235,7 +235,7 @@ flowchart LR
     # 길면 target 창으로 자르되, 뒤쪽 절반에서 문단 경계(\n\n, \n, ". ")를
     # 만나면 거기서 끊어 문장 중간 절단을 피한다. 이웃 청크는 overlap만큼 겹침.
     ...</code></pre>
-        <p class="entitle">어떤 전략을 고를까 — 문서 종류로 결정</p>
+        <p class="entitle">Which strategy? Decide by document type</p>
         <div class="mermaid">
 flowchart TD
     Start{"What kind of document?"}
@@ -244,7 +244,7 @@ flowchart TD
     Start -->|"prose · articles"| Sent["Sentence/paragraph boundaries<br/>e.g. blog, news"]
     Start -->|"long · structured · precise"| Sem["Semantic (model decides)<br/>e.g. long technical manual"]
         </div>
-        <p class="entitle">overlap이 하는 일 — 경계에서 잘린 문맥 잇기</p>
+        <p class="entitle">What overlap does — stitch context cut at the boundary</p>
         <div class="mermaid">
 flowchart LR
     subgraph doc["original text (char positions)"]
@@ -275,10 +275,10 @@ flowchart LR
 
       <!-- store -->
       <section id="store">
-        <h2>4.5 · Vector stores &amp; batch economics <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">슬라이드 10–13</a></h2>
+        <h2>4.5 · Vector stores &amp; batch economics <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">Slide 10–13</a></h2>
         <p class="tldr">벡터를 저장하고 "가장 가까운 K개"를 빠르게 찾는 곳. 규모에 맞춰 고릅니다.</p>
         <div class="concept">
-          <span class="tag">선택지</span>
+          <span class="tag">Options</span>
           <ul>
             <li><strong>numpy/in-memory</strong> — 프로토타입(&lt;100K). 재시작 시 소실</li>
             <li><strong>Postgres + pgvector</strong> — 기존 Postgres에 메타 SQL join. ~1M 편함</li>
@@ -286,7 +286,7 @@ flowchart LR
             <li><strong>SQLite + sqlite-vec</strong> — 단일 사용자·로컬·임베디드</li>
           </ul>
         </div>
-        <p class="entitle">어떤 store를 고를까 — 규모·환경으로 결정 (예시 포함)</p>
+        <p class="entitle">Which store? Decide by scale & environment (with examples)</p>
         <div class="mermaid">
 flowchart TD
     Q{"How many vectors? Where does it run?"}
@@ -295,7 +295,7 @@ flowchart TD
     Q -->|"large scale · hybrid"| MG["Managed<br/>e.g. Pinecone · Weaviate · Qdrant<br/>⚠️ cost · vendor lock-in"]
     Q -->|"single user · local app"| SQ["SQLite + sqlite-vec<br/>e.g. desktop embedded app<br/>👍 ships as one file"]
         </div>
-        <p class="entitle">검색 속도 — 프로토타입의 O(n) vs 프로덕션의 ANN</p>
+        <p class="entitle">Search speed — prototype O(n) vs production ANN</p>
         <div class="mermaid">
 flowchart LR
     subgraph naive["Prototype: linear scan — O(n)"]
@@ -314,9 +314,9 @@ flowchart LR
           <strong>HNSW 같은 ANN</strong>(근사 최근접)으로 O(log n)에 찾습니다. ANN은 "정확히 가장 가까운"
           대신 "거의 가장 가까운"을 주는 대신 훨씬 빨라요 — 검색에선 이 근사로 충분한 경우가 대부분입니다.
         </p>
-        <p class="entitle">슬라이드 11 — ANN &amp; HNSW, 약어부터 풀어보기</p>
+        <p class="entitle">Slide 11 — ANN &amp; HNSW, unpacking the acronyms</p>
         <div class="concept">
-          <span class="tag">ANN = Approximate Nearest Neighbor (근사 최근접 이웃)</span>
+          <span class="tag">ANN = Approximate Nearest Neighbor</span>
           <p>
             목표는 "쿼리와 가장 가까운 벡터 K개" 찾기예요. 이걸 <strong>정확히(exact)</strong> 하려면 모든
             벡터와 일일이 비교해야 하는데(O(n)), 수백만 개면 너무 느립니다. <strong>ANN</strong>은 "정확히 1등"을
@@ -370,7 +370,7 @@ flowchart TB
             100% 정확 보장은 ANN의 목적이 아니에요 — 그건 exact 검색이고, 속도를 위해 일부러 근사합니다.
           </p>
         </div>
-        <p class="entitle">배치 경제성 — 캡에 부딪히면 절반으로 (적응형 폴백)</p>
+        <p class="entitle">Batch economics — halve on cap (adaptive fallback)</p>
         <div class="mermaid">
 flowchart TD
     B["embed a batch of N chunks"] --> C{"per-request cap exceeded?"}
@@ -394,7 +394,7 @@ flowchart TD
 
       <!-- rag -->
       <section id="rag">
-        <h2>4.6 · RAG in 30 lines: retrieve · augment · generate <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">슬라이드 15–17</a></h2>
+        <h2>4.6 · RAG in 30 lines: retrieve · augment · generate <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">Slide 15–17</a></h2>
         <p class="tldr">검색(Retrieve) → 번호 붙여 붙이기(Augment) → Claude 한 번 호출(Generate). 끝.</p>
         <pre><code># 1. RETRIEVE — 질문을 임베딩해 가장 가까운 K개 청크
 query_vec = embedder.embed([question])[0]
@@ -413,7 +413,7 @@ answer = client.messages.create(
     system=system_prompt,
     messages=[{"role": "user", "content": user_prompt}],
 ).content[0].text</code></pre>
-        <p class="entitle">한 번의 질문이 흐르는 길</p>
+        <p class="entitle">The path one question flows through</p>
         <div class="mermaid">
 sequenceDiagram
     participant U as User
@@ -428,7 +428,7 @@ sequenceDiagram
     C-->>U: answer with [3] citations
     Note over U: after: validate citation numbers are in range
         </div>
-        <p class="entitle">The retrieval failures (슬라이드 16)</p>
+        <p class="entitle">The retrieval failures (Slide 16)</p>
         <ul>
           <li><strong>다양성 부족</strong> — verbose 문서 하나가 top-K 독점 → 그룹별 예산·MMR 다양화</li>
           <li><strong>관련은 있으나 무의미</strong> — 텍스트만 비슷한 청크 → reranker·하이브리드(벡터+키워드)</li>
@@ -446,13 +446,13 @@ flowchart LR
 
       <!-- citations -->
       <section id="cite">
-        <h2>4.7 · Citations — why and how <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">슬라이드 18</a></h2>
+        <h2>4.7 · Citations — why and how <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">Slide 18</a></h2>
         <p class="tldr">모든 사실 주장에 <code>[n]</code> 번호로 출처를 강제 → 사용자 검증·디버깅·hallucination 방어.</p>
         <pre><code># 모델이 쓴 인용 번호 파싱; 범위 밖 번호는 제거
 import re
 used  = [int(n) for n in re.findall(r"\[(\d+)\]", answer)]
 valid = [n for n in used if 1 &lt;= n &lt;= len(retrieved_chunks)]</code></pre>
-        <p class="entitle">인용 검증 — 받은 답을 믿지 말고 번호를 확인</p>
+        <p class="entitle">Citation validation — don't trust the answer, check the numbers</p>
         <div class="mermaid">
 flowchart LR
     A["Claude answer"] --> P["parse [n] numbers with regex"]
@@ -489,7 +489,7 @@ flowchart TD
 
       <!-- memory -->
       <section id="memory">
-        <h2>4.8 · Memory: 모델은 매번 백지에서 시작한다 <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">보충 개념 · 덱(20)엔 없음</a></h2>
+        <h2>4.8 · Memory: the model starts blank every time <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">supplement · not in the deck(20)</a></h2>
         <p class="tldr">
           LLM은 <strong>stateless</strong> — 지난 대화를 스스로 기억하지 못합니다. "기억"은 우리가
           <strong>저장하고 다시 찾아 붙여주는</strong> 것. 그리고 그 방법은 이미 배운 RAG와 똑같아요.
@@ -500,7 +500,7 @@ flowchart TD
           chat-app(2B편)에서 대화 히스토리를 매 턴 다시 보낸 것 — 그게 가장 단순한 메모리였습니다.
         </div>
         <div class="concept">
-          <span class="tag">두 층위</span>
+          <span class="tag">Two layers</span>
           <ul>
             <li>
               <strong>단기(short-term)</strong> — 이번 대화의 최근 턴들을 그대로 다시 보냄. 단순하지만
@@ -513,7 +513,7 @@ flowchart TD
             </li>
           </ul>
         </div>
-        <p class="entitle">두 층위를 한눈에</p>
+        <p class="entitle">Both layers at a glance</p>
         <div class="mermaid">
 flowchart TB
     subgraph ST["Short-term memory (this conversation)"]
@@ -526,7 +526,7 @@ flowchart TB
       l2 --> l3["= RAG applied to chat history"]
     end
         </div>
-        <p class="entitle">장기 memory의 순환 — 검색하고, 답하고, 다시 저장</p>
+        <p class="entitle">The long-term memory cycle — retrieve, answer, store again</p>
         <div class="mermaid">
 flowchart LR
     U["new message"] --> R["search relevant memories<br/>(vector store)"]
@@ -557,10 +557,10 @@ flowchart LR
 
       <!-- project -->
       <section id="project">
-        <h2>4.9 · Project: index a corpus, then add RAG to your chat app <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">슬라이드 19–20</a></h2>
+        <h2>4.9 · Project: index a corpus, then add RAG to your chat app <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">Slide 19–20</a></h2>
         <p class="tldr">작은 코퍼스를 인덱싱하고, 2편 chat-app에 RAG + 인용을 얹습니다.</p>
         <div class="concept">
-          <span class="tag">순서대로</span>
+          <span class="tag">In order</span>
           <ol>
             <li><strong>Index</strong> — 청크/임베드/저장</li>
             <li><strong>Retrieve</strong> — top-K</li>
@@ -590,7 +590,7 @@ flowchart LR
           이전: <a href="./03-tools.html">Module 3 · Tools</a> ·
           다음: <a href="./05-agents.html">Module 5 · Agents →</a>
         </p>
-        <p>llm-app-lab · Module 4 · Context Management · 원본 <a href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">슬라이드 덱(20)</a></p>
+        <p>llm-app-lab · Module 4 · Context Management · 원본 <a href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">Slide deck(20)</a></p>
       </footer>
     </div>
     <!-- 퀴즈 채점: 정답 누르면 초록 + 해설, 오답은 빨강 + 다시 시도 가능 -->

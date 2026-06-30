@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>llm-app-lab — Module 7 · Workshop</title>
     <link rel="stylesheet" href="./style.css?v=2" />
-    <script src="./nav.js?v=4" defer></script>
+    <script src="./nav.js?v=5" defer></script>
     <script type="module">
       import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
       mermaid.initialize({ startOnLoad: true, theme: "neutral" });
@@ -15,7 +15,7 @@
     <div class="wrap">
       <header class="hero">
         <p class="muted"><a href="./index.html">← Start here</a> · Module 7 · 8 slides</p>
-        <h1>Module 7 · Workshop — 빌드 데이</h1>
+        <h1>Module 7 · Workshop — build day</h1>
         <p class="muted">
           배운 것을 모아 직접 만듭니다. 목표는 polish가 아니라 <strong>shape</strong> —
           E2E LLM 앱을 끝까지 빌드해 보는 감각.
@@ -29,16 +29,16 @@
       <nav class="toc">
         <strong>목차</strong>
         <ul>
-          <li><a href="#how">7.1 · 워크숍 진행 방식</a></li>
-          <li><a href="#options">7.2 · 무엇을 만들까 (확장 vs 신규)</a></li>
-          <li><a href="#recap">7.3 · 지금까지 만든 것 (M1–6 복습)</a></li>
+          <li><a href="#how">7.1 · How the workshop works</a></li>
+          <li><a href="#options">7.2 · What to build (extend vs new)</a></li>
+          <li><a href="#recap">7.3 · What you've built (M1–6 recap)</a></li>
           <li><a href="#final-quiz">7.4 · Final Quiz</a></li>
         </ul>
       </nav>
 
       <!-- 7.1 how -->
       <section id="how">
-        <h2>7.1 · How the workshop works <a class="slide" href="https://ksetp.netlify.app/workshop" target="_blank" rel="noopener">슬라이드 1–2</a></h2>
+        <h2>7.1 · How the workshop works <a class="slide" href="https://ksetp.netlify.app/workshop" target="_blank" rel="noopener">Slide 1–2</a></h2>
         <p class="tldr">짧게 피칭 → 강사 지원받으며 빌드 → 작은 데모로 마무리.</p>
         <ul>
           <li>첫 30분 안에 <strong>무엇을 만들지 피칭</strong></li>
@@ -71,7 +71,7 @@ flowchart LR
 
       <!-- 7.2 options -->
       <section id="options">
-        <h2>7.2 · Project options — extend or greenfield <a class="slide" href="https://ksetp.netlify.app/workshop" target="_blank" rel="noopener">슬라이드 3</a></h2>
+        <h2>7.2 · Project options — extend or greenfield <a class="slide" href="https://ksetp.netlify.app/workshop" target="_blank" rel="noopener">Slide 3</a></h2>
         <p class="tldr">두 갈래: 이미 만든 걸 키우거나, 새 아이디어를 작게 시작하거나.</p>
         <p class="entitle">Which path? Decide by what you want to practice</p>
         <div class="mermaid">
@@ -82,14 +82,14 @@ flowchart TD
     Ext --> Small["keep it shippable today"]
     New --> Small
         </div>
-        <p class="entitle">기존 확장 (이미 만든 걸 키우기)</p>
+        <p class="entitle">Extend an existing project (grow what you built)</p>
         <ul>
           <li>chat-app에 도구 레지스트리(weather/math/web search)</li>
           <li>추출기를 MCP 서버로 래핑 → Claude Desktop에서 호출</li>
           <li>RAG 후속 질문용 쿼리 재작성 · 인용 재번호 + UI</li>
           <li>스트리밍(SSE) · 전체 히스토리 대화 메모리</li>
         </ul>
-        <p class="entitle">Greenfield (새로 시작)</p>
+        <p class="entitle">Greenfield (start fresh)</p>
         <ul>
           <li>일상 API용 MCP 서버(Notion/Linear/커스텀 DB)</li>
           <li>비용 최적 멀티모델 라우터</li>
@@ -100,7 +100,7 @@ flowchart TD
 
       <!-- 7.3 recap -->
       <section id="recap">
-        <h2>7.3 · What you've built so far — the whole arc <a class="slide" href="https://ksetp.netlify.app/workshop" target="_blank" rel="noopener">복습</a></h2>
+        <h2>7.3 · What you've built so far — the whole arc <a class="slide" href="https://ksetp.netlify.app/workshop" target="_blank" rel="noopener">Recap</a></h2>
         <p class="tldr">워크숍 재료는 전부 이미 손에 있어요 — 1편부터 6편까지 쌓은 조각들입니다.</p>
         <div class="mermaid">
 flowchart LR
@@ -132,7 +132,7 @@ flowchart LR
 
       <!-- 7.4 final quiz -->
       <section id="final-quiz">
-        <h2>7.4 · Final Quiz <a class="slide" href="https://ksetp.netlify.app/workshop" target="_blank" rel="noopener">슬라이드 4–8</a></h2>
+        <h2>7.4 · Final Quiz <a class="slide" href="https://ksetp.netlify.app/workshop" target="_blank" rel="noopener">Slide 4–8</a></h2>
         <p class="tldr">통과 암호로 잠긴 2세트 — 전 모듈을 가로지르는 10문항. 아래는 그 예열용 복습 퀴즈예요.</p>
         <ul>
           <li><strong>1 of 2</strong> — Foundations → Tools → Context</li>
@@ -180,7 +180,7 @@ flowchart LR
           이전: <a href="./06-production.html">Module 6 · Production</a> ·
           🎉 마지막 모듈
         </p>
-        <p>llm-app-lab · Module 7 · Workshop · 원본 <a href="https://ksetp.netlify.app/workshop" target="_blank" rel="noopener">슬라이드 덱(8)</a></p>
+        <p>llm-app-lab · Module 7 · Workshop · 원본 <a href="https://ksetp.netlify.app/workshop" target="_blank" rel="noopener">Slide deck(8)</a></p>
       </footer>
     </div>
     <!-- 퀴즈 채점: 정답 누르면 초록 + 해설, 오답은 빨강 + 다시 시도 가능 -->

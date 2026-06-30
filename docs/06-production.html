@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>llm-app-lab — Module 6 · Production Considerations</title>
     <link rel="stylesheet" href="./style.css?v=2" />
-    <script src="./nav.js?v=4" defer></script>
+    <script src="./nav.js?v=5" defer></script>
     <script type="module">
       import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
       mermaid.initialize({ startOnLoad: true, theme: "neutral" });
@@ -29,7 +29,7 @@
       <nav class="toc">
         <strong>목차</strong>
         <ul>
-          <li><a href="#three-questions">6.1 · 배포 전 세 가지 질문</a></li>
+          <li><a href="#three-questions">6.1 · Three questions before shipping</a></li>
           <li><a href="#eval">6.2 · Eval &amp; Testing</a></li>
           <li><a href="#security">6.3 · Guardrails &amp; Security</a></li>
           <li><a href="#observability">6.4 · Observability &amp; Latency</a></li>
@@ -39,10 +39,10 @@
 
       <!-- 6.1 overview -->
       <section id="three-questions">
-        <h2>6.1 · Three questions before you ship <a class="slide" href="https://ksetp.netlify.app/production" target="_blank" rel="noopener">슬라이드 2–3</a></h2>
+        <h2>6.1 · Three questions before you ship <a class="slide" href="https://ksetp.netlify.app/production" target="_blank" rel="noopener">Slide 2–3</a></h2>
         <p class="tldr">프로토타입과 프로덕션을 가르는 건 기능이 아니라 <strong>세 가지 질문에 답할 수 있는가</strong>입니다.</p>
         <div class="concept">
-          <span class="tag">배포 전 체크</span>
+          <span class="tag">Pre-ship checklist</span>
           <ul>
             <li><strong>Does it work?</strong> → eval &amp; testing — 사용자 전에 회귀를 잡는다</li>
             <li><strong>Can it be trusted?</strong> → guardrails &amp; security — 주입·누출·위험 행동 방어</li>
@@ -77,10 +77,10 @@ flowchart LR
 
       <!-- 6.2 eval -->
       <section id="eval">
-        <h2>6.2 · Eval &amp; Testing — does it work, and stay working? <a class="slide" href="https://ksetp.netlify.app/production" target="_blank" rel="noopener">슬라이드 4–9</a></h2>
+        <h2>6.2 · Eval &amp; Testing — does it work, and stay working? <a class="slide" href="https://ksetp.netlify.app/production" target="_blank" rel="noopener">Slide 4–9</a></h2>
         <p class="tldr">출력이 비결정적이라 "한 번 됐다"로는 부족 — <strong>점수를 시간에 따라 추적</strong>합니다.</p>
         <div class="concept">
-          <span class="tag">Eval 사다리 (싼 것부터)</span>
+          <span class="tag">Eval ladder (cheapest first)</span>
           <ol>
             <li><strong>결정론적 체크</strong> — schema 검증·regex (싸고 빠름, 가장 먼저)</li>
             <li><strong>Golden dataset</strong> — 정답 세트로 회귀 테스트</li>
@@ -122,7 +122,7 @@ flowchart TB
 
       <!-- 6.3 security -->
       <section id="security">
-        <h2>6.3 · Guardrails &amp; Security <a class="slide" href="https://ksetp.netlify.app/production" target="_blank" rel="noopener">슬라이드 10–15</a></h2>
+        <h2>6.3 · Guardrails &amp; Security <a class="slide" href="https://ksetp.netlify.app/production" target="_blank" rel="noopener">Slide 10–15</a></h2>
         <p class="tldr">
           <strong>LLM은 "지시"와 "데이터"를 신뢰성 있게 구분하지 못합니다.</strong> 그래서 계층 방어가 필요해요.
         </p>
@@ -140,7 +140,7 @@ flowchart LR
     R -->|no reliable boundary| Risk["may obey the injected text"]
         </div>
         <div class="concept">
-          <span class="tag">계층 방어</span>
+          <span class="tag">Layered defense</span>
           <ul>
             <li><strong>least-privilege 도구</strong> — 꼭 필요한 권한만 (Module 5의 read-only 패턴)</li>
             <li><strong>human-in-the-loop</strong> — 비가역 행동엔 사람 확인</li>
@@ -176,10 +176,10 @@ flowchart LR
 
       <!-- 6.4 observability -->
       <section id="observability">
-        <h2>6.4 · Observability &amp; Latency <a class="slide" href="https://ksetp.netlify.app/production" target="_blank" rel="noopener">슬라이드 16–23</a></h2>
+        <h2>6.4 · Observability &amp; Latency <a class="slide" href="https://ksetp.netlify.app/production" target="_blank" rel="noopener">Slide 16–23</a></h2>
         <p class="tldr">1일차부터 구조화 텔레메트리. 그리고 <strong>output 토큰이 latency를 지배</strong>합니다.</p>
         <div class="concept">
-          <span class="tag">무엇을 남기나</span>
+          <span class="tag">What to capture</span>
           <ul>
             <li><strong>Trace</strong> — 한 요청이 거친 단계 트리(검색→증강→생성→도구)</li>
             <li><strong>Metrics</strong> — latency <code>p95/p99</code>, 토큰 수, 에러율</li>
@@ -244,7 +244,7 @@ sequenceDiagram
 
       <!-- 6.5 wrap -->
       <section id="wrapup">
-        <h2>6.5 · Wrap-up &amp; topics we didn't cover <a class="slide" href="https://ksetp.netlify.app/production" target="_blank" rel="noopener">슬라이드 24–27</a></h2>
+        <h2>6.5 · Wrap-up &amp; topics we didn't cover <a class="slide" href="https://ksetp.netlify.app/production" target="_blank" rel="noopener">Slide 24–27</a></h2>
         <p class="tldr">세 질문에 세 분야로 답하면 출시 준비의 골격이 섭니다.</p>
         <div class="mermaid">
 flowchart LR
@@ -268,7 +268,7 @@ flowchart LR
           이전: <a href="./05-agents.html">Module 5 · Agents</a> ·
           다음: <a href="./07-workshop.html">Module 7 · Workshop →</a>
         </p>
-        <p>llm-app-lab · Module 6 · Production · 원본 <a href="https://ksetp.netlify.app/production" target="_blank" rel="noopener">슬라이드 덱(27)</a></p>
+        <p>llm-app-lab · Module 6 · Production · 원본 <a href="https://ksetp.netlify.app/production" target="_blank" rel="noopener">Slide deck(27)</a></p>
       </footer>
     </div>
     <!-- 퀴즈 채점: 정답 누르면 초록 + 해설, 오답은 빨강 + 다시 시도 가능 -->

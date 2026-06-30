@@ -142,10 +142,10 @@
   rail.className = "rail";
   const handle = document.createElement("button");
   handle.className = "rail-handle";
-  handle.setAttribute("aria-label", "사이드바 접기/펼치기");
+  handle.setAttribute("aria-label", "Toggle sidebar");
   const setCollapsed = (c) => {
     document.body.classList.toggle("rail-collapsed", c);
-    handle.textContent = c ? "☰ 목차" : "‹ 접기";
+    handle.textContent = c ? "☰ Menu" : "‹ Hide";
     try { localStorage.setItem("railCollapsed", c ? "1" : "0"); } catch (e) {}
   };
   handle.addEventListener("click", () =>
