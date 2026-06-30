@@ -14,7 +14,7 @@
   <body>
     <div class="wrap">
       <header class="hero">
-        <p class="muted"><a href="./index.html">← 개념 지도</a> · Module 4 · 42 slides</p>
+        <p class="muted"><a href="./index.html">← 개념 지도</a> · Module 4 · 20 slides</p>
         <h1>Module 4 · Context Management — Indexing / RAG</h1>
         <p class="muted">
           거대한 문서 더미를 모델에게 통째로 주는 대신, 질문에 <strong>관련 있는 조각만 찾아 붙여</strong>
@@ -43,9 +43,9 @@
 
       <!-- demo + why -->
       <section id="why">
-        <h2>4.1 · First, the obvious question: why not a giant context window? <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">슬라이드 3–9</a></h2>
+        <h2>4.1 · First, the obvious question: why not a giant context window? <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">슬라이드 4</a></h2>
         <p class="tldr">"그냥 문서 전부를 프롬프트에 넣으면 안 되나?" — 4가지 이유로 안 됩니다.</p>
-        <p class="entitle">Live demo: Solutions Manager — indexed Drive + cited chat (슬라이드 3–6)</p>
+        <p class="entitle">Live demo: Solutions Manager — indexed Drive + cited chat (슬라이드 2)</p>
         <div class="concept">
           <span class="tag">왜 검색이 필요한가 (4가지)</span>
           <ol>
@@ -62,13 +62,13 @@
         <p class="entitle">두 갈래 — 전부 넣기 vs 검색해서 넣기</p>
         <div class="mermaid">
 flowchart TB
-    Q(["사용자 질문 1개"])
-    Q --> A["❌ 전부 넣기<br/>수억 토큰을 통째로"]
-    Q --> B["✅ 검색해서 넣기 (RAG)<br/>관련 청크 top-K만"]
-    A --> A2["느림 · 비쌈<br/>lost in the middle"]
-    B --> B2["빠름 · 쌈<br/>집중된 근거 + 인용"]
-    A2 -.-> Bad(["답 품질 ↓"])
-    B2 -.-> Good(["답 품질 ↑"])
+    Q(["one user question"])
+    Q --> A["❌ Stuff everything in<br/>hundreds of millions of tokens"]
+    Q --> B["✅ Retrieve, then add (RAG)<br/>only the top-K relevant chunks"]
+    A --> A2["slow · expensive<br/>lost in the middle"]
+    B --> B2["fast · cheap<br/>focused evidence + citations"]
+    A2 -.-> Bad(["answer quality down"])
+    B2 -.-> Good(["answer quality up"])
         </div>
         <div class="callout">
           🧭 <strong>"lost in the middle":</strong> 컨텍스트가 아주 길면 모델은 <strong>맨 앞·맨 뒤</strong>는
@@ -90,14 +90,14 @@ flowchart TB
 
       <!-- pipeline -->
       <section id="pipeline">
-        <h2>4.2 · Indexing: documents → chunks → vectors → store <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">슬라이드 11–15</a></h2>
+        <h2>4.2 · Indexing: documents → chunks → vectors → store <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">슬라이드 8</a></h2>
         <p class="tldr">질문이 오기 <strong>전에</strong> 문서를 쪼개고 의미 벡터로 바꿔 저장해 둡니다.</p>
         <div class="mermaid">
 flowchart LR
-    S["Source<br/>PDF·docs·sheets"] --> E["Extract<br/>(MIME별 텍스트)"]
-    E --> C["Chunk<br/>(N자 + overlap)"]
-    C --> V["Embed<br/>(청크→벡터)"]
-    V --> St["Store<br/>(vec+meta+ANN)"]
+    S["Source<br/>PDF · docs · sheets"] --> E["Extract<br/>(text per MIME type)"]
+    E --> C["Chunk<br/>(N chars + overlap)"]
+    C --> V["Embed<br/>(chunk to vector)"]
+    V --> St["Store<br/>(vec + meta + ANN)"]
         </div>
         <p class="muted">
           각 청크는 벡터만 저장하지 않아요. <strong>메타데이터</strong>(원본 문서 id, 파일명, 위치/페이지,
@@ -106,20 +106,20 @@ flowchart LR
         </p>
         <div class="mermaid">
 flowchart TB
-    chunk["청크 1개"] --> rec["저장 레코드"]
+    chunk["one chunk"] --> rec["stored record"]
     rec --> v["vector: [0.01, -0.03, ...]"]
     rec --> m["metadata:<br/>doc_id · source · position · user_id"]
         </div>
         <p class="entitle">왜 idempotent해야 하나 — 재인덱싱의 함정</p>
         <div class="mermaid">
 flowchart LR
-    D["doc#42 내용 변경"] --> Q{"기존 청크 처리?"}
-    Q -->|"❌ 그냥 INSERT"| Dup["옛 청크 + 새 청크 공존<br/>→ 중복·유령 결과"]
-    Q -->|"✅ delete-then-insert"| Clean["doc#42 청크 전부 DELETE<br/>→ 새 청크 INSERT"]
-    Clean --> Fresh["항상 깨끗한 최신 상태"]
+    D["doc#42 content changes"] --> Q{"how to handle old chunks?"}
+    Q -->|"❌ just INSERT"| Dup["old + new chunks coexist<br/>→ duplicates · ghost results"]
+    Q -->|"✅ delete-then-insert"| Clean["DELETE all doc#42 chunks<br/>→ INSERT new chunks"]
+    Clean --> Fresh["always clean & up to date"]
         </div>
         <div class="callout cs">
-          ♻️ <strong>Idempotency rule (슬라이드 15):</strong> 한 문서를 다시 인덱싱했을 때 옛 청크가
+          ♻️ <strong>Idempotency rule (슬라이드 8):</strong> 한 문서를 다시 인덱싱했을 때 옛 청크가
           중복·잔존하면 안 됩니다. <strong>delete-then-insert</strong>(먼저 지우고 다시 넣기)가 가장 단순·정확.
           "같은 입력을 두 번 넣어도 결과가 같다" — 그게 idempotent입니다.
         </div>
@@ -127,7 +127,7 @@ flowchart LR
 
       <!-- embeddings -->
       <section id="embed">
-        <h2>4.3 · What is an embedding model? <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">슬라이드 16–18, 21–23</a></h2>
+        <h2>4.3 · What is an embedding model? <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">슬라이드 6–7</a></h2>
         <p class="tldr">텍스트를 <strong>고정 길이 숫자 벡터</strong>로 바꿉니다. 뜻이 비슷하면 공간적으로 가까워져요.</p>
         <pre><code>embedder.embed([
   "the cat sat on the mat",
@@ -149,8 +149,8 @@ graph LR
     cat(["🐱 the cat sat on the mat"])
     feline(["🐱 a feline rested on a rug"])
     py(["🐍 Python is a language"])
-    cat <-->|"cosine ≈ 0.92<br/>가깝다"| feline
-    cat <-->|"cosine ≈ 0.15<br/>멀다"| py
+    cat <-->|"cosine ≈ 0.92<br/>close"| feline
+    cat <-->|"cosine ≈ 0.15<br/>far"| py
         </div>
         <div class="callout">
           📏 <strong>cosine similarity:</strong> 두 벡터가 이루는 <em>각도</em>로 닮음을 잽니다. 같은 방향이면
@@ -198,7 +198,7 @@ python similarity.py "cat" "고양이"      # 한 방 모드</code></pre>
         <p class="entitle">차원 수의 트레이드오프</p>
         <div class="mermaid">
 flowchart LR
-    d1["384차원<br/>가볍고 빠름"] --> d2["768 / 1536"] --> d3["3072차원<br/>정밀하지만<br/>저장·검색 비용 ↑"]
+    d1["384 dims<br/>light & fast"] --> d2["768 / 1536"] --> d3["3072 dims<br/>more precise<br/>higher storage & search cost"]
         </div>
         <p class="muted">놀거리: <a href="https://projector.tensorflow.org" target="_blank" rel="noopener">TensorFlow Embedding Projector</a>로 임베딩을 3D로 탐색.</p>
         <div class="quiz" data-answer="1">
@@ -216,10 +216,10 @@ flowchart LR
 
       <!-- chunking -->
       <section id="chunk">
-        <h2>4.4 · Chunking is a design decision <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">슬라이드 19–20</a></h2>
+        <h2>4.4 · Chunking is a design decision <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">슬라이드 9</a></h2>
         <p class="tldr">문서를 어떻게 쪼개느냐가 검색 품질을 좌우합니다. <strong>검색을 튜닝하기 전에 청킹부터</strong>.</p>
         <div class="concept">
-          <span class="tag">전략 (슬라이드 20)</span>
+          <span class="tag">전략 (슬라이드 9)</span>
           <ul>
             <li><strong>Fixed-size</strong>(N자/토큰) — 빠른 시작, 균일 문서. 단점: 문장 중간 절단</li>
             <li><strong>Sentence/paragraph 경계</strong> — 산문·기사. 단점: 크기 가변</li>
@@ -238,23 +238,23 @@ flowchart LR
         <p class="entitle">어떤 전략을 고를까 — 문서 종류로 결정</p>
         <div class="mermaid">
 flowchart TD
-    Start{"문서가 어떤 종류?"}
-    Start -->|"짧다 (1청크에 다 들어감)"| Doc["Document-as-chunk<br/>예: FAQ 한 항목, 짧은 메모"]
-    Start -->|"균일·빠른 시작이 중요"| Fixed["Fixed-size<br/>예: 1500자 + 200 overlap"]
-    Start -->|"산문·기사"| Sent["Sentence/paragraph 경계<br/>예: 블로그, 뉴스"]
-    Start -->|"길고 구조적·정밀 필요"| Sem["Semantic (모델이 결정)<br/>예: 긴 기술 매뉴얼"]
+    Start{"What kind of document?"}
+    Start -->|"short (fits in one chunk)"| Doc["Document-as-chunk<br/>e.g. one FAQ entry, short note"]
+    Start -->|"uniform · fast to start"| Fixed["Fixed-size<br/>e.g. 1500 chars + 200 overlap"]
+    Start -->|"prose · articles"| Sent["Sentence/paragraph boundaries<br/>e.g. blog, news"]
+    Start -->|"long · structured · precise"| Sem["Semantic (model decides)<br/>e.g. long technical manual"]
         </div>
         <p class="entitle">overlap이 하는 일 — 경계에서 잘린 문맥 잇기</p>
         <div class="mermaid">
 flowchart LR
-    subgraph doc["원문 (문자 위치)"]
+    subgraph doc["original text (char positions)"]
       direction LR
-      c1["청크 1<br/>0 – 1500"]
-      c2["청크 2<br/>1300 – 2800"]
-      c3["청크 3<br/>2600 – 4100"]
+      c1["chunk 1<br/>0 – 1500"]
+      c2["chunk 2<br/>1300 – 2800"]
+      c3["chunk 3<br/>2600 – 4100"]
     end
-    c1 -.->|1300–1500 겹침| c2
-    c2 -.->|2600–2800 겹침| c3
+    c1 -.->|overlap 1300–1500| c2
+    c2 -.->|overlap 2600–2800| c3
         </div>
         <div class="callout">
           🔗 겹치는 200자 덕분에, 경계에 걸친 문장("…매출은 전년 대비 | 20% 늘었다")이 <strong>어느 한
@@ -275,7 +275,7 @@ flowchart LR
 
       <!-- store -->
       <section id="store">
-        <h2>4.5 · Vector stores &amp; batch economics <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">슬라이드 24–27</a></h2>
+        <h2>4.5 · Vector stores &amp; batch economics <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">슬라이드 10–13</a></h2>
         <p class="tldr">벡터를 저장하고 "가장 가까운 K개"를 빠르게 찾는 곳. 규모에 맞춰 고릅니다.</p>
         <div class="concept">
           <span class="tag">선택지</span>
@@ -289,24 +289,24 @@ flowchart LR
         <p class="entitle">어떤 store를 고를까 — 규모·환경으로 결정 (예시 포함)</p>
         <div class="mermaid">
 flowchart TD
-    Q{"벡터 몇 개? 어디서 돌아가나?"}
-    Q -->|"10만 미만 · 프로토타입"| NP["numpy / in-memory<br/>예: rag-starter 기본값<br/>⚠️ 재시작 시 소실"]
-    Q -->|"이미 Postgres 사용 · ~1M"| PG["Postgres + pgvector<br/>예: 메타데이터를 SQL로 join<br/>👍 운영 단순"]
-    Q -->|"대규모 · 하이브리드·스케일"| MG["Managed<br/>예: Pinecone · Weaviate · Qdrant<br/>⚠️ 비용 · 벤더 락인"]
-    Q -->|"단일 사용자 · 로컬 앱"| SQ["SQLite + sqlite-vec<br/>예: 데스크톱 임베디드 앱<br/>👍 파일 하나로 배포"]
+    Q{"How many vectors? Where does it run?"}
+    Q -->|"under 100K · prototype"| NP["numpy / in-memory<br/>e.g. rag-starter default<br/>⚠️ lost on restart"]
+    Q -->|"already on Postgres · ~1M"| PG["Postgres + pgvector<br/>e.g. join metadata in SQL<br/>👍 simple ops"]
+    Q -->|"large scale · hybrid"| MG["Managed<br/>e.g. Pinecone · Weaviate · Qdrant<br/>⚠️ cost · vendor lock-in"]
+    Q -->|"single user · local app"| SQ["SQLite + sqlite-vec<br/>e.g. desktop embedded app<br/>👍 ships as one file"]
         </div>
         <p class="entitle">검색 속도 — 프로토타입의 O(n) vs 프로덕션의 ANN</p>
         <div class="mermaid">
 flowchart LR
-    subgraph naive["프로토타입: 선형 스캔 — O(n)"]
+    subgraph naive["Prototype: linear scan — O(n)"]
       direction TB
-      q1(["쿼리 벡터"]) --> s1["모든 레코드와<br/>일일이 cosine 비교"]
-      s1 --> r1(["top-K"])
+      q1(["query vector"]) --> s1["compare with EVERY record<br/>one by one (cosine)"]
+      s1 --> r1(["top-K (exact)"])
     end
-    subgraph fast["프로덕션: ANN (HNSW) — O(log n)"]
+    subgraph fast["Production: ANN (HNSW) — O(log n)"]
       direction TB
-      q2(["쿼리 벡터"]) --> s2["그래프를 점프하며<br/>가까운 이웃만 탐색"]
-      s2 --> r2(["top-K (근사)"])
+      q2(["query vector"]) --> s2["hop across a graph,<br/>visit only nearby neighbors"]
+      s2 --> r2(["top-K (approximate)"])
     end
         </div>
         <p class="muted">
@@ -314,12 +314,68 @@ flowchart LR
           <strong>HNSW 같은 ANN</strong>(근사 최근접)으로 O(log n)에 찾습니다. ANN은 "정확히 가장 가까운"
           대신 "거의 가장 가까운"을 주는 대신 훨씬 빨라요 — 검색에선 이 근사로 충분한 경우가 대부분입니다.
         </p>
+        <p class="entitle">슬라이드 11 — ANN &amp; HNSW, 약어부터 풀어보기</p>
+        <div class="concept">
+          <span class="tag">ANN = Approximate Nearest Neighbor (근사 최근접 이웃)</span>
+          <p>
+            목표는 "쿼리와 가장 가까운 벡터 K개" 찾기예요. 이걸 <strong>정확히(exact)</strong> 하려면 모든
+            벡터와 일일이 비교해야 하는데(O(n)), 수백만 개면 너무 느립니다. <strong>ANN</strong>은 "정확히 1등"을
+            고집하지 않고 <em>거의 가장 가까운 것</em>을 받아들이는 대신, 비교 횟수를 확 줄여 <strong>훨씬 빠르게</strong>
+            찾아요. 검색·추천에선 이 작은 근사가 거의 티가 안 납니다.
+          </p>
+        </div>
+        <div class="concept">
+          <span class="tag">HNSW = Hierarchical Navigable Small World</span>
+          <p>가장 널리 쓰는 ANN 인덱스예요. 이름 세 조각이 그대로 작동 원리입니다:</p>
+          <ul>
+            <li><strong>Small World</strong> — "6단계 법칙"처럼, 점(벡터)들을 잘 이어 두면 어느 점에서 출발해도 몇 번만 건너뛰면 목표 근처에 닿는 그래프.</li>
+            <li><strong>Navigable</strong> — 매 단계에서 "목표에 더 가까워지는 이웃"으로만 이동하며 길을 찾음(greedy 탐색).</li>
+            <li><strong>Hierarchical</strong> — 그래프를 <strong>여러 층</strong>으로 쌓음. 위층은 점이 적고 점프가 커서 빠르게 근처로, 아래층은 점이 많고 점프가 작아 정밀하게 최근접을 찾음.</li>
+          </ul>
+        </div>
+        <div class="callout analogy">
+          🚇 <strong>비유:</strong> 지하철과 같아요. 먼저 <em>급행</em>(위층, 큰 점프)을 타고 목적지 근처 역까지
+          빠르게 간 뒤, <em>완행·도보</em>(아래층, 작은 걸음)로 정확한 출구를 찾습니다. 매번 모든 역에
+          내리지 않으니 빠르죠 — 이게 O(n)이 아니라 O(log n)인 이유예요.
+        </div>
+        <div class="mermaid">
+flowchart TB
+    Q(["query vector"])
+    subgraph top["Layer 2 — sparse, big jumps"]
+      T["enter at the top<br/>few nodes, long hops"]
+    end
+    subgraph mid["Layer 1 — medium density"]
+      M["move closer<br/>medium hops"]
+    end
+    subgraph bot["Layer 0 — all nodes, dense"]
+      Bm["fine-tune to the nearest<br/>neighbors (short hops)"]
+    end
+    Res(["approximate top-K"])
+    Q --> T --> M --> Bm --> Res
+        </div>
+        <div class="callout cs">
+          ⚖️ <strong>트레이드오프:</strong> ANN/HNSW는 <em>정확도를 아주 조금 양보</em>하고 <strong>속도(O(log n))</strong>를
+          얻어요. 파라미터로 "더 정확 vs 더 빠름"을 조절합니다 — 예를 들어 탐색 폭 <code>efSearch</code>를 키우면
+          더 많은 이웃을 살펴 정확도↑·속도↓. 프로토타입(수만 개)은 그냥 O(n) 선형 스캔으로 충분하고,
+          <strong>수백만 개부터 HNSW가 빛납니다</strong>.
+        </div>
+        <div class="quiz" data-answer="2">
+          <p class="q">HNSW가 굳이 "계층(hierarchical)" 구조를 쓰는 이유는?</p>
+          <button class="opt">층이 많을수록 저장 공간이 줄어서</button>
+          <button class="opt">정확히 가장 가까운 벡터를 100% 보장하려고</button>
+          <button class="opt">위층의 큰 점프로 목표 근처까지 빨리 가고, 아래층의 작은 걸음으로 정밀하게 좁히려고</button>
+          <p class="explain">
+            위층은 점이 적어 한 번에 멀리 점프해 <strong>목표 근처로 빠르게</strong> 이동하고, 아래층은 촘촘해서
+            <strong>정밀하게 최근접</strong>을 찾아요. 덕분에 모든 점을 보지 않고도 O(log n)에 좋은 답을 냅니다.
+            100% 정확 보장은 ANN의 목적이 아니에요 — 그건 exact 검색이고, 속도를 위해 일부러 근사합니다.
+          </p>
+        </div>
         <p class="entitle">배치 경제성 — 캡에 부딪히면 절반으로 (적응형 폴백)</p>
         <div class="mermaid">
 flowchart TD
-    B["청크 N개 배치로 임베드 요청"] --> C{"요청당 캡 초과?"}
-    C -->|"아니오"| Done(["임베딩 성공"])
-    C -->|"예 (too large)"| Half["배치 크기를 절반으로"]
+    B["embed a batch of N chunks"] --> C{"per-request cap exceeded?"}
+    C -->|"no"| Done(["embeddings OK"])
+    C -->|"yes (too large)"| Half["halve the batch size"]
     Half --> B
         </div>
         <div class="quiz" data-answer="1">
@@ -338,7 +394,7 @@ flowchart TD
 
       <!-- rag -->
       <section id="rag">
-        <h2>4.6 · RAG in 30 lines: retrieve · augment · generate <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">슬라이드 28–31</a></h2>
+        <h2>4.6 · RAG in 30 lines: retrieve · augment · generate <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">슬라이드 15–17</a></h2>
         <p class="tldr">검색(Retrieve) → 번호 붙여 붙이기(Augment) → Claude 한 번 호출(Generate). 끝.</p>
         <pre><code># 1. RETRIEVE — 질문을 임베딩해 가장 가까운 K개 청크
 query_vec = embedder.embed([question])[0]
@@ -360,19 +416,19 @@ answer = client.messages.create(
         <p class="entitle">한 번의 질문이 흐르는 길</p>
         <div class="mermaid">
 sequenceDiagram
-    participant U as 사용자
+    participant U as User
     participant E as Embedder
     participant V as Vector store
     participant C as Claude
-    U->>E: 질문을 임베딩
-    E->>V: 쿼리 벡터로 top-K 검색
-    V-->>U: 관련 청크 K개 (+메타)
-    Note over U: AUGMENT — [1][2][3] 번호 블록 + 인용 규칙
+    U->>E: embed the question
+    E->>V: search top-K by query vector
+    V-->>U: K relevant chunks (+meta)
+    Note over U: AUGMENT — numbered [1][2][3] blocks + citation rule
     U->>C: CONTEXT + QUESTION
-    C-->>U: "[3]" 인용이 달린 답변
-    Note over U: 받은 뒤 인용 번호 범위 검증
+    C-->>U: answer with [3] citations
+    Note over U: after: validate citation numbers are in range
         </div>
-        <p class="entitle">The retrieval failures (슬라이드 32–35)</p>
+        <p class="entitle">The retrieval failures (슬라이드 16)</p>
         <ul>
           <li><strong>다양성 부족</strong> — verbose 문서 하나가 top-K 독점 → 그룹별 예산·MMR 다양화</li>
           <li><strong>관련은 있으나 무의미</strong> — 텍스트만 비슷한 청크 → reranker·하이브리드(벡터+키워드)</li>
@@ -381,16 +437,16 @@ sequenceDiagram
         </ul>
         <div class="mermaid">
 flowchart LR
-    f1["다양성 부족<br/>한 문서가 top-K 독점"] --> x1["그룹별 예산 · MMR 다양화"]
-    f2["관련하나 무의미<br/>표면만 비슷한 청크"] --> x2["reranker · 하이브리드(벡터+키워드)"]
-    f3["비특정 쿼리<br/>'그들 매출은?'"] --> x3["대화 히스토리로<br/>self-contained 쿼리 재작성"]
-    f4["과도한 컨텍스트<br/>K가 너무 큼"] --> x4["청크 예산으로 트림"]
+    f1["low diversity<br/>one doc dominates top-K"] --> x1["per-group budget · MMR"]
+    f2["relevant but useless<br/>only surface-similar chunks"] --> x2["reranker · hybrid (vector+keyword)"]
+    f3["non-specific query<br/>'what are their sales?'"] --> x3["rewrite into a self-contained<br/>query using chat history"]
+    f4["too much context<br/>K too large"] --> x4["trim with a chunk budget"]
         </div>
       </section>
 
       <!-- citations -->
       <section id="cite">
-        <h2>4.7 · Citations — why and how <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">슬라이드 36–38</a></h2>
+        <h2>4.7 · Citations — why and how <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">슬라이드 18</a></h2>
         <p class="tldr">모든 사실 주장에 <code>[n]</code> 번호로 출처를 강제 → 사용자 검증·디버깅·hallucination 방어.</p>
         <pre><code># 모델이 쓴 인용 번호 파싱; 범위 밖 번호는 제거
 import re
@@ -399,25 +455,25 @@ valid = [n for n in used if 1 &lt;= n &lt;= len(retrieved_chunks)]</code></pre>
         <p class="entitle">인용 검증 — 받은 답을 믿지 말고 번호를 확인</p>
         <div class="mermaid">
 flowchart LR
-    A["Claude 답변"] --> P["정규식으로 [n] 번호 파싱"]
-    P --> R{"1 ≤ n ≤ 청크 수?"}
-    R -->|"예"| Keep["유효 인용으로 유지"]
-    R -->|"아니오"| Drop["범위 밖 → 제거<br/>(없는 번호 발명 = 환각)"]
+    A["Claude answer"] --> P["parse [n] numbers with regex"]
+    P --> R{"1 ≤ n ≤ #chunks?"}
+    R -->|"yes"| Keep["keep as valid citation"]
+    R -->|"no"| Drop["out of range → drop<br/>(invented number = hallucination)"]
         </div>
         <p class="muted">
           흔한 실패: 없는 번호 발명, 순서 뒤섞임, 필요한 곳 인용 누락, 인용–주장 불일치.
           그래서 <strong>받은 뒤 검증</strong>합니다(범위 밖 번호 제거).
         </p>
         <div class="callout cs">
-          ⚖️ <strong>Single-turn vs Agentic RAG (슬라이드 38):</strong> 기본은 <strong>single-turn</strong>
+          ⚖️ <strong>Single-turn vs Agentic RAG (슬라이드 18):</strong> 기본은 <strong>single-turn</strong>
           (1 검색 + 1 LLM, 예측 가능). 개방형 리서치·multi-hop처럼 single-turn이 <em>증명적으로 불가능</em>할
           때만 agentic(여러 턴 검색)으로 올립니다.
         </div>
         <div class="mermaid">
 flowchart TD
-    Q{"질문이 어떤 유형?"}
-    Q -->|"단일 사실 조회 (대부분)"| ST["✅ Single-turn<br/>1 검색 + 1 LLM<br/>예측 가능 · 싸다 · 빠르다"]
-    Q -->|"multi-hop · 개방형 리서치<br/>(single-turn으로 증명적 불가능)"| AG["Agentic<br/>여러 턴 검색·추론<br/>강력하지만 느리고 비쌈"]
+    Q{"What type of question?"}
+    Q -->|"single fact lookup (most)"| ST["✅ Single-turn<br/>1 search + 1 LLM<br/>predictable · cheap · fast"]
+    Q -->|"multi-hop · open-ended research<br/>(provably impossible single-turn)"| AG["Agentic<br/>multi-turn search + reasoning<br/>powerful but slow & costly"]
         </div>
         <div class="quiz" data-answer="1">
           <p class="q">RAG에서 인용 <code>[3]</code>을 강제하는 가장 큰 이유는?</p>
@@ -433,7 +489,7 @@ flowchart TD
 
       <!-- memory -->
       <section id="memory">
-        <h2>4.8 · Memory: 모델은 매번 백지에서 시작한다 <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">개념 연결 · 슬라이드 덱 전반</a></h2>
+        <h2>4.8 · Memory: 모델은 매번 백지에서 시작한다 <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">보충 개념 · 덱(20)엔 없음</a></h2>
         <p class="tldr">
           LLM은 <strong>stateless</strong> — 지난 대화를 스스로 기억하지 못합니다. "기억"은 우리가
           <strong>저장하고 다시 찾아 붙여주는</strong> 것. 그리고 그 방법은 이미 배운 RAG와 똑같아요.
@@ -460,25 +516,25 @@ flowchart TD
         <p class="entitle">두 층위를 한눈에</p>
         <div class="mermaid">
 flowchart TB
-    subgraph ST["단기 memory (이번 대화)"]
+    subgraph ST["Short-term memory (this conversation)"]
       direction TB
-      s1["최근 N턴을 그대로 전송"] --> s2["길어지면 오래된 턴을<br/>요약(summarization)해 압축"]
+      s1["resend the last N turns as-is"] --> s2["when it grows, summarize<br/>old turns to compress"]
     end
-    subgraph LT["장기 memory (대화를 넘어서)"]
+    subgraph LT["Long-term memory (beyond one chat)"]
       direction TB
-      l1["기억할 사실만 추출 → 임베드 → 저장"] --> l2["새 발화에 관련 기억을 검색해 붙임"]
-      l2 --> l3["= RAG를 '대화 기록'에 적용"]
+      l1["extract facts → embed → store"] --> l2["retrieve relevant memories<br/>for a new message"]
+      l2 --> l3["= RAG applied to chat history"]
     end
         </div>
         <p class="entitle">장기 memory의 순환 — 검색하고, 답하고, 다시 저장</p>
         <div class="mermaid">
 flowchart LR
-    U["새 발화"] --> R["관련 기억 검색<br/>(vector store)"]
-    R --> A["프롬프트에 붙이기<br/>요약 + 검색된 사실"]
-    A --> G["Claude 호출"]
-    G --> X["기억할 사실 추출"]
-    X --> St["저장<br/>(user_id로 격리)"]
-    St -.다음 턴.-> R
+    U["new message"] --> R["search relevant memories<br/>(vector store)"]
+    R --> A["augment the prompt<br/>summary + retrieved facts"]
+    A --> G["call Claude"]
+    G --> X["extract facts to remember"]
+    X --> St["store<br/>(isolated by user_id)"]
+    St -.next turn.-> R
         </div>
         <div class="callout cs">
           ⚠️ <strong>설계 함정:</strong> ① <em>전부 저장하면 노이즈</em> — 무엇을 기억할지 골라야 검색
@@ -501,7 +557,7 @@ flowchart LR
 
       <!-- project -->
       <section id="project">
-        <h2>4.9 · Project: index a corpus, then add RAG to your chat app <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">슬라이드 39–42</a></h2>
+        <h2>4.9 · Project: index a corpus, then add RAG to your chat app <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">슬라이드 19–20</a></h2>
         <p class="tldr">작은 코퍼스를 인덱싱하고, 2편 chat-app에 RAG + 인용을 얹습니다.</p>
         <div class="concept">
           <span class="tag">순서대로</span>
@@ -515,11 +571,11 @@ flowchart LR
         </div>
         <div class="mermaid">
 flowchart LR
-    I["① Index<br/>청크·임베드·저장"] --> R["② Retrieve<br/>top-K"]
-    R --> A["③ Augment<br/>[n] 블록 + 인용 규칙"]
-    A --> G["④ Generate<br/>Claude 단일 호출"]
-    G --> Rep["⑤ Report<br/>질문 5개로 점검"]
-    Rep -.프롬프트·청킹 보강.-> I
+    I["① Index<br/>chunk · embed · store"] --> R["② Retrieve<br/>top-K"]
+    R --> A["③ Augment<br/>[n] blocks + citation rule"]
+    A --> G["④ Generate<br/>single Claude call"]
+    G --> Rep["⑤ Report<br/>check with 5 questions"]
+    Rep -.improve prompt & chunking.-> I
         </div>
         <p class="muted">
           스타터: <code>rag-starter.zip</code> —
@@ -534,7 +590,7 @@ flowchart LR
           이전: <a href="./tools.html">Module 3 · Tools</a> ·
           다음: <a href="./agents.html">Module 5 · Agents →</a>
         </p>
-        <p>llm-app-lab · Module 4 · Context Management · 원본 <a href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">슬라이드 덱(42)</a></p>
+        <p>llm-app-lab · Module 4 · Context Management · 원본 <a href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">슬라이드 덱(20)</a></p>
       </footer>
     </div>
     <!-- 퀴즈 채점: 정답 누르면 초록 + 해설, 오답은 빨강 + 다시 시도 가능 -->
