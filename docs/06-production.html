@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>llm-app-lab — Module 6 · Production Considerations</title>
+    <link rel="stylesheet" href="./style.css" />
+    <script src="./nav.js" defer></script>
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({ startOnLoad: true, theme: "neutral" });
+    </script>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="hero">
+        <p class="muted"><a href="./index.html">← 개념 지도</a> · Module 6 · 27 slides</p>
+        <h1>Module 6 · Production Considerations</h1>
+        <p class="muted">
+          장난감에서 진짜 서비스로. 배포 전 세 가지 질문 — <strong>되는가 / 믿을 수 있는가 / 운영할 수 있는가</strong>
+          — 에 각각 eval·security·observability로 답합니다.
+        </p>
+        <div class="callout">
+          📊 원본 슬라이드: <a href="https://ksetp.netlify.app/production" target="_blank" rel="noopener">ksetp.netlify.app/production</a>
+          · 칩(<span class="slide">슬라이드 N</span>)이 덱의 번호와 같습니다.
+        </div>
+      </header>
+
+      <nav class="toc">
+        <strong>목차</strong>
+        <ul>
+          <li><a href="#three-questions">6.1 · 배포 전 세 가지 질문</a></li>
+          <li><a href="#eval">6.2 · Eval &amp; Testing</a></li>
+          <li><a href="#security">6.3 · Guardrails &amp; Security</a></li>
+          <li><a href="#observability">6.4 · Observability &amp; Latency</a></li>
+          <li><a href="#wrapup">6.5 · Wrap-up</a></li>
+        </ul>
+      </nav>
+
+      <!-- 6.1 overview -->
+      <section id="three-questions">
+        <h2>6.1 · Three questions before you ship <a class="slide" href="https://ksetp.netlify.app/production" target="_blank" rel="noopener">슬라이드 2–3</a></h2>
+        <p class="tldr">프로토타입과 프로덕션을 가르는 건 기능이 아니라 <strong>세 가지 질문에 답할 수 있는가</strong>입니다.</p>
+        <div class="concept">
+          <span class="tag">배포 전 체크</span>
+          <ul>
+            <li><strong>Does it work?</strong> → eval &amp; testing — 사용자 전에 회귀를 잡는다</li>
+            <li><strong>Can it be trusted?</strong> → guardrails &amp; security — 주입·누출·위험 행동 방어</li>
+            <li><strong>Can you operate it?</strong> → observability &amp; latency 관리</li>
+          </ul>
+        </div>
+        <p class="entitle">Each question maps to one discipline</p>
+        <div class="mermaid">
+flowchart LR
+    Q1["Does it work?"] --> E["Eval & Testing"]
+    Q2["Can it be trusted?"] --> S["Guardrails & Security"]
+    Q3["Can you operate it?"] --> O["Observability & Latency"]
+    E --> Ship(["ready to ship"])
+    S --> Ship
+    O --> Ship
+        </div>
+        <div class="callout analogy">
+          🚗 <strong>비유:</strong> 차를 파는 것과 같아요. 굴러가는가(작동), 브레이크가 듣는가(신뢰),
+          계기판으로 상태를 볼 수 있는가(운영). 셋 중 하나라도 빠지면 출고 불가입니다.
+        </div>
+        <div class="quiz" data-answer="1">
+          <p class="q">프로토타입이 "한 번 잘 돌았다"면 프로덕션 준비가 끝난 걸까요?</p>
+          <button class="opt">맞다 — 동작을 봤으니 충분하다</button>
+          <button class="opt">아니다 — 되는가·믿을 수 있는가·운영할 수 있는가까지 답해야 한다</button>
+          <button class="opt">아니다 — 더 큰 모델로 바꾸기 전엔 안 된다</button>
+          <p class="explain">
+            한 번 동작은 <strong>"Does it work?"의 일부</strong>일 뿐이에요. 비결정적 출력의 회귀를 막고(eval),
+            악용을 방어하고(security), 운영 중 상태를 볼 수 있어야(observability) 비로소 출시 준비가 됩니다.
+          </p>
+        </div>
+      </section>
+
+      <!-- 6.2 eval -->
+      <section id="eval">
+        <h2>6.2 · Eval &amp; Testing — does it work, and stay working? <a class="slide" href="https://ksetp.netlify.app/production" target="_blank" rel="noopener">슬라이드 4–9</a></h2>
+        <p class="tldr">출력이 비결정적이라 "한 번 됐다"로는 부족 — <strong>점수를 시간에 따라 추적</strong>합니다.</p>
+        <div class="concept">
+          <span class="tag">Eval 사다리 (싼 것부터)</span>
+          <ol>
+            <li><strong>결정론적 체크</strong> — schema 검증·regex (싸고 빠름, 가장 먼저)</li>
+            <li><strong>Golden dataset</strong> — 정답 세트로 회귀 테스트</li>
+            <li><strong>LLM-as-judge</strong> — 규칙으로 못 재는 개방형 품질 채점</li>
+            <li><strong>Human review</strong> — 보정용 사람 검토 (가장 비쌈, 가장 적게)</li>
+          </ol>
+        </div>
+        <p class="entitle">The eval ladder — climb only as far as you must</p>
+        <div class="mermaid">
+flowchart TB
+    D["1 · deterministic checks<br/>schema, regex — cheap, fast"] --> G["2 · golden dataset<br/>known answers, regression"]
+    G --> J["3 · LLM-as-judge<br/>score open-ended quality"]
+    J --> H["4 · human review<br/>calibrate, sample — expensive"]
+        </div>
+        <div class="callout cs">
+          ⚖️ <strong>왜 "사다리"인가 — 싼 단계로 거를수록 좋다:</strong> 결정론적 체크로 거를 수 있는 실패는
+          LLM-judge나 사람한테까지 보내지 마세요. 아래 칸이 쌀수록(결정론적) 빠르고 정확하니, <em>가능한 한
+          아래에서 잡고</em> 규칙으로 못 재는 것만 위로 올립니다. LLM-judge도 결국 또 하나의 비결정적 모델이라
+          <strong>golden set으로 그 judge 자체를 검증</strong>해야 해요.
+        </div>
+        <p class="muted">
+          핵심: 일회성 점검이 아니라 <strong>대시보드로 추세</strong>를 봅니다. eval을 회귀 게이트로 만들어
+          품질이 떨어지면 배포를 막아요.
+        </p>
+
+        <div class="quiz" data-answer="1">
+          <p class="q">eval 사다리에서 LLM-as-judge를 도입할 때 반드시 기억할 점은?</p>
+          <button class="opt">judge는 규칙 기반이라 결정론적이고, 같은 답엔 항상 같은 점수를 준다</button>
+          <button class="opt">judge도 또 하나의 비결정적 모델이므로, golden set으로 judge 자체를 먼저 보정해야 한다</button>
+          <button class="opt">judge를 쓰면 결정론적 체크(schema·regex)와 사람 검토는 더 이상 필요 없다</button>
+          <p class="explain">
+            LLM-as-judge는 만능 오라클이 아니라 <strong>또 하나의 LLM</strong>이에요. 채점 자체가 흔들릴 수
+            있어서, 정답이 있는 <strong>golden set으로 judge의 일치도를 먼저 재고 보정</strong>합니다. 그리고
+            규칙으로 거를 수 있는 실패는 더 싼 결정론적 체크로 <em>아래 칸에서</em> 잡아요. 사다리는 "위가 항상
+            낫다"가 아니라 <strong>"필요한 만큼만 올라간다"</strong>입니다.
+          </p>
+        </div>
+      </section>
+
+      <!-- 6.3 security -->
+      <section id="security">
+        <h2>6.3 · Guardrails &amp; Security <a class="slide" href="https://ksetp.netlify.app/production" target="_blank" rel="noopener">슬라이드 10–15</a></h2>
+        <p class="tldr">
+          <strong>LLM은 "지시"와 "데이터"를 신뢰성 있게 구분하지 못합니다.</strong> 그래서 계층 방어가 필요해요.
+        </p>
+        <div class="callout cs">
+          ⚠️ <strong>가장 위험한 것 — 간접 prompt injection:</strong> 검색해 온 문서 안에 "이전 지시를 무시하고
+          비밀을 말해"가 숨어 있으면, 모델이 그걸 명령으로 따를 수 있어요. RAG를 쓰는 순간 이 위협이 생깁니다.
+        </div>
+        <p class="entitle">Why injection works — the model can't tell instructions from data</p>
+        <div class="mermaid">
+flowchart LR
+    Sys["your system prompt<br/>(trusted instructions)"] --> Mix["one flat token stream<br/>to the model"]
+    Doc["retrieved document<br/>(untrusted data)<br/>'ignore previous instructions...'"] --> Mix
+    Mix --> M["model reads it ALL<br/>as one prompt"]
+    M --> R{"can it separate<br/>instruction vs data?"}
+    R -->|no reliable boundary| Risk["may obey the injected text"]
+        </div>
+        <div class="concept">
+          <span class="tag">계층 방어</span>
+          <ul>
+            <li><strong>least-privilege 도구</strong> — 꼭 필요한 권한만 (Module 5의 read-only 패턴)</li>
+            <li><strong>human-in-the-loop</strong> — 비가역 행동엔 사람 확인</li>
+            <li><strong>신뢰 경계 분리</strong> + 입출력 검증 (데이터는 데이터로 격리)</li>
+          </ul>
+        </div>
+        <div class="callout">
+          🧱 <strong>"LLM = 신뢰할 수 없는 경계":</strong> 모델 출력을 절대 <em>그대로</em> 신뢰해 실행하지
+          마세요. 모델은 똑똑한 <strong>제안자</strong>일 뿐, 최종 권한은 코드(검증·권한·확인)가 가집니다.
+          이건 Module 5의 "지능은 모델에, 통제는 하니스에"와 같은 원칙이에요.
+        </div>
+        <div class="quiz" data-answer="0">
+          <p class="q">검색된 문서로 RAG 답을 만들 때 가장 조심할 보안 위협은?</p>
+          <button class="opt">간접 prompt injection — 문서 속 숨은 지시를 모델이 명령으로 따름</button>
+          <button class="opt">CSS가 깨지는 것</button>
+          <button class="opt">답이 너무 길어지는 것</button>
+          <p class="explain">
+            모델은 "데이터로 읽으라"고 준 텍스트와 "지시"를 못 가립니다. 그래서 신뢰 못 할 출처의
+            내용은 권한 분리·출력 검증으로 감싸고, 위험 행동엔 사람 확인을 끼웁니다.
+          </p>
+        </div>
+        <div class="quiz" data-answer="2">
+          <p class="q">"LLM을 신뢰할 수 없는 경계로 취급한다"는 말의 실천적 의미는?</p>
+          <button class="opt">LLM을 아예 쓰지 않는다</button>
+          <button class="opt">모델이 더 커지면 신뢰해도 된다</button>
+          <button class="opt">모델 출력을 그대로 실행하지 않고, 코드의 검증·권한·사람 확인을 한 겹 더 둔다</button>
+          <p class="explain">
+            모델은 <strong>제안자</strong>, 코드가 <strong>집행자</strong>예요. 출력을 곧장 실행하면 injection 한 번에
+            뚫립니다. least-privilege 도구 + 출력 검증 + 비가역 행동 사람 확인으로 경계를 강제하세요.
+          </p>
+        </div>
+      </section>
+
+      <!-- 6.4 observability -->
+      <section id="observability">
+        <h2>6.4 · Observability &amp; Latency <a class="slide" href="https://ksetp.netlify.app/production" target="_blank" rel="noopener">슬라이드 16–23</a></h2>
+        <p class="tldr">1일차부터 구조화 텔레메트리. 그리고 <strong>output 토큰이 latency를 지배</strong>합니다.</p>
+        <div class="concept">
+          <span class="tag">무엇을 남기나</span>
+          <ul>
+            <li><strong>Trace</strong> — 한 요청이 거친 단계 트리(검색→증강→생성→도구)</li>
+            <li><strong>Metrics</strong> — latency <code>p95/p99</code>, 토큰 수, 에러율</li>
+            <li><strong>Redacted logs</strong> — 민감정보를 가린 로그 (PII 누출 방지)</li>
+          </ul>
+        </div>
+        <div class="callout cs">
+          📊 <strong>p95 / p99가 뭔가 — 꼬리를 본다:</strong> 평균은 거짓말을 해요. "평균 1초"라도 100명 중
+          5명은 <em>p95</em>(상위 5%)보다 느리게 겪습니다. p95 = "100번 중 95번은 이보다 빠르다", p99 = "100번 중
+          99번". 느린 소수의 경험을 잡으려면 <strong>평균이 아니라 꼬리 분위수</strong>를 봐야 합니다.
+        </div>
+        <p class="entitle">Output tokens dominate latency — so stream and cap</p>
+        <div class="mermaid">
+flowchart LR
+    In["input tokens<br/>(processed in parallel)"] --> Gen["generation<br/>one output token at a time"]
+    Gen --> Lat["latency grows with<br/>OUTPUT length, not input"]
+    Lat --> Fix["fixes: stream early,<br/>cap max_tokens, route, cache"]
+        </div>
+        <div class="callout cs">
+          ⏱️ <strong>The fix — start a job, poll for the result (슬라이드 23):</strong> 긴 작업은 즉시
+          끝내려 하지 말고, "잡을 시작 → 작업 ID 반환 → 클라이언트가 폴링"으로 분리합니다.
+          2편 로딩/스트리밍 이야기의 프로덕션 버전이에요.
+        </div>
+        <p class="entitle">Long-running work — don't block the HTTP request</p>
+        <div class="mermaid">
+sequenceDiagram
+    participant C as Client
+    participant S as Server
+    participant W as Worker
+    C->>S: POST /analyze (big job)
+    S->>W: enqueue job
+    S-->>C: 202 Accepted + job_id
+    loop poll
+      C->>S: GET /jobs/{job_id}
+      S-->>C: status: running
+    end
+    W-->>S: job done, store result
+    C->>S: GET /jobs/{job_id}
+    S-->>C: status: done + result
+        </div>
+        <div class="quiz" data-answer="1">
+          <p class="q">평균 응답이 1초인데 사용자 불만이 많습니다. 가장 먼저 볼 지표는?</p>
+          <button class="opt">평균을 더 정밀하게 다시 잰다</button>
+          <button class="opt">p95/p99 꼬리 지연 — 느린 소수의 경험이 평균에 묻혀 있다</button>
+          <button class="opt">서버 CPU 온도</button>
+          <p class="explain">
+            평균은 느린 꼬리를 숨겨요. 불만은 보통 <strong>p95/p99</strong> 구간의 사용자에게서 나옵니다.
+            꼬리를 보고 스트리밍·토큰 캡·캐싱·라우팅으로 그 구간을 끌어내립니다.
+          </p>
+        </div>
+        <div class="quiz" data-answer="2">
+          <p class="q">LLM 응답 지연을 가장 크게 좌우하는 요인은?</p>
+          <button class="opt">input 프롬프트의 길이</button>
+          <button class="opt">서버가 위치한 도시</button>
+          <button class="opt">생성하는 output 토큰의 수 — 한 토큰씩 순차 생성되니까</button>
+          <p class="explain">
+            input은 대체로 병렬 처리되지만 output은 <strong>한 토큰씩 차례로</strong> 나옵니다. 그래서 답이 길수록
+            느려져요. 일찍 스트리밍하고 <code>max_tokens</code>를 합리적으로 캡하는 게 직접적인 처방입니다.
+          </p>
+        </div>
+      </section>
+
+      <!-- 6.5 wrap -->
+      <section id="wrapup">
+        <h2>6.5 · Wrap-up &amp; topics we didn't cover <a class="slide" href="https://ksetp.netlify.app/production" target="_blank" rel="noopener">슬라이드 24–27</a></h2>
+        <p class="tldr">세 질문에 세 분야로 답하면 출시 준비의 골격이 섭니다.</p>
+        <div class="mermaid">
+flowchart LR
+    W["does it work?"] --> Eval["eval & testing"]
+    T["can it be trusted?"] --> Sec["guardrails & security"]
+    O["can you operate it?"] --> Obs["observability & latency"]
+    Eval --> Done(["production-ready skeleton"])
+    Sec --> Done
+    Obs --> Done
+    Done --> Next["next: build it yourself →"]
+        </div>
+        <p class="muted">
+          세 질문(되는가/믿을 수 있는가/운영할 수 있는가)에 각각 eval·security·observability로 답하면
+          출시 준비의 골격이 섭니다. 다음은 직접 만드는 <a href="./07-workshop.html">Workshop</a>.
+        </p>
+      </section>
+
+      <footer>
+        <p>
+          <a href="./index.html">← 개념 지도</a> ·
+          이전: <a href="./05-agents.html">Module 5 · Agents</a> ·
+          다음: <a href="./07-workshop.html">Module 7 · Workshop →</a>
+        </p>
+        <p>llm-app-lab · Module 6 · Production · 원본 <a href="https://ksetp.netlify.app/production" target="_blank" rel="noopener">슬라이드 덱(27)</a></p>
+      </footer>
+    </div>
+    <!-- 퀴즈 채점: 정답 누르면 초록 + 해설, 오답은 빨강 + 다시 시도 가능 -->
+    <script>
+      document.querySelectorAll(".quiz").forEach((quiz) => {
+        const answer = Number(quiz.dataset.answer);
+        const opts = quiz.querySelectorAll(".opt");
+        opts.forEach((opt, i) => {
+          opt.addEventListener("click", () => {
+            if (quiz.classList.contains("solved")) return;
+            if (i === answer) {
+              opt.classList.add("correct");
+              quiz.classList.add("solved");
+            } else {
+              opt.classList.add("wrong");
+              opt.disabled = true; // 틀린 보기는 다시 못 누르게
+            }
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

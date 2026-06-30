@@ -35,19 +35,19 @@
       <nav class="toc">
         <strong>목차</strong>
         <ul>
-          <li><a href="#demo">Live demo (SQL)</a></li>
-          <li><a href="#levels">4 Levels 개요</a></li>
-          <li><a href="#level1">Level 1 · Parseable</a></li>
-          <li><a href="#level2">Level 2 · Structured</a></li>
-          <li><a href="#level3">Level 3 · Tool use</a></li>
-          <li><a href="#level4">Level 4 · MCP</a></li>
-          <li><a href="#project">Project</a></li>
+          <li><a href="#demo">3.1 · Live demo (SQL)</a></li>
+          <li><a href="#levels">3.2 · 4 Levels 개요</a></li>
+          <li><a href="#level1">3.3 · Level 1 · Parseable</a></li>
+          <li><a href="#level2">3.4 · Level 2 · Structured</a></li>
+          <li><a href="#level3">3.5 · Level 3 · Tool use</a></li>
+          <li><a href="#level4">3.6 · Level 4 · MCP</a></li>
+          <li><a href="#project">3.7 · Project</a></li>
         </ul>
       </nav>
 
       <!-- ───────── DEMO ───────── -->
       <section id="demo">
-        <h2>Live demo: SQL Code Generation for BigQuery <a class="slide" href="https://ksetp.netlify.app/tools" target="_blank" rel="noopener">슬라이드 3–5</a></h2>
+        <h2>3.1 · Live demo: SQL Code Generation for BigQuery <a class="slide" href="https://ksetp.netlify.app/tools" target="_blank" rel="noopener">슬라이드 3–5</a></h2>
         <p class="tldr">"자연어 → SQL" 데모 하나로, 진짜 앱이 풀어야 했던 6가지 고민을 끌어냅니다.</p>
         <p class="entitle">What that app had to solve (슬라이드 6–11)</p>
         <div class="concept">
@@ -65,13 +65,27 @@
 
       <!-- ───────── LEVELS OVERVIEW ───────── -->
       <section id="levels">
-        <h2>What you'll learn: 4 Levels <a class="slide" href="https://ksetp.netlify.app/tools" target="_blank" rel="noopener">슬라이드 12–17</a></h2>
+        <h2>3.2 · What you'll learn: 4 Levels <a class="slide" href="https://ksetp.netlify.app/tools" target="_blank" rel="noopener">슬라이드 12–17</a></h2>
         <p class="tldr">출력을 "구조화"하는 강도가 점점 세집니다. 필요에 맞는 가장 낮은 레벨을 고르세요.</p>
         <div class="mermaid">
 flowchart LR
     L1["Level 1<br/>Parseable text"] --> L2["Level 2<br/>Structured (JSON schema)"]
     L2 --> L3["Level 3<br/>Tool use (agent loop)"]
     L3 --> L4["Level 4<br/>MCP"]
+        </div>
+        <p class="entitle">Pick the lowest level that does the job</p>
+        <div class="mermaid">
+flowchart TD
+    Q{"what do you need?"}
+    Q -->|"one fixed shape, single call"| L2b["Level 2<br/>structured output + schema"]
+    Q -->|"just a formatting rule"| L1b["Level 1<br/>parseable text + post-process"]
+    Q -->|"model must act: call tools, loop"| L3b["Level 3<br/>tool use (agent loop)"]
+    Q -->|"share tools across apps/clients"| L4b["Level 4<br/>MCP server"]
+        </div>
+        <div class="callout cs">
+          🎚️ <strong>가장 낮은 레벨 우선:</strong> 레벨이 높을수록 강력하지만 <em>복잡·비용</em>도 같이 올라가요.
+          한 가지 모양만 뽑으면 Level 2로 끝, 굳이 에이전트 루프(3)나 MCP(4)를 세우지 마세요. 필요가 커질 때만
+          한 칸씩 올립니다.
         </div>
         <div class="quiz" data-answer="0">
           <p class="q">"이메일에서 이름·금액 하나만 뽑아 DB에 넣기" — 가장 알맞은 레벨은?</p>
@@ -87,7 +101,7 @@ flowchart LR
 
       <!-- ───────── LEVEL 1 ───────── -->
       <section id="level1">
-        <h2>Level 1 · Parseable output <a class="slide" href="https://ksetp.netlify.app/tools" target="_blank" rel="noopener">슬라이드 14, 18–21</a></h2>
+        <h2>3.3 · Level 1 · Parseable output <a class="slide" href="https://ksetp.netlify.app/tools" target="_blank" rel="noopener">슬라이드 14, 18–21</a></h2>
         <p class="tldr">포맷 규칙이 있는 <strong>단순 텍스트</strong>. system prompt로 규칙을 강제하고, 방어적으로 후처리.</p>
         <div class="callout analogy">
           ✉️ <strong>비유:</strong> "답장은 한 줄로, 인사말 빼고, 코드블록 쓰지 말고"라고 미리 일러두는 것.
@@ -102,7 +116,7 @@ flowchart LR
 
       <!-- ───────── LEVEL 2 ───────── -->
       <section id="level2">
-        <h2>Level 2 · True structured output <a class="slide" href="https://ksetp.netlify.app/tools" target="_blank" rel="noopener">슬라이드 15, 22–27</a></h2>
+        <h2>3.4 · Level 2 · True structured output <a class="slide" href="https://ksetp.netlify.app/tools" target="_blank" rel="noopener">슬라이드 15, 22–27</a></h2>
         <p class="tldr">
           <strong>JSON schema</strong>로 출력 모양을 강제하고 검증. 실패하면 그 에러를 모델에 되먹여
           스스로 고치게 합니다(자기 교정 재시도).
@@ -123,7 +137,7 @@ flowchart LR
 
       <!-- ───────── LEVEL 3 ───────── -->
       <section id="level3">
-        <h2>Level 3 · Tool use (the agent loop) <a class="slide" href="https://ksetp.netlify.app/tools" target="_blank" rel="noopener">슬라이드 16, 28–33</a></h2>
+        <h2>3.5 · Level 3 · Tool use (the agent loop) <a class="slide" href="https://ksetp.netlify.app/tools" target="_blank" rel="noopener">슬라이드 16, 28–33</a></h2>
         <p class="tldr">
           모델이 <strong>반복 루프</strong>를 주도합니다. 정보를 모으거나 행동하려고 도구를 호출하고,
           그 결과를 보고 다음 도구를 부르길 <code>end_turn</code>까지 반복.
@@ -148,7 +162,7 @@ while True:
 
       <!-- ───────── LEVEL 4 ───────── -->
       <section id="level4">
-        <h2>Level 4 · MCP — Model Context Protocol <a class="slide" href="https://ksetp.netlify.app/tools" target="_blank" rel="noopener">슬라이드 17, 34–42</a></h2>
+        <h2>3.6 · Level 4 · MCP — Model Context Protocol <a class="slide" href="https://ksetp.netlify.app/tools" target="_blank" rel="noopener">슬라이드 17, 34–42</a></h2>
         <p class="tldr">
           벤더가 도구 스키마를 <strong>한 번 publish</strong>하면, MCP 호환 클라이언트(Claude Desktop·Cursor·IDE
           에이전트)가 손으로 배선하지 않고 그 도구를 발견해 씁니다.
@@ -179,7 +193,7 @@ After  MCP: 도구가 표준 스키마를 publish → 클라이언트가 자동 
 
       <!-- ───────── PROJECT ───────── -->
       <section id="project">
-        <h2>Project: single-turn structured extractor <a class="slide" href="https://ksetp.netlify.app/tools" target="_blank" rel="noopener">슬라이드 43</a></h2>
+        <h2>3.7 · Project: single-turn structured extractor <a class="slide" href="https://ksetp.netlify.app/tools" target="_blank" rel="noopener">슬라이드 43</a></h2>
         <p class="tldr">제공 문서에서 정보를 뽑는 <strong>단발(single-turn) 구조화 추출기</strong>를 만듭니다(= Level 2 실습). 자유 형식 글 →  타입이 정해진 객체.</p>
         <div class="callout analogy">
           📋 <strong>비유:</strong> 사람이 자유롭게 쓴 글을 받아 <strong>정해진 양식의 빈칸</strong>(제목·회사·연봉…)에
@@ -297,8 +311,8 @@ return block.input   # 이미 input_schema를 통과한 dict</code></pre>
       <footer>
         <p>
           <a href="./index.html">← 개념 지도</a> ·
-          이전: <a href="./chat-app.html">2-2편 chat-app</a> ·
-          다음: <a href="./context.html">Module 4 · Context →</a>
+          이전: <a href="./02-2-chat-app.html">2-2편 chat-app</a> ·
+          다음: <a href="./04-context.html">Module 4 · Context →</a>
         </p>
         <p>llm-app-lab · Module 3 · Tools &amp; Structure · 원본 <a href="https://ksetp.netlify.app/tools" target="_blank" rel="noopener">슬라이드 덱(43)</a></p>
       </footer>

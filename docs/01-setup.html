@@ -6,6 +6,10 @@
     <title>llm-app-lab — Module 1 · Setup</title>
     <link rel="stylesheet" href="./style.css" />
     <script src="./nav.js" defer></script>
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({ startOnLoad: true, theme: "neutral" });
+    </script>
   </head>
   <body>
     <div class="wrap">
@@ -25,10 +29,33 @@
           🧰 <strong>비유:</strong> 요리를 시작하기 전 주방에 칼·도마·불을 갖추는 단계예요.
           여기선 안 쓰지만, 이게 없으면 2편부터 아무것도 못 합니다.
         </div>
+        <p class="entitle">How the pieces fit together</p>
+        <div class="mermaid">
+flowchart LR
+    VS["VSCode<br/>edit code"] --> Git["Git<br/>track changes"]
+    Git --> RT["runtimes<br/>Node.js + Python 3.11"]
+    RT --> Venv["venv<br/>isolated Python deps"]
+    Venv --> CLI["Claude Code CLI<br/>AI pair-programmer"]
+    CLI --> Key["ANTHROPIC_API_KEY<br/>in shared .env"]
+    Key --> Ready(["ready for Module 2"])
+        </div>
       </header>
 
-      <section>
-        <h2>Install VSCode <a class="slide" href="https://ksetp.netlify.app/setup" target="_blank" rel="noopener">슬라이드 1</a></h2>
+      <nav class="toc">
+        <strong>목차</strong>
+        <ul>
+          <li><a href="#vscode">1.1 · Install VSCode</a></li>
+          <li><a href="#git">1.2 · Install Git</a></li>
+          <li><a href="#node">1.3 · Install Node.js (LTS)</a></li>
+          <li><a href="#python">1.4 · Install Python 3.11</a></li>
+          <li><a href="#venv">1.5 · Project folder &amp; venv</a></li>
+          <li><a href="#cli">1.6 · Claude Code CLI</a></li>
+          <li><a href="#apikey">1.7 · Anthropic API key</a></li>
+        </ul>
+      </nav>
+
+      <section id="vscode">
+        <h2>1.1 · Install VSCode <a class="slide" href="https://ksetp.netlify.app/setup" target="_blank" rel="noopener">슬라이드 1</a></h2>
         <p class="tldr">코드를 들여다보고 편집하는 에디터(IDE). 필수는 아니지만 곧 필요해집니다.</p>
         <pre><code># macOS
 brew install --cask visual-studio-code
@@ -42,8 +69,8 @@ code --version</code></pre>
         </p>
       </section>
 
-      <section>
-        <h2>Install Git <a class="slide" href="https://ksetp.netlify.app/setup" target="_blank" rel="noopener">슬라이드 2</a></h2>
+      <section id="git">
+        <h2>1.2 · Install Git <a class="slide" href="https://ksetp.netlify.app/setup" target="_blank" rel="noopener">슬라이드 2</a></h2>
         <p class="tldr">변경을 한 커밋씩 추적 → 발표 때 "diff를 따라 걷기". 42에서 매일 쓰던 그 git이에요.</p>
         <pre><code># macOS (보통 Xcode CLT로 이미 있음)
 brew install git
@@ -55,10 +82,20 @@ git --version</code></pre>
           GitHub 계정/원격은 <strong>불필요</strong> — git은 완전히 로컬로 동작합니다.
           repo는 프로젝트 안의 숨김 <code>.git/</code> 폴더일 뿐이에요.
         </p>
+        <div class="quiz" data-answer="1">
+          <p class="q">이 코스를 위해 git을 쓰려면 GitHub 계정이 꼭 있어야 할까요?</p>
+          <button class="opt">그렇다 — git은 GitHub 없이는 동작하지 않는다</button>
+          <button class="opt">아니다 — git은 로컬에서 완전히 동작하고, 변경은 프로젝트 안 <code>.git/</code>에 쌓인다</button>
+          <button class="opt">그렇다 — 커밋은 항상 클라우드로 올라간다</button>
+          <p class="explain">
+            git(버전관리)과 GitHub(원격 호스팅)은 다른 거예요. git은 <strong>로컬</strong>에서 커밋·diff·되돌리기를
+            전부 합니다. GitHub은 그걸 <em>원격에 공유</em>할 때만 필요하죠.
+          </p>
+        </div>
       </section>
 
-      <section>
-        <h2>Install Node.js (LTS) <a class="slide" href="https://ksetp.netlify.app/setup" target="_blank" rel="noopener">슬라이드 3</a></h2>
+      <section id="node">
+        <h2>1.3 · Install Node.js (LTS) <a class="slide" href="https://ksetp.netlify.app/setup" target="_blank" rel="noopener">슬라이드 3</a></h2>
         <p class="tldr">React 프론트엔드를 빌드·실행하는 도구(<code>npm</code> 포함).</p>
         <pre><code># macOS
 brew install node
@@ -70,8 +107,8 @@ npm --version</code></pre>
         <p class="muted">또는 <a href="https://nodejs.org" target="_blank" rel="noopener">nodejs.org</a> → LTS(v20/v22).</p>
       </section>
 
-      <section>
-        <h2>Install Python 3.11 <a class="slide" href="https://ksetp.netlify.app/setup" target="_blank" rel="noopener">슬라이드 4</a></h2>
+      <section id="python">
+        <h2>1.4 · Install Python 3.11 <a class="slide" href="https://ksetp.netlify.app/setup" target="_blank" rel="noopener">슬라이드 4</a></h2>
         <p class="tldr">Flask 백엔드를 돌리는 언어. 버전을 3.11로 맞춥니다.</p>
         <pre><code># macOS
 brew install python@3.11
@@ -80,10 +117,15 @@ winget install Python.Python.3.11
 # Verify
 python3.11 --version    # Python 3.11.x
 py -3.11 --version      # Windows: py 런처로 특정 버전 선택</code></pre>
+        <div class="callout cs">
+          📌 <strong>왜 버전을 3.11로 콕 집나:</strong> 라이브러리(특히 ML 계열)는 특정 파이썬 버전에서만
+          빌드된 휠을 제공할 때가 많아요. 모두가 <em>같은 3.11</em>을 쓰면 "내 컴퓨터에선 되는데"식 버전 차이
+          버그가 사라집니다. <code>python3.11</code>로 명시 호출하면 시스템에 여러 버전이 깔려 있어도 안전해요.
+        </div>
       </section>
 
-      <section>
-        <h2>Create your project folder and venv <a class="slide" href="https://ksetp.netlify.app/setup" target="_blank" rel="noopener">슬라이드 5</a></h2>
+      <section id="venv">
+        <h2>1.5 · Create your project folder and venv <a class="slide" href="https://ksetp.netlify.app/setup" target="_blank" rel="noopener">슬라이드 5</a></h2>
         <p class="tldr">프로젝트 폴더를 만들고, 그 안에 <strong>격리된 파이썬 환경(venv)</strong>을 켭니다.</p>
         <pre><code># macOS
 mkdir ~/ksept-lab && cd ~/ksept-lab
@@ -98,6 +140,19 @@ py -3.11 -m venv .venv
           📦 <strong>비유:</strong> venv는 "이 프로젝트 전용 서랍"이에요. 활성화 중
           <code>pip install</code>한 건 시스템 전체가 아니라 이 서랍에만 들어갑니다 —
           프로젝트끼리 라이브러리가 안 엉켜요.
+        </div>
+        <p class="entitle">venv isolates installs per project</p>
+        <div class="mermaid">
+flowchart TB
+    Sys["system Python<br/>(shared, don't pollute)"]
+    subgraph A["project A · .venv"]
+      a1["flask 3.x"]
+    end
+    subgraph B["project B · .venv"]
+      b1["flask 2.x + other libs"]
+    end
+    Sys -.creates.-> A
+    Sys -.creates.-> B
         </div>
         <p class="muted">
           Windows에서 스크립트가 막히면 한 번만:
@@ -116,8 +171,8 @@ py -3.11 -m venv .venv
         </div>
       </section>
 
-      <section>
-        <h2>Install the Claude Code CLI <a class="slide" href="https://ksetp.netlify.app/setup" target="_blank" rel="noopener">슬라이드 6</a></h2>
+      <section id="cli">
+        <h2>1.6 · Install the Claude Code CLI <a class="slide" href="https://ksetp.netlify.app/setup" target="_blank" rel="noopener">슬라이드 6</a></h2>
         <p class="tldr">앱을 대신 스캐폴딩해 주는 AI 코딩 어시스턴트(지금 당신이 쓰는 그것).</p>
         <pre><code># macOS
 npm install -g @anthropic-ai/claude-code
@@ -128,10 +183,20 @@ claude --version</code></pre>
         <pre><code>cd ~/ksept-lab
 code .     # VSCode로 폴더 열기
 claude     # 통합 터미널에서 실행 — 첫 실행 시 로그인 안내</code></pre>
+        <div class="quiz" data-answer="2">
+          <p class="q">Claude Code CLI는 다음 섹션의 API 키로 로그인할까요?</p>
+          <button class="opt">그렇다 — CLI도 <code>ANTHROPIC_API_KEY</code>가 있어야 켜진다</button>
+          <button class="opt">그렇다 — 키가 없으면 설치조차 안 된다</button>
+          <button class="opt">아니다 — CLI는 자체 로그인이 있고, API 키는 <em>당신이 만드는 예제 앱</em>용이다</button>
+          <p class="explain">
+            둘은 별개예요. <strong>Claude Code(도구)</strong>는 자체 계정으로 로그인하고, <strong>API 키</strong>는
+            당신 앱이 Claude를 호출할 때 쓰는 열쇠입니다. 다음 섹션에서 그 키를 받아 <code>.env</code>에 둬요.
+          </p>
+        </div>
       </section>
 
-      <section>
-        <h2>Get an Anthropic API key <a class="slide" href="https://ksetp.netlify.app/setup" target="_blank" rel="noopener">슬라이드 7</a></h2>
+      <section id="apikey">
+        <h2>1.7 · Get an Anthropic API key <a class="slide" href="https://ksetp.netlify.app/setup" target="_blank" rel="noopener">슬라이드 7</a></h2>
         <p class="tldr">
           <strong>당신의 앱</strong>이 Claude를 호출할 때 쓰는 열쇠. Claude Code 자체는 자기 로그인이
           있어 필요 없고, 이 키는 <em>예제 앱</em>용이에요.
@@ -151,12 +216,35 @@ echo 'ANTHROPIC_API_KEY=sk-ant-...your-key...' &gt; .env
           (<code>~/ksept-lab/</code>)에 두면, 모든 예제 앱이 폴더 트리를 거슬러 올라가
           이 키 하나를 자동으로 찾아 씁니다 — 키를 여러 번 적을 필요가 없어요.
         </div>
+        <p class="entitle">One shared .env, found by walking up the tree</p>
+        <div class="mermaid">
+flowchart TB
+    Env["~/ksept-lab/.env<br/>ANTHROPIC_API_KEY=..."]
+    subgraph apps["each example app"]
+      A["chat-app/"]
+      B["extract-starter/"]
+      C["rag-starter/"]
+    end
+    A -.walks up to find.-> Env
+    B -.walks up to find.-> Env
+    C -.walks up to find.-> Env
+        </div>
+        <div class="quiz" data-answer="0">
+          <p class="q"><code>.env</code>를 각 앱 폴더가 아니라 그 상위(<code>~/ksept-lab/</code>)에 두는 이유는?</p>
+          <button class="opt">모든 예제 앱이 트리를 거슬러 올라가 키 하나를 공유하고, git에서도 한 번에 제외되니까</button>
+          <button class="opt">상위 폴더가 더 빨라서</button>
+          <button class="opt">규칙상 <code>.env</code>는 홈 디렉터리에만 둘 수 있어서</button>
+          <p class="explain">
+            키를 앱마다 복붙하면 새는 지점도 늘고 관리가 번거로워요. <strong>상위에 하나</strong> 두면 모든 앱이
+            공유하고, <code>.gitignore</code> 한 줄로 커밋 사고도 막습니다. 비밀은 <em>코드와 분리</em>가 원칙이에요.
+          </p>
+        </div>
       </section>
 
       <footer>
         <p>
           <a href="./index.html">← 개념 지도</a> ·
-          다음: <a href="./foundations.html">Module 2 · Foundations (2-1편) →</a>
+          다음: <a href="./02-1-foundations.html">Module 2 · Foundations (2-1편) →</a>
         </p>
         <p>llm-app-lab · Module 1 · Setup · 원본 <a href="https://ksetp.netlify.app/setup" target="_blank" rel="noopener">슬라이드 덱</a></p>
       </footer>
@@ -181,5 +269,4 @@ echo 'ANTHROPIC_API_KEY=sk-ant-...your-key...' &gt; .env
       });
     </script>
   </body>
-
 </html>

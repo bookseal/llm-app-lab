@@ -33,36 +33,36 @@
         <p class="muted">→ 커밋마다 한 일은 <a href="./history.html">변경 이력</a>에서.</p>
         <div class="callout cs">
           📚 <strong>이 노트는 여러 편으로 나뉩니다.</strong> 지금 보는 <strong>1편 — 기초(hello-world)</strong>에
-          이어, <a href="./chat-app.html">2편 — LLM 채팅앱(chat-app)</a>에서는 봇이 왜 이름을
+          이어, <a href="./02-2-chat-app.html">2편 — LLM 채팅앱(chat-app)</a>에서는 봇이 왜 이름을
           기억 못 하는지, 로딩·에러·네트워크 실패를 어디서 잡아야 하는지를 다룹니다.
         </div>
         <div class="callout">
           📊 <strong>이 편이 따라가는 슬라이드:</strong>
           <a href="https://ksetp.netlify.app/foundations" target="_blank" rel="noopener">Foundations</a>
           슬라이드 8–15 (Scaffold · Walkthrough · Quiz). LLM 강의·첫 LLM 앱(16–30)은
-          <a href="./chat-app.html">2-2편</a>에서 이어집니다.
+          <a href="./02-2-chat-app.html">2-2편</a>에서 이어집니다.
         </div>
       </header>
 
       <nav class="toc">
         <strong>목차</strong>
         <ul>
-          <li><a href="#overview">전체 그림</a></li>
-          <li><a href="#flask">Flask</a></li>
-          <li><a href="#endpoint">엔드포인트</a></li>
-          <li><a href="#cors">CORS</a></li>
-          <li><a href="#react">React</a></li>
-          <li><a href="#vite">Vite</a></li>
-          <li><a href="#jsx">JSX</a></li>
-          <li><a href="#mount">Mount</a></li>
-          <li><a href="#stateless">Stateless</a></li>
-          <li><a href="#selfcheck">스스로 점검</a></li>
+          <li><a href="#overview">2-1.1 · 전체 그림</a></li>
+          <li><a href="#flask">2-1.2 · Flask</a></li>
+          <li><a href="#endpoint">2-1.3 · 엔드포인트</a></li>
+          <li><a href="#cors">2-1.4 · CORS</a></li>
+          <li><a href="#react">2-1.5 · React</a></li>
+          <li><a href="#vite">2-1.6 · Vite</a></li>
+          <li><a href="#jsx">2-1.7 · JSX</a></li>
+          <li><a href="#mount">2-1.8 · Mount</a></li>
+          <li><a href="#stateless">2-1.9 · Stateless</a></li>
+          <li><a href="#selfcheck">2-1.10 · 스스로 점검</a></li>
         </ul>
       </nav>
 
       <!-- ───────────────── OVERVIEW ───────────────── -->
       <section id="overview">
-        <h2>전체 그림</h2>
+        <h2>2-1.1 · 전체 그림</h2>
         <p class="tldr">
           프로그램이 <strong>두 개</strong> 돕니다. 화면 담당(프론트)과
           데이터 담당(백). 둘은 서로 다른 문(포트)으로 들어갑니다.
@@ -103,7 +103,7 @@ flowchart LR
 
       <!-- ───────────────── FLASK ───────────────── -->
       <section id="flask">
-        <h2>Flask</h2>
+        <h2>2-1.2 · Flask</h2>
         <p class="tldr">"이 주소로 요청이 오면 이 함수를 실행해"를 적는 파이썬 도구.</p>
         <div class="callout analogy">
           ☎️ <strong>전화 교환원 비유:</strong> 특정 번호(URL)로 전화가 오면
@@ -137,7 +137,7 @@ def hello():               # 이 함수를 실행하고
 
       <!-- ───────────────── ENDPOINT ───────────────── -->
       <section id="endpoint">
-        <h2>엔드포인트 (endpoint)</h2>
+        <h2>2-1.3 · 엔드포인트 (endpoint)</h2>
         <p class="tldr">"주소(경로) + 방법(메서드)" 한 쌍. 우리에겐 <code>GET /api/hello</code> 하나뿐.</p>
         <div class="callout analogy">
           📋 <strong>메뉴판 비유:</strong> 엔드포인트는 메뉴판의 항목 하나예요.
@@ -164,7 +164,7 @@ def hello():               # 이 함수를 실행하고
 
       <!-- ───────────────── CORS ───────────────── -->
       <section id="cors">
-        <h2>CORS</h2>
+        <h2>2-1.4 · CORS</h2>
         <p class="tldr">"다른 동네에서 온 응답을 읽어도 돼?"를 브라우저가 확인하는 보안 규칙.</p>
         <div class="callout analogy">
           🛂 <strong>출입 허가 비유:</strong> 브라우저는 기본적으로, 지금 보는
@@ -212,7 +212,7 @@ def hello():               # 이 함수를 실행하고
 
       <!-- ───────────────── REACT ───────────────── -->
       <section id="react">
-        <h2>React</h2>
+        <h2>2-1.5 · React</h2>
         <p class="tldr">화면을 직접 고치지 말고, "이 상태면 화면이 이렇게 생겨야 해"만 적는 도구.</p>
         <div class="callout analogy">
           🏠 <strong>설계도 비유:</strong> 벽을 직접 망치로 두드려 고치는 대신
@@ -251,7 +251,7 @@ def hello():               # 이 함수를 실행하고
 
       <!-- ───────────────── VITE ───────────────── -->
       <section id="vite">
-        <h2>Vite</h2>
+        <h2>2-1.6 · Vite</h2>
         <p class="tldr">프론트 개발용 서버. 코드 저장하면 화면이 즉시 갱신되고, 백으로 요청을 대신 넘겨준다.</p>
         <div class="callout analogy">
           🏤 <strong>우체국 비유:</strong> 브라우저는 모든 편지를 동네 우체국(Vite,
@@ -291,7 +291,7 @@ proxy: { "/api": "http://localhost:5001" }
 
       <!-- ───────────────── JSX ───────────────── -->
       <section id="jsx">
-        <h2>JSX</h2>
+        <h2>2-1.7 · JSX</h2>
         <p class="tldr">JavaScript 안에 HTML처럼 쓰는 문법. 브라우저가 읽기 전에 평범한 JS로 번역된다.</p>
         <div class="callout analogy">
           🌐 <strong>번역 비유:</strong> <code>&lt;p&gt;{message}&lt;/p&gt;</code>처럼
@@ -321,7 +321,7 @@ React.createElement("p", null, message)</code></pre>
 
       <!-- ───────────────── MOUNT ───────────────── -->
       <section id="mount">
-        <h2>Mount (마운트)</h2>
+        <h2>2-1.8 · Mount (마운트)</h2>
         <p class="tldr">컴포넌트가 화면에 <strong>처음 나타나는 순간</strong>. "fetch on mount" = 화면 뜨자마자 한 번 데이터 가져오기.</p>
         <div class="callout analogy">
           🏪 <strong>개점 비유:</strong> 가게 문을 처음 여는 순간(마운트)에
@@ -363,7 +363,7 @@ React.createElement("p", null, message)</code></pre>
 
       <!-- ───────────────── STATELESS ───────────────── -->
       <section id="stateless">
-        <h2>Stateless</h2>
+        <h2>2-1.9 · Stateless</h2>
         <p class="tldr">서버는 기억상실. 매 요청을 "처음 보는 손님"처럼 대한다. 그래서 갱신하려면 매번 새로 물어야 한다.</p>
         <div class="callout analogy">
           🧑‍🍳 <strong>기억 못 하는 주방 비유:</strong> 주방(서버)은 방금 누가
@@ -410,7 +410,7 @@ sequenceDiagram
 
       <!-- ───────────────── SELF-CHECK ───────────────── -->
       <section id="selfcheck">
-        <h2>스스로 점검 (코드 읽기)</h2>
+        <h2>2-1.10 · 스스로 점검 (코드 읽기)</h2>
         <p class="muted">
           위 퀴즈가 개념이었다면, 이건 <strong>실제 코드</strong>를 보고 답하는 문제입니다.
           정답은 접어 뒀어요 — 먼저 생각해 보고 펼치세요.
@@ -436,7 +436,7 @@ sequenceDiagram
       <footer>
         <p>
           <a href="./index.html">← 개념 지도</a> ·
-          다음: <a href="./chat-app.html">2-2편 · LLM 채팅앱 →</a>
+          다음: <a href="./02-2-chat-app.html">2-2편 · LLM 채팅앱 →</a>
         </p>
         <p>
           llm-app-lab · Module 2 · Foundations (2-1편 hello-world) ·

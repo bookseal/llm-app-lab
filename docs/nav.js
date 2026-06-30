@@ -17,31 +17,35 @@
   // way the page does at runtime, so the anchor still resolves.
   const OUTLINE = [
     { href: "index.html", num: "·", label: "개념 지도", sections: [] },
-    { href: "setup.html", num: "1", label: "Setup", sections: [
-      { t: "Install VSCode" }, { t: "Install Git" }, { t: "Install Node.js (LTS)" },
-      { t: "Install Python 3.11" }, { t: "Create your project folder and venv" },
-      { t: "Install the Claude Code CLI" }, { t: "Get an Anthropic API key" },
+    { href: "01-setup.html", num: "1", label: "Setup", sections: [
+      { t: "1.1 · Install VSCode", id: "vscode" },
+      { t: "1.2 · Install Git", id: "git" },
+      { t: "1.3 · Install Node.js (LTS)", id: "node" },
+      { t: "1.4 · Install Python 3.11", id: "python" },
+      { t: "1.5 · Project folder & venv", id: "venv" },
+      { t: "1.6 · Claude Code CLI", id: "cli" },
+      { t: "1.7 · Anthropic API key", id: "apikey" },
     ] },
-    { href: "foundations.html", num: "2-1", label: "Foundations", sections: [
-      { t: "전체 그림", id: "overview" }, { t: "Flask", id: "flask" },
-      { t: "엔드포인트 (endpoint)", id: "endpoint" }, { t: "CORS", id: "cors" },
-      { t: "React", id: "react" }, { t: "Vite", id: "vite" }, { t: "JSX", id: "jsx" },
-      { t: "Mount (마운트)", id: "mount" }, { t: "Stateless", id: "stateless" },
-      { t: "스스로 점검 (코드 읽기)", id: "selfcheck" },
+    { href: "02-1-foundations.html", num: "2-1", label: "Foundations", sections: [
+      { t: "2-1.1 · 전체 그림", id: "overview" }, { t: "2-1.2 · Flask", id: "flask" },
+      { t: "2-1.3 · 엔드포인트 (endpoint)", id: "endpoint" }, { t: "2-1.4 · CORS", id: "cors" },
+      { t: "2-1.5 · React", id: "react" }, { t: "2-1.6 · Vite", id: "vite" }, { t: "2-1.7 · JSX", id: "jsx" },
+      { t: "2-1.8 · Mount (마운트)", id: "mount" }, { t: "2-1.9 · Stateless", id: "stateless" },
+      { t: "2-1.10 · 스스로 점검 (코드 읽기)", id: "selfcheck" },
     ] },
-    { href: "chat-app.html", num: "2-2", label: "chat-app", sections: [
-      { t: "전체 그림 — 서버가 셋", id: "llm" }, { t: "메모리 (stateless)", id: "memory" },
-      { t: "비동기 & 로딩", id: "async" }, { t: "네트워크 실패", id: "network" },
-      { t: "API 에러", id: "apierror" }, { t: "입력 검증 & 그 외", id: "missing" },
-      { t: "결함 5가지 찾기", id: "selfcheck" },
+    { href: "02-2-chat-app.html", num: "2-2", label: "chat-app", sections: [
+      { t: "2-2.1 · 전체 그림 — 서버가 셋", id: "llm" }, { t: "2-2.2 · 메모리 (stateless)", id: "memory" },
+      { t: "2-2.3 · 비동기 & 로딩", id: "async" }, { t: "2-2.4 · 네트워크 실패", id: "network" },
+      { t: "2-2.5 · API 에러", id: "apierror" }, { t: "2-2.6 · 입력 검증 & 그 외", id: "missing" },
+      { t: "2-2.7 · 결함 5가지 찾기", id: "selfcheck" },
     ] },
-    { href: "tools.html", num: "3", label: "Tools & Structure", sections: [
-      { t: "Live demo (BigQuery SQL)", id: "demo" }, { t: "4 Levels", id: "levels" },
-      { t: "L1 · Parseable output", id: "level1" }, { t: "L2 · Structured output", id: "level2" },
-      { t: "L3 · Tool use (agent loop)", id: "level3" }, { t: "L4 · MCP", id: "level4" },
-      { t: "Project · structured extractor", id: "project" },
+    { href: "03-tools.html", num: "3", label: "Tools & Structure", sections: [
+      { t: "3.1 · Live demo (BigQuery SQL)", id: "demo" }, { t: "3.2 · 4 Levels", id: "levels" },
+      { t: "3.3 · L1 · Parseable output", id: "level1" }, { t: "3.4 · L2 · Structured output", id: "level2" },
+      { t: "3.5 · L3 · Tool use (agent loop)", id: "level3" }, { t: "3.6 · L4 · MCP", id: "level4" },
+      { t: "3.7 · Project · structured extractor", id: "project" },
     ] },
-    { href: "context.html", num: "4", label: "Context / RAG", sections: [
+    { href: "04-context.html", num: "4", label: "Context / RAG", sections: [
       { t: "4.1 · Why not giant context", id: "why" },
       { t: "4.2 · Embeddings", id: "embed" },
       { t: "4.3 · Indexing pipeline", id: "pipeline" },
@@ -52,21 +56,27 @@
       { t: "4.8 · Memory", id: "memory" },
       { t: "4.9 · Project", id: "project" },
     ] },
-    { href: "agents.html", num: "5", label: "Agents", sections: [
-      { t: "The agent loop — the engine" }, { t: "What is Claude Code, actually?" },
-      { t: "Subagents — recursion for agents" }, { t: "Memory — what persists, where" },
-      { t: "Patterns: routing · caching · async · progress" },
-      { t: "Computer use & Safety" }, { t: "Project: build a data-analyst agent" },
+    { href: "05-agents.html", num: "5", label: "Agents", sections: [
+      { t: "5.1 · The agent loop", id: "loop" },
+      { t: "5.2 · What is Claude Code", id: "claude-code" },
+      { t: "5.3 · Subagents", id: "subagents" },
+      { t: "5.4 · Memory scopes", id: "memory" },
+      { t: "5.5 · Patterns (routing·caching·async)", id: "patterns" },
+      { t: "5.6 · Computer use & Safety", id: "safety" },
+      { t: "5.7 · Project: data-analyst agent", id: "project" },
     ] },
-    { href: "production.html", num: "6", label: "Production", sections: [
-      { t: "Three questions before you ship" },
-      { t: "Eval & Testing — does it work, and stay working?" },
-      { t: "Guardrails & Security" }, { t: "Observability & Latency" },
-      { t: "Wrap-up & topics we didn't cover" },
+    { href: "06-production.html", num: "6", label: "Production", sections: [
+      { t: "6.1 · Three questions before you ship", id: "three-questions" },
+      { t: "6.2 · Eval & Testing", id: "eval" },
+      { t: "6.3 · Guardrails & Security", id: "security" },
+      { t: "6.4 · Observability & Latency", id: "observability" },
+      { t: "6.5 · Wrap-up", id: "wrapup" },
     ] },
-    { href: "workshop.html", num: "7", label: "Workshop", sections: [
-      { t: "How the workshop works" }, { t: "Suggestions, in case you want them" },
-      { t: "Final Quiz" },
+    { href: "07-workshop.html", num: "7", label: "Workshop", sections: [
+      { t: "7.1 · How the workshop works", id: "how" },
+      { t: "7.2 · Project options", id: "options" },
+      { t: "7.3 · What you've built so far", id: "recap" },
+      { t: "7.4 · Final Quiz", id: "final-quiz" },
     ] },
   ];
 

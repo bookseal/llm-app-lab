@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>llm-app-lab — Module 7 · Workshop</title>
+    <link rel="stylesheet" href="./style.css" />
+    <script src="./nav.js" defer></script>
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({ startOnLoad: true, theme: "neutral" });
+    </script>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="hero">
+        <p class="muted"><a href="./index.html">← 개념 지도</a> · Module 7 · 8 slides</p>
+        <h1>Module 7 · Workshop — 빌드 데이</h1>
+        <p class="muted">
+          배운 것을 모아 직접 만듭니다. 목표는 polish가 아니라 <strong>shape</strong> —
+          E2E LLM 앱을 끝까지 빌드해 보는 감각.
+        </p>
+        <div class="callout">
+          📊 원본 슬라이드: <a href="https://ksetp.netlify.app/workshop" target="_blank" rel="noopener">ksetp.netlify.app/workshop</a>
+          · 칩(<span class="slide">슬라이드 N</span>)이 덱의 번호와 같습니다.
+        </div>
+      </header>
+
+      <nav class="toc">
+        <strong>목차</strong>
+        <ul>
+          <li><a href="#how">7.1 · 워크숍 진행 방식</a></li>
+          <li><a href="#options">7.2 · 무엇을 만들까 (확장 vs 신규)</a></li>
+          <li><a href="#recap">7.3 · 지금까지 만든 것 (M1–6 복습)</a></li>
+          <li><a href="#final-quiz">7.4 · Final Quiz</a></li>
+        </ul>
+      </nav>
+
+      <!-- 7.1 how -->
+      <section id="how">
+        <h2>7.1 · How the workshop works <a class="slide" href="https://ksetp.netlify.app/workshop" target="_blank" rel="noopener">슬라이드 1–2</a></h2>
+        <p class="tldr">짧게 피칭 → 강사 지원받으며 빌드 → 작은 데모로 마무리.</p>
+        <ul>
+          <li>첫 30분 안에 <strong>무엇을 만들지 피칭</strong></li>
+          <li>강사가 설계·디버깅·코드리뷰 지원</li>
+          <li>종료 시 간단 데모(슬라이드 1장 or 화면공유)</li>
+        </ul>
+        <p class="entitle">The day, end to end</p>
+        <div class="mermaid">
+flowchart LR
+    P["pitch (first 30 min)<br/>what will you build?"] --> B["build<br/>with instructor support"]
+    B --> D["demo<br/>one slide or screen share"]
+    B -.stuck?.-> H["ask for help<br/>design / debug / review"]
+    H -.-> B
+        </div>
+        <div class="callout cs">
+          🎯 <strong>핵심 조언:</strong> 끝낼 수 있을 만큼 작게. <em>동작하는 작은 것</em>이
+          반쯤 만든 야심작을 이깁니다.
+        </div>
+        <div class="quiz" data-answer="1">
+          <p class="q">빌드 데이에서 프로젝트 범위를 정하는 가장 좋은 기준은?</p>
+          <button class="opt">가능한 한 야심차게 — 미완성이어도 인상적이면 된다</button>
+          <button class="opt">하루 안에 동작까지 끝낼 수 있을 만큼 작게</button>
+          <button class="opt">남들이 안 한 가장 어려운 주제</button>
+          <p class="explain">
+            워크숍의 목표는 완성도(polish)가 아니라 <strong>E2E로 한 번 굴려보는 shape</strong>예요. 작더라도
+            <em>끝까지 동작하는</em> 것이 반쯤 만든 야심작보다 훨씬 많이 가르쳐 줍니다.
+          </p>
+        </div>
+      </section>
+
+      <!-- 7.2 options -->
+      <section id="options">
+        <h2>7.2 · Project options — extend or greenfield <a class="slide" href="https://ksetp.netlify.app/workshop" target="_blank" rel="noopener">슬라이드 3</a></h2>
+        <p class="tldr">두 갈래: 이미 만든 걸 키우거나, 새 아이디어를 작게 시작하거나.</p>
+        <p class="entitle">Which path? Decide by what you want to practice</p>
+        <div class="mermaid">
+flowchart TD
+    Q{"start from what?"}
+    Q -->|"deepen a concept I built"| Ext["Extend<br/>grow chat-app / extractor / RAG"]
+    Q -->|"try a fresh idea"| New["Greenfield<br/>new MCP server / router / agent"]
+    Ext --> Small["keep it shippable today"]
+    New --> Small
+        </div>
+        <p class="entitle">기존 확장 (이미 만든 걸 키우기)</p>
+        <ul>
+          <li>chat-app에 도구 레지스트리(weather/math/web search)</li>
+          <li>추출기를 MCP 서버로 래핑 → Claude Desktop에서 호출</li>
+          <li>RAG 후속 질문용 쿼리 재작성 · 인용 재번호 + UI</li>
+          <li>스트리밍(SSE) · 전체 히스토리 대화 메모리</li>
+        </ul>
+        <p class="entitle">Greenfield (새로 시작)</p>
+        <ul>
+          <li>일상 API용 MCP 서버(Notion/Linear/커스텀 DB)</li>
+          <li>비용 최적 멀티모델 라우터</li>
+          <li>레포 분석 subagent 탐색기 · 파일 변경 감지 에이전트</li>
+          <li>API 없는 앱 자동화 computer-use 에이전트</li>
+        </ul>
+      </section>
+
+      <!-- 7.3 recap -->
+      <section id="recap">
+        <h2>7.3 · What you've built so far — the whole arc <a class="slide" href="https://ksetp.netlify.app/workshop" target="_blank" rel="noopener">복습</a></h2>
+        <p class="tldr">워크숍 재료는 전부 이미 손에 있어요 — 1편부터 6편까지 쌓은 조각들입니다.</p>
+        <div class="mermaid">
+flowchart LR
+    M1["M1 Setup<br/>toolchain + key"] --> M2["M2 Foundations<br/>2 servers, stateless, errors"]
+    M2 --> M3["M3 Tools<br/>structured output, tool use, MCP"]
+    M3 --> M4["M4 Context<br/>embeddings, RAG, citations"]
+    M4 --> M5["M5 Agents<br/>agent loop, subagents, memory"]
+    M5 --> M6["M6 Production<br/>eval, security, observability"]
+    M6 --> M7(["M7 Workshop<br/>assemble it"])
+        </div>
+        <p class="muted">
+          복습 링크: <a href="./02-2-chat-app.html">chat-app</a> ·
+          <a href="./03-tools.html">Tools/MCP</a> ·
+          <a href="./04-context.html">RAG</a> ·
+          <a href="./05-agents.html">agent loop</a> ·
+          <a href="./06-production.html">production</a>.
+        </p>
+        <div class="quiz" data-answer="2">
+          <p class="q">chat-app에 "도구 레지스트리"를 붙이는 건 어느 모듈의 개념을 워크숍에서 합치는 걸까요?</p>
+          <button class="opt">M1 Setup + M6 Production</button>
+          <button class="opt">M4 Context만</button>
+          <button class="opt">M2의 채팅 루프 + M3의 tool use(agent loop) + M5의 안전 패턴</button>
+          <p class="explain">
+            워크숍은 <strong>이미 배운 조각의 조합</strong>이에요. 채팅 UI/메모리(M2), 도구 호출 루프(M3·M5),
+            그리고 위험 도구 제한 같은 안전(M5·M6)이 하나로 모입니다. 새 개념이 아니라 통합이죠.
+          </p>
+        </div>
+      </section>
+
+      <!-- 7.4 final quiz -->
+      <section id="final-quiz">
+        <h2>7.4 · Final Quiz <a class="slide" href="https://ksetp.netlify.app/workshop" target="_blank" rel="noopener">슬라이드 4–8</a></h2>
+        <p class="tldr">통과 암호로 잠긴 2세트 — 전 모듈을 가로지르는 10문항. 아래는 그 예열용 복습 퀴즈예요.</p>
+        <ul>
+          <li><strong>1 of 2</strong> — Foundations → Tools → Context</li>
+          <li><strong>2 of 2</strong> — Context → Agents → Production</li>
+        </ul>
+        <p class="muted">
+          주제: API statefulness, hallucination, structured outputs, MCP 아키텍처, RAG 검색,
+          시맨틱 검색, agent loop, subagents, 실패 모드, 테스트 전략.
+        </p>
+        <div class="quiz" data-answer="1">
+          <p class="q">[복습] LLM API가 "stateless"라는 말의 뜻은?</p>
+          <button class="opt">매 요청이 느리다는 뜻</button>
+          <button class="opt">서버가 지난 대화를 스스로 기억하지 않아, 매번 필요한 맥락을 다시 보내야 한다</button>
+          <button class="opt">모델이 상태(감정)를 갖지 않는다는 뜻</button>
+          <p class="explain">
+            stateless = <strong>요청 간 기억 없음</strong>이에요(M2). 그래서 대화 히스토리를 매 턴 다시 보내거나
+            (단기 메모리), 사실을 벡터 스토어에 저장해 검색(M4·M5의 long-term memory)합니다.
+          </p>
+        </div>
+        <div class="quiz" data-answer="0">
+          <p class="q">[복습] RAG에서 인용 <code>[n]</code>을 강제하는 핵심 이유는?</p>
+          <button class="opt">사용자가 출처로 검증할 수 있고, 모델이 근거 없이 지어내기 어려워진다</button>
+          <button class="opt">답을 더 길어 보이게 하려고</button>
+          <button class="opt">검색을 더 빠르게 하려고</button>
+          <p class="explain">
+            인용은 <strong>귀속 강제 = hallucination 방어</strong>예요(M4). 받은 답의 번호가 실제 청크 범위
+            안인지 코드로 한 번 더 검증해 환각을 거릅니다.
+          </p>
+        </div>
+        <div class="quiz" data-answer="2">
+          <p class="q">[복습] 에이전트의 폭주(무한 루프·비용 폭탄)를 막는 1차 방어선은?</p>
+          <button class="opt">더 정중한 프롬프트</button>
+          <button class="opt">더 큰 모델</button>
+          <button class="opt">스텝 예산·토큰 캡·시간 데드라인 같은 코드로 강제하는 하드 리밋</button>
+          <p class="explain">
+            자율성과 안전은 트레이드오프(M5)예요. 모델을 믿기보다 <strong>하니스가 강제하는 한도</strong>가
+            폭주를 막고, 비가역 행동엔 사람 확인을 끼웁니다.
+          </p>
+        </div>
+      </section>
+
+      <footer>
+        <p>
+          <a href="./index.html">← 개념 지도</a> ·
+          이전: <a href="./06-production.html">Module 6 · Production</a> ·
+          🎉 마지막 모듈
+        </p>
+        <p>llm-app-lab · Module 7 · Workshop · 원본 <a href="https://ksetp.netlify.app/workshop" target="_blank" rel="noopener">슬라이드 덱(8)</a></p>
+      </footer>
+    </div>
+    <!-- 퀴즈 채점: 정답 누르면 초록 + 해설, 오답은 빨강 + 다시 시도 가능 -->
+    <script>
+      document.querySelectorAll(".quiz").forEach((quiz) => {
+        const answer = Number(quiz.dataset.answer);
+        const opts = quiz.querySelectorAll(".opt");
+        opts.forEach((opt, i) => {
+          opt.addEventListener("click", () => {
+            if (quiz.classList.contains("solved")) return;
+            if (i === answer) {
+              opt.classList.add("correct");
+              quiz.classList.add("solved");
+            } else {
+              opt.classList.add("wrong");
+              opt.disabled = true; // 틀린 보기는 다시 못 누르게
+            }
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

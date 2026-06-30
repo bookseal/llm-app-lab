@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>llm-app-lab — Module 5 · Architecture &amp; Agents</title>
+    <link rel="stylesheet" href="./style.css" />
+    <script src="./nav.js" defer></script>
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({ startOnLoad: true, theme: "neutral" });
+    </script>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="hero">
+        <p class="muted"><a href="./index.html">← 개념 지도</a> · Module 5 · 25 slides</p>
+        <h1>Module 5 · Architecture &amp; Agents</h1>
+        <p class="muted">
+          모든 에이전트 시스템의 핵심은 <strong>~20줄 agent loop</strong> 하나뿐입니다. 나머지(Claude Code,
+          Cursor, 커스텀 에이전트)는 그 위에 얹은 "두꺼운 하니스"예요. 이 모듈은 그 패턴들의 서베이입니다.
+        </p>
+        <div class="callout">
+          📊 원본 슬라이드: <a href="https://ksetp.netlify.app/agents" target="_blank" rel="noopener">ksetp.netlify.app/agents</a>
+          · 칩(<span class="slide">슬라이드 N</span>)이 덱의 번호와 같습니다.
+        </div>
+      </header>
+
+      <nav class="toc">
+        <strong>목차</strong>
+        <ul>
+          <li><a href="#loop">5.1 · The agent loop — 엔진</a></li>
+          <li><a href="#claude-code">5.2 · Claude Code의 정체</a></li>
+          <li><a href="#subagents">5.3 · Subagents</a></li>
+          <li><a href="#memory">5.4 · Memory scopes</a></li>
+          <li><a href="#patterns">5.5 · Patterns (routing·caching·async·progress)</a></li>
+          <li><a href="#safety">5.6 · Computer use &amp; Safety</a></li>
+          <li><a href="#project">5.7 · Project</a></li>
+        </ul>
+      </nav>
+
+      <!-- 5.1 the engine -->
+      <section id="loop">
+        <h2>5.1 · The agent loop — the engine <a class="slide" href="https://ksetp.netlify.app/agents" target="_blank" rel="noopener">슬라이드 5</a></h2>
+        <p class="tldr">Claude에 messages+tools 전송 → tool call 디스패치 → 결과 append → <code>end_turn</code>까지 반복.</p>
+        <p class="entitle">The whole engine — a single while-loop</p>
+        <div class="mermaid">
+flowchart LR
+    A["messages + tools<br/>to Claude"] --> B{"stop_reason?"}
+    B -->|tool_use| C["run the tool"]
+    C --> D["append result to messages"]
+    D --> A
+    B -->|end_turn| E["done"]
+        </div>
+        <pre><code>messages = [{"role": "user", "content": question}]
+while True:
+    reply = client.messages.create(model=..., tools=TOOLS, messages=messages)
+    messages.append({"role": "assistant", "content": reply.content})
+    if reply.stop_reason != "tool_use":
+        break                                   # end_turn → 끝
+    for call in tool_calls(reply):              # 모델이 요청한 도구들 실행
+        result = dispatch(call.name, call.input)
+        messages.append({"role": "user",
+                         "content": [{"type": "tool_result",
+                                      "tool_use_id": call.id, "content": result}]})</code></pre>
+        <p class="muted">
+          Module 3의 Level 3에서 본 바로 그 루프예요. <strong>이 ~20줄이 엔진</strong>이고, 화려한
+          에이전트는 모두 이 위에 UI·권한·도구를 덧댄 것뿐입니다.
+        </p>
+        <div class="callout cs">
+          🧩 <strong>"thick harness"가 뭔가:</strong> 엔진(loop)은 얇습니다. 진짜 제품이 되려면 그 둘레에
+          <em>도구 레지스트리 · 권한 게이트 · 메모리 · 에러 복구 · UI</em>를 둘러야 해요. 이 둘레가 두꺼울수록
+          "프레임워크"가 됩니다. 핵심: <strong>지능은 모델에, 통제는 하니스에</strong> 있습니다.
+        </div>
+        <div class="quiz" data-answer="2">
+          <p class="q">"agent"의 가장 정확한 정의는?</p>
+          <button class="opt">스스로 학습해 똑똑해지는 특별한 모델</button>
+          <button class="opt">프롬프트를 아주 길게 쓴 챗봇</button>
+          <button class="opt">LLM 호출을 루프로 감싸 도구를 부르고 결과를 다시 넣어주는 프로그램</button>
+          <p class="explain">
+            에이전트는 새 모델이 아니라 <strong>제어 구조</strong>예요. "모델 호출 → 도구 실행 → 결과 append →
+            반복"이라는 루프가 본질이고, 모델은 매 턴 "다음에 뭘 할지"만 정합니다. 그래서 ~20줄로 충분합니다.
+          </p>
+        </div>
+      </section>
+
+      <!-- 5.2 claude code -->
+      <section id="claude-code">
+        <h2>5.2 · What is Claude Code, actually? <a class="slide" href="https://ksetp.netlify.app/agents" target="_blank" rel="noopener">슬라이드 6</a></h2>
+        <p class="tldr">기본 루프 + UI 레이어 + 권한 게이트 + ~25개 내장 도구 + MCP 도구 레지스트리 + 멀티스코프 메모리.</p>
+        <div class="callout analogy">
+          🏗️ <strong>비유:</strong> 엔진(agent loop)은 같고, Claude Code는 그 위에 계기판(UI), 안전벨트(권한
+          게이트), 공구함(25개 도구)을 붙인 완성차예요. 지금 당신이 타고 있는 그 차입니다.
+        </div>
+        <p class="entitle">The layers stacked on the loop</p>
+        <div class="mermaid">
+flowchart TB
+    UI["UI layer<br/>streaming, diffs, prompts"] --> PERM["permission gate<br/>read ok, write confirm, exec sandbox"]
+    PERM --> LOOP["the agent loop (~20 lines)"]
+    LOOP --> TOOLS["~25 built-in tools<br/>read, edit, bash, search"]
+    LOOP --> MCP["MCP registry<br/>external tools on demand"]
+    LOOP --> MEM["multi-scope memory<br/>conversation to world"]
+        </div>
+        <p class="muted">
+          핵심 통찰: Claude Code가 특별한 건 모델이 달라서가 아니라, <strong>엔진 둘레의 하니스가 두껍기
+          때문</strong>이에요. 같은 엔진에 더 얇은 하니스를 붙이면 당신만의 에이전트가 됩니다.
+        </p>
+        <div class="quiz" data-answer="1">
+          <p class="q">Claude Code가 단순 챗봇과 근본적으로 다른 지점은?</p>
+          <button class="opt">훨씬 큰 비밀 모델을 쓴다</button>
+          <button class="opt">루프가 도구를 실제로 실행하고(파일 편집·셸·검색) 권한 게이트로 통제한다</button>
+          <button class="opt">인터넷에 항상 연결되어 있다</button>
+          <p class="explain">
+            차이는 모델이 아니라 <strong>하니스</strong>예요. 챗봇은 텍스트만 내놓지만, Claude Code는 그 텍스트를
+            <em>도구 호출</em>로 받아 파일을 고치고 셸을 돌립니다. 그 힘을 권한 게이트가 통제하죠.
+          </p>
+        </div>
+      </section>
+
+      <!-- 5.3 subagents -->
+      <section id="subagents">
+        <h2>5.3 · Subagents — recursion for agents <a class="slide" href="https://ksetp.netlify.app/agents" target="_blank" rel="noopener">슬라이드 7</a></h2>
+        <p class="tldr">제한된 도구셋·전용 system prompt로 <strong>자식 Claude 세션</strong>을 띄움 → 컨텍스트 격리·전문화.</p>
+        <p class="muted">
+          부모는 자식이 한 일의 <em>요약만</em> 받습니다 → 병렬 처리 + 재귀적 분해. 큰 일을 작은 독립 작업으로
+          쪼개 여럿에게 동시에 맡기는 셈이에요(42의 <code>fork()</code>/프로세스 분할과 비슷한 감각).
+        </p>
+        <p class="entitle">One parent fans work out, gets summaries back</p>
+        <div class="mermaid">
+flowchart TB
+    P["parent agent<br/>full context"] --> C1["subagent A<br/>narrow tools + own prompt"]
+    P --> C2["subagent B<br/>narrow tools + own prompt"]
+    P --> C3["subagent C<br/>narrow tools + own prompt"]
+    C1 -.summary only.-> P
+    C2 -.summary only.-> P
+    C3 -.summary only.-> P
+        </div>
+        <div class="callout cs">
+          🪟 <strong>왜 "요약만" 돌려받나 — 컨텍스트 보호:</strong> 자식이 파일 50개를 읽어도 부모 창에는
+          <em>결론 한 단락</em>만 들어옵니다. 덕분에 부모의 컨텍스트가 잡음으로 차오르지 않아요. 이게 서브에이전트의
+          진짜 이득 — 병렬성보다 <strong>컨텍스트 격리</strong>가 더 큽니다.
+        </div>
+        <div class="quiz" data-answer="0">
+          <p class="q">서브에이전트를 쓰는 가장 큰 이점은?</p>
+          <button class="opt">자식이 많은 파일을 뒤져도 부모엔 요약만 들어와 컨텍스트가 깨끗하게 유지된다</button>
+          <button class="opt">자식 에이전트는 더 똑똑한 모델을 쓴다</button>
+          <button class="opt">토큰을 전혀 쓰지 않는다</button>
+          <p class="explain">
+            서브에이전트는 <strong>컨텍스트 격리 + 전문화</strong>가 핵심이에요. 넓은 탐색은 자식에게 맡기고
+            부모는 결론만 받아 큰 그림을 유지합니다. 토큰은 오히려 더 쓰지만(여러 세션), 부모 창이 안 더러워지는
+            대가로 충분히 남는 장사죠.
+          </p>
+        </div>
+      </section>
+
+      <!-- 5.4 memory -->
+      <section id="memory">
+        <h2>5.4 · Memory — what persists, where <a class="slide" href="https://ksetp.netlify.app/agents" target="_blank" rel="noopener">슬라이드 8</a></h2>
+        <p class="tldr">"무엇을 어디까지 기억하나"를 <strong>5단계 스코프</strong>로 나눕니다 — 좁은 휘발성부터 넓은 영속까지.</p>
+        <div class="concept">
+          <span class="tag">Memory Scopes (5)</span>
+          <ul>
+            <li><strong>conversation</strong> — 현재 세션의 메시지들 (가장 좁고 휘발성)</li>
+            <li><strong>session</strong> — 로그인 지속 동안 유지</li>
+            <li><strong>user</strong> — 사용자별 영속 선호 (재방문해도 남음)</li>
+            <li><strong>project</strong> — 레포 컨벤션 (<code>CLAUDE.md</code> 같은 파일)</li>
+            <li><strong>world</strong> — 벡터 스토어·지식베이스 (= Module 4의 RAG, 가장 넓음)</li>
+          </ul>
+        </div>
+        <p class="entitle">Five scopes, narrow &amp; volatile to wide &amp; persistent</p>
+        <div class="mermaid">
+flowchart LR
+    A["conversation<br/>this session"] --> B["session<br/>while logged in"]
+    B --> C["user<br/>persistent prefs"]
+    C --> D["project<br/>repo conventions (CLAUDE.md)"]
+    D --> E["world<br/>vector store / knowledge base"]
+        </div>
+        <div class="callout">
+          🔁 <strong>2편과 4편이 여기서 만난다:</strong> 2편에서 "API는 stateless"라 했죠 — 이 스코프들이 바로
+          <em>그 stateless 위에 우리가 얹는 기억 장치</em>입니다. 그리고 가장 넓은 <code>world</code> 스코프는
+          새 개념이 아니라 <a href="./04-context.html#memory">Module 4의 RAG</a>를 "기억"에 그대로 적용한 거예요.
+        </div>
+        <div class="quiz" data-answer="2">
+          <p class="q">가장 넓은 <code>world</code> 스코프는 어떻게 구현될까요?</p>
+          <button class="opt">모델 가중치 안에 영구 저장된다</button>
+          <button class="opt">context window를 무한히 키워서 전부 담는다</button>
+          <button class="opt">벡터 스토어에 사실을 저장하고 필요할 때 검색한다 — Module 4의 RAG 재사용</button>
+          <p class="explain">
+            <code>world</code> 메모리 = <strong>RAG를 기억에 적용</strong>한 것이에요. 사실을 chunk·embed해 저장하고,
+            필요할 때 top-K로 검색해 붙입니다. 모델 가중치는 학습 때 고정되고, context window 무한 확장은
+            Module 4 첫 섹션의 4가지 이유(Scale·Cost·Latency·Accuracy)에 부딪혀요.
+          </p>
+        </div>
+      </section>
+
+      <!-- 5.5 patterns -->
+      <section id="patterns">
+        <h2>5.5 · Patterns: routing · caching · async · progress <a class="slide" href="https://ksetp.netlify.app/agents" target="_blank" rel="noopener">슬라이드 9–12</a></h2>
+        <p class="tldr">프로덕션 에이전트가 비용·지연·신뢰성을 잡는 네 가지 반복 패턴.</p>
+        <div class="concept">
+          <span class="tag">네 가지 패턴</span>
+          <ul>
+            <li><strong>Multi-Model Routing</strong> — 싼 모델(Haiku)을 분류기로 써서 적절한 모델로 라우팅 → 비용 한정</li>
+            <li><strong>Prompt Caching</strong> — 정적 system prefix를 cacheable로 표시 → 5분 윈도우 내 반복 비용 ~90%↓</li>
+            <li><strong>Long-Running Tasks</strong> — 백그라운드 잡·예약 wake-up·webhook으로 비동기. 일시정지 중 상태를 어디 둘지 결정</li>
+            <li><strong>Progress Streaming</strong> — 각 단계서 사람이 읽을 이벤트 emit, 전송계층과 분리, 종료는 <code>done</code>/<code>error</code></li>
+          </ul>
+        </div>
+        <p class="entitle">Multi-model routing — a cheap model triages first</p>
+        <div class="mermaid">
+flowchart LR
+    Q(["incoming request"]) --> H["cheap model (Haiku)<br/>classify difficulty"]
+    H -->|simple| S["answer with Haiku<br/>fast, cheap"]
+    H -->|hard| B["escalate to a bigger model<br/>(Sonnet / Opus)"]
+        </div>
+        <div class="callout cs">
+          💸 <strong>Prompt caching, 한 번 더:</strong> 매 요청에 똑같이 들어가는 <em>긴 system 프롬프트·도구
+          정의</em>를 캐시로 표시하면, 5분 윈도우 안의 다음 호출들은 그 부분을 <strong>재처리하지 않고</strong>
+          재사용해요. 같은 토큰을 매번 새로 계산하지 않으니 반복 비용이 ~90%까지 떨어집니다. <em>정적인 부분은
+          앞에, 변하는 부분은 뒤에</em> 두는 게 캐시 적중의 핵심.
+        </div>
+        <p class="entitle">Long-running tasks — pause, persist, resume</p>
+        <div class="mermaid">
+flowchart LR
+    T["long task starts"] --> Wk["do a chunk of work"]
+    Wk --> P{"need to wait?<br/>API, human, timer"}
+    P -->|no| Wk
+    P -->|yes| Sv["persist state, release the worker"]
+    Sv -.webhook / scheduled wake-up.-> Wk
+        </div>
+        <div class="quiz" data-answer="1">
+          <p class="q">멀티모델 라우팅에서 값싼 Haiku를 "분류기"로 먼저 두는 이유는?</p>
+          <button class="opt">Haiku가 어려운 질문에 항상 더 정확해서</button>
+          <button class="opt">쉬운 요청은 싸게 처리하고, 어려운 것만 비싼 모델로 올려 전체 비용을 한정하려고</button>
+          <button class="opt">큰 모델은 분류를 못해서</button>
+          <p class="explain">
+            라우팅의 목적은 <strong>비용 상한</strong>이에요. 대부분의 요청은 쉬운데, 그걸 전부 Opus로 처리하면
+            낭비죠. 싼 모델이 먼저 난이도를 보고, <em>진짜 어려운 것만</em> 비싼 모델로 escalate 합니다.
+          </p>
+        </div>
+        <div class="quiz" data-answer="0">
+          <p class="q">prompt caching 효과를 극대화하려면 프롬프트를 어떻게 배치해야 할까요?</p>
+          <button class="opt">변하지 않는 부분(지시·도구 정의)을 앞에, 매번 달라지는 부분을 뒤에 둔다</button>
+          <button class="opt">매 요청마다 프롬프트 순서를 무작위로 섞는다</button>
+          <button class="opt">사용자 질문을 항상 맨 앞에 둔다</button>
+          <p class="explain">
+            캐시는 <strong>접두(prefix) 단위로 적중</strong>해요. 앞부분이 매번 똑같아야 그 구간을 재사용합니다.
+            그래서 정적인 system·도구 정의를 앞에 고정하고, 변하는 사용자 입력을 뒤로 미는 게 핵심이에요.
+          </p>
+        </div>
+      </section>
+
+      <!-- 5.6 computer use + safety -->
+      <section id="safety">
+        <h2>5.6 · Computer use &amp; Safety <a class="slide" href="https://ksetp.netlify.app/agents" target="_blank" rel="noopener">슬라이드 13–14</a></h2>
+        <p class="tldr">화면이 곧 API. 스크린샷 + 마우스/키보드로 API 없는 자동화. 단, 권한·한도가 필수.</p>
+        <p class="entitle">Computer use — the screen is the API</p>
+        <div class="mermaid">
+flowchart LR
+    SS["take a screenshot"] --> M["model reads pixels<br/>decides next action"]
+    M --> AC["click / type / scroll"]
+    AC --> SS
+    M -.goal reached.-> Done(["done"])
+        </div>
+        <div class="callout cs">
+          🛡️ <strong>Safety = 권한 게이트 + 하드 리밋.</strong> 읽기는 항상 허용, 파괴적 작업은 확인,
+          실행은 샌드박스. 그리고 스텝 예산·토큰 캡·시간 데드라인·scope 제한으로 폭주를 막습니다.
+        </div>
+        <p class="entitle">Two layers of defense — gate every action, cap the whole run</p>
+        <div class="mermaid">
+flowchart TB
+    A["agent proposes an action"] --> G{"permission gate"}
+    G -->|read| OK["allow"]
+    G -->|write / delete| Ask["ask human first"]
+    G -->|exec| Sand["run in sandbox"]
+    OK --> L{"hard limits<br/>steps, tokens, time"}
+    Ask --> L
+    Sand --> L
+    L -->|within budget| Next["continue loop"]
+    L -->|exceeded| Stop["halt the run"]
+        </div>
+        <div class="quiz" data-answer="2">
+          <p class="q">에이전트가 무한 루프로 비용 폭탄이 되는 걸 막는 1차 방어선은?</p>
+          <button class="opt">더 똑똑한 모델로 바꾼다</button>
+          <button class="opt">프롬프트를 더 정중하게 쓴다</button>
+          <button class="opt">스텝 예산·토큰 캡·시간 데드라인 같은 하드 리밋을 건다</button>
+          <p class="explain">
+            능력(자율성)과 안전은 트레이드오프예요. 모델을 믿기보다, <strong>코드로 강제하는 한도</strong>가
+            폭주를 막습니다. 파괴적 작업엔 사람 확인(human-in-the-loop)도 함께.
+          </p>
+        </div>
+        <div class="quiz" data-answer="1">
+          <p class="q">권한 게이트에서 "읽기/쓰기/실행"을 다르게 다루는 이유는?</p>
+          <button class="opt">읽기가 가장 위험해서 항상 막아야 하니까</button>
+          <button class="opt">작업마다 되돌리기 어려움·파급력이 달라서 — 읽기는 안전, 삭제·실행은 위험</button>
+          <button class="opt">모델이 세 종류만 구분할 수 있어서</button>
+          <p class="explain">
+            핵심은 <strong>되돌릴 수 있는가</strong>예요. 읽기는 부작용이 없으니 자유롭게, 파일 삭제·셸 실행은
+            돌이키기 어렵고 외부에 영향을 주니 확인·샌드박스로 감쌉니다. 위험도에 비례한 마찰이 좋은 설계죠.
+          </p>
+        </div>
+      </section>
+
+      <!-- 5.7 project -->
+      <section id="project">
+        <h2>5.7 · Project: build a data-analyst agent <a class="slide" href="https://ksetp.netlify.app/agents" target="_blank" rel="noopener">슬라이드 17–21</a></h2>
+        <p class="tldr">SQLite 위 <strong>read-only SQL 도구 3개</strong>로 agent loop를 시연하는 스타터(안전 패턴 2개 기구현).</p>
+        <div class="concept">
+          <span class="tag">스타터에 이미 들어간 안전 패턴</span>
+          <ul>
+            <li>구조적으로 read-only인 DB(안전 패턴 1) — 쓰기 도구를 아예 안 줌</li>
+            <li>max-steps 예산(안전 패턴 2) — 루프가 N스텝 넘으면 강제 종료</li>
+          </ul>
+        </div>
+        <p class="entitle">The data-analyst loop you'll wire up</p>
+        <div class="mermaid">
+flowchart LR
+    U(["natural-language question"]) --> Ag["agent loop"]
+    Ag -->|list_tables| DB[("read-only SQLite")]
+    Ag -->|describe_table| DB
+    Ag -->|run_select| DB
+    DB -.rows.-> Ag
+    Ag --> Ans(["answer in plain language"])
+        </div>
+        <div class="callout cs">
+          🚀 <strong>Beyond — Managed Agents (beta, 슬라이드 23):</strong> 소유 모델 역전 — Anthropic이
+          루프를 실행하고, 당신은 도구 정의 + 이벤트 스트림 반응만 합니다. 수동 메시지 리스트 관리가 사라지고
+          멀티턴 세션이 무료로 제공돼요.
+        </div>
+        <div class="quiz" data-answer="0">
+          <p class="q">이 데이터분석 에이전트에 <code>run_select</code>만 주고 <code>run_sql</code>(임의 실행)을 안 주는 이유는?</p>
+          <button class="opt">도구 셋 자체를 read-only로 좁혀, 모델이 데이터를 망칠 길을 구조적으로 차단하려고</button>
+          <button class="opt">SELECT가 다른 쿼리보다 빨라서</button>
+          <button class="opt">프롬프트를 짧게 하려고</button>
+          <p class="explain">
+            가장 튼튼한 안전장치는 <strong>위험한 도구를 애초에 안 주는 것</strong>이에요(안전 패턴 1). 모델이
+            아무리 헷갈려도 줄 수 있는 도구가 SELECT뿐이면 DROP/UPDATE는 불가능합니다. 프롬프트 경고보다
+            확실하죠.
+          </p>
+        </div>
+        <p class="muted">
+          스타터: <code>agent-app.zip</code> —
+          <a href="https://ksetp.netlify.app/assets/agents/agent-app.zip" target="_blank" rel="noopener">다운로드</a>
+        </p>
+      </section>
+
+      <footer>
+        <p>
+          <a href="./index.html">← 개념 지도</a> ·
+          이전: <a href="./04-context.html">Module 4 · Context</a> ·
+          다음: <a href="./06-production.html">Module 6 · Production →</a>
+        </p>
+        <p>llm-app-lab · Module 5 · Architecture &amp; Agents · 원본 <a href="https://ksetp.netlify.app/agents" target="_blank" rel="noopener">슬라이드 덱(25)</a></p>
+      </footer>
+    </div>
+    <!-- 퀴즈 채점: 정답 누르면 초록 + 해설, 오답은 빨강 + 다시 시도 가능 -->
+    <script>
+      document.querySelectorAll(".quiz").forEach((quiz) => {
+        const answer = Number(quiz.dataset.answer);
+        const opts = quiz.querySelectorAll(".opt");
+        opts.forEach((opt, i) => {
+          opt.addEventListener("click", () => {
+            if (quiz.classList.contains("solved")) return;
+            if (i === answer) {
+              opt.classList.add("correct");
+              quiz.classList.add("solved");
+            } else {
+              opt.classList.add("wrong");
+              opt.disabled = true; // 틀린 보기는 다시 못 누르게
+            }
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
