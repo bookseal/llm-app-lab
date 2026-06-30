@@ -43,8 +43,8 @@
     ] },
     { href: "context.html", num: "4", label: "Context / RAG", sections: [
       { t: "4.1 · Why not giant context", id: "why" },
-      { t: "4.2 · Indexing pipeline", id: "pipeline" },
-      { t: "4.3 · Embeddings", id: "embed" },
+      { t: "4.2 · Embeddings", id: "embed" },
+      { t: "4.3 · Indexing pipeline", id: "pipeline" },
       { t: "4.4 · Chunking", id: "chunk" },
       { t: "4.5 · Vector stores · ANN/HNSW", id: "store" },
       { t: "4.6 · RAG in 30 lines", id: "rag" },

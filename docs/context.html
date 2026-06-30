@@ -30,8 +30,8 @@
         <strong>목차</strong>
         <ul>
           <li><a href="#why">4.1 · 왜 거대 컨텍스트로 안 하나</a></li>
-          <li><a href="#pipeline">4.2 · Indexing 파이프라인</a></li>
-          <li><a href="#embed">4.3 · Embeddings</a></li>
+          <li><a href="#embed">4.2 · Embeddings</a></li>
+          <li><a href="#pipeline">4.3 · Indexing 파이프라인</a></li>
           <li><a href="#chunk">4.4 · Chunking</a></li>
           <li><a href="#store">4.5 · Vector stores</a></li>
           <li><a href="#rag">4.6 · RAG in 30 lines</a></li>
@@ -88,46 +88,9 @@ flowchart TB
         </div>
       </section>
 
-      <!-- pipeline -->
-      <section id="pipeline">
-        <h2>4.2 · Indexing: documents → chunks → vectors → store <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">슬라이드 8</a></h2>
-        <p class="tldr">질문이 오기 <strong>전에</strong> 문서를 쪼개고 의미 벡터로 바꿔 저장해 둡니다.</p>
-        <div class="mermaid">
-flowchart LR
-    S["Source<br/>PDF · docs · sheets"] --> E["Extract<br/>(text per MIME type)"]
-    E --> C["Chunk<br/>(N chars + overlap)"]
-    C --> V["Embed<br/>(chunk to vector)"]
-    V --> St["Store<br/>(vec + meta + ANN)"]
-        </div>
-        <p class="muted">
-          각 청크는 벡터만 저장하지 않아요. <strong>메타데이터</strong>(원본 문서 id, 파일명, 위치/페이지,
-          그리고 다음 섹션의 <code>user_id</code> 같은 격리 키)를 함께 저장해야 나중에 인용을 달고
-          필터링을 할 수 있습니다.
-        </p>
-        <div class="mermaid">
-flowchart TB
-    chunk["one chunk"] --> rec["stored record"]
-    rec --> v["vector: [0.01, -0.03, ...]"]
-    rec --> m["metadata:<br/>doc_id · source · position · user_id"]
-        </div>
-        <p class="entitle">왜 idempotent해야 하나 — 재인덱싱의 함정</p>
-        <div class="mermaid">
-flowchart LR
-    D["doc#42 content changes"] --> Q{"how to handle old chunks?"}
-    Q -->|"❌ just INSERT"| Dup["old + new chunks coexist<br/>→ duplicates · ghost results"]
-    Q -->|"✅ delete-then-insert"| Clean["DELETE all doc#42 chunks<br/>→ INSERT new chunks"]
-    Clean --> Fresh["always clean & up to date"]
-        </div>
-        <div class="callout cs">
-          ♻️ <strong>Idempotency rule (슬라이드 8):</strong> 한 문서를 다시 인덱싱했을 때 옛 청크가
-          중복·잔존하면 안 됩니다. <strong>delete-then-insert</strong>(먼저 지우고 다시 넣기)가 가장 단순·정확.
-          "같은 입력을 두 번 넣어도 결과가 같다" — 그게 idempotent입니다.
-        </div>
-      </section>
-
       <!-- embeddings -->
       <section id="embed">
-        <h2>4.3 · What is an embedding model? <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">슬라이드 6–7</a></h2>
+        <h2>4.2 · What is an embedding model? <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">슬라이드 6–7</a></h2>
         <p class="tldr">텍스트를 <strong>고정 길이 숫자 벡터</strong>로 바꿉니다. 뜻이 비슷하면 공간적으로 가까워져요.</p>
         <pre><code>embedder.embed([
   "the cat sat on the mat",
@@ -211,6 +174,43 @@ flowchart LR
             cosine 거리가 무의미해지는데, <em>에러 없이</em> 그럴듯한 엉뚱한 결과를 내서 잡기 어렵습니다.
             그래서 인덱싱·쿼리에 반드시 <strong>같은 임베딩 모델</strong>을 고정하세요.
           </p>
+        </div>
+      </section>
+
+      <!-- pipeline -->
+      <section id="pipeline">
+        <h2>4.3 · Indexing: documents → chunks → vectors → store <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">슬라이드 8</a></h2>
+        <p class="tldr">질문이 오기 <strong>전에</strong> 문서를 쪼개고 의미 벡터로 바꿔 저장해 둡니다.</p>
+        <div class="mermaid">
+flowchart LR
+    S["Source<br/>PDF · docs · sheets"] --> E["Extract<br/>(text per MIME type)"]
+    E --> C["Chunk<br/>(N chars + overlap)"]
+    C --> V["Embed<br/>(chunk to vector)"]
+    V --> St["Store<br/>(vec + meta + ANN)"]
+        </div>
+        <p class="muted">
+          각 청크는 벡터만 저장하지 않아요. <strong>메타데이터</strong>(원본 문서 id, 파일명, 위치/페이지,
+          그리고 뒤의 4.8 Memory에서 쓰는 <code>user_id</code> 같은 격리 키)를 함께 저장해야 나중에 인용을 달고
+          필터링을 할 수 있습니다.
+        </p>
+        <div class="mermaid">
+flowchart TB
+    chunk["one chunk"] --> rec["stored record"]
+    rec --> v["vector: [0.01, -0.03, ...]"]
+    rec --> m["metadata:<br/>doc_id · source · position · user_id"]
+        </div>
+        <p class="entitle">왜 idempotent해야 하나 — 재인덱싱의 함정</p>
+        <div class="mermaid">
+flowchart LR
+    D["doc#42 content changes"] --> Q{"how to handle old chunks?"}
+    Q -->|"❌ just INSERT"| Dup["old + new chunks coexist<br/>→ duplicates · ghost results"]
+    Q -->|"✅ delete-then-insert"| Clean["DELETE all doc#42 chunks<br/>→ INSERT new chunks"]
+    Clean --> Fresh["always clean & up to date"]
+        </div>
+        <div class="callout cs">
+          ♻️ <strong>Idempotency rule (슬라이드 8):</strong> 한 문서를 다시 인덱싱했을 때 옛 청크가
+          중복·잔존하면 안 됩니다. <strong>delete-then-insert</strong>(먼저 지우고 다시 넣기)가 가장 단순·정확.
+          "같은 입력을 두 번 넣어도 결과가 같다" — 그게 idempotent입니다.
         </div>
       </section>
 
