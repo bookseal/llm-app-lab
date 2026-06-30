@@ -79,10 +79,11 @@ nav.toc li { margin: .15rem 0; }
   font-size: .82rem;
   line-height: 1.45;
 }
-.rail-toggle { display: flex; gap: .3rem; margin-bottom: .9rem; }
-.rail-toggle button {
-  flex: 1;
-  padding: .35rem .4rem;
+/* collapse/expand handle */
+.rail-handle {
+  display: block;
+  margin: 0 0 .8rem auto;
+  padding: .25rem .55rem;
   font: inherit;
   font-size: .76rem;
   color: var(--muted);
@@ -90,32 +91,56 @@ nav.toc li { margin: .15rem 0; }
   border: 1px solid var(--border);
   border-radius: 7px;
   cursor: pointer;
+  white-space: nowrap;
 }
-.rail-toggle button:hover { color: var(--text); }
-.rail-toggle button.on {
-  color: var(--text);
-  background: var(--panel);
-  border-color: var(--accent);
-}
-.rail-panel { display: flex; flex-direction: column; gap: .08rem; }
-.rail-panel[hidden] { display: none; }
-.rail a {
+.rail-handle:hover { color: var(--text); border-color: var(--accent); }
+
+/* one continuous outline: modules + their section sub-links */
+.rail-outline { display: flex; flex-direction: column; }
+.rail-mod {
   display: block;
+  margin-top: .55rem;
   padding: .3rem .55rem;
+  font-weight: 700;
+  color: var(--text);
+  text-decoration: none;
   border-radius: 6px;
-  border-left: 2px solid transparent;
+}
+.rail-mod:first-child { margin-top: 0; }
+.rail-mod:hover { background: var(--panel); }
+.rail-mod.current-mod { color: var(--accent); background: var(--panel); }
+.rail-subs {
+  display: flex;
+  flex-direction: column;
+  gap: .02rem;
+  margin: .12rem 0 .25rem .35rem;
+  border-left: 1px solid var(--border);
+}
+.rail-sub {
+  display: block;
+  margin-left: -1px;
+  padding: .22rem .55rem;
+  font-size: .77rem;
   color: var(--muted);
   text-decoration: none;
+  border-left: 2px solid transparent;
 }
-.rail a:hover { color: var(--text); background: var(--panel); }
+.rail-sub:hover { color: var(--text); background: var(--panel); }
+.rail-sub.active { color: var(--text); background: var(--panel); border-left-color: var(--accent); }
 .rail .rail-num {
   display: inline-block;
-  min-width: 1.9em;
+  min-width: 2.2em;
   color: var(--accent2);
   font-variant-numeric: tabular-nums;
 }
-.rail a.current { color: var(--accent); font-weight: 700; background: var(--panel); }
-.rail a.active { color: var(--text); background: var(--panel); border-left-color: var(--accent); }
+
+/* collapsed: hide the outline, keep just the handle; main content reflows wide */
+body.rail-collapsed .rail {
+  width: auto;
+  border-right: none;
+  padding: 1.6rem .5rem 2rem;
+}
+body.rail-collapsed .rail-outline { display: none; }
 
 /* only truly narrow (mobile) screens drop the rail; nav.toc is the fallback */
 @media (max-width: 720px) {
