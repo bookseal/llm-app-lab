@@ -80,8 +80,57 @@ product* inspired by this contest (instructor uploads their own materials). The
 contest itself is Q&A over the fixed Apollo corpus. Same engine (RAG + citations),
 different corpus/UX. Decide which one we're building before scaffolding.
 
-**Open / to confirm:** exact list of the 20 Apollo docs, and whether the zip
-ships a README with submission/eval details (needs inspecting the zip).
+### Corpus contents (inspected from rag-starter.zip)
+
+`documents/` holds **20 Apollo Wikipedia extracts** (~850 KB total):
+- 15 missions: apollo-01, 04, 05, 06, 07, 08, 09, 10, 11, 12, 13, 14, 15, 16, 17
+- 5 related: apollo-program, saturn-v, lunar-module, command-service-module, mission-control
+
+⚠️ **Gotcha — a stray off-topic doc:** the folder also ships `06-changelog.md`,
+which is **not Apollo** — it's a changelog for a *habit-tracking app* (streaks,
+reminders, "less habits"). The README even mis-lists sample output as
+`02-streaks.md`. It's a copy-paste leftover from a different example corpus.
+It will get chunked and indexed alongside Apollo, so a query about "streaks" or
+"reminders" can surface it. **Decide:** delete it for a clean Apollo index, or
+keep it as a built-in robustness test (does retrieval wrongly pull it into an
+Apollo answer? does the model cite it?). Either way — know it's there.
+
+## Official project spec (from the rag-starter README)
+
+The starter is a runnable RAG app with three things stubbed out for you. The
+embedding model (`all-MiniLM-L6-v2`, 384-dim, no API key) and `search()` (cosine,
+top-k) and the citation parser are **already provided**.
+
+**Your job:**
+1. **`indexer.py` → `chunk_text()`** — currently `raise NotImplementedError`.
+   ~1000 chars / ~100 overlap, break on `\n\n` when possible. Then
+   `python indexer.py` → builds `index.pkl`.
+2. **`backend/app.py`** — fill the TODOs: set `SYSTEM_PROMPT` citation rules
+   (answer only from context · cite each claim `[n]` · say so if not in context);
+   `hits = search(user_message, INDEX, k=5)`; format a numbered context block;
+   `user_content = "CONTEXT:\n…\n\nQUESTION:\n…"`. `_build_citations()` already
+   drops out-of-range `[n]` and returns source filenames for the UI.
+3. **Run** backend (port 5000) + frontend (5173), ask Apollo questions.
+
+**Test questions (graded easy → hard, from the README):**
+- "What was the cause of the Apollo 1 fire?" — single-doc, factual
+- "Which Apollo missions landed on the Moon?" — enumeration
+- "Compare the moonwalk durations of Apollo 11 and Apollo 17." — cross-doc compare
+- "List Apollo missions that used the Saturn V rocket." — cross-doc reasoning
+- "What is the Artemis program?" — **out-of-corpus → must say it doesn't know, not hallucinate**
+
+**Deliverable (Report):** pick 5 questions; for each give the question, the
+answer, whether cited sources are correct (open the file & verify), and a verdict
+(good / weak / hallucinated). Then 2 strengths + 2 weaknesses with worked examples.
+
+**Present:** chunking choice (size/overlap/boundary) & why · the citation rules ·
+one clean question with correct citations · one failing question (wrong answer /
+missing citation / hallucinated source) · what you'd change to fix it.
+
+> **Note:** the README explicitly blesses an **"Alternative project — RAG over
+> your own corpus"** (replace `documents/`, re-run the indexer). So the
+> "instructor uploads their own course materials" idea is sanctioned — it's the
+> same pipeline with a different corpus.
 
 ## Status
 
