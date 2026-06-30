@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="ko">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>llm-app-lab — 개념 지도</title>
+    <title>Build with LLMs — llm-app-lab</title>
     <link rel="stylesheet" href="./style.css?v=2" />
-    <script src="./nav.js?v=2" defer></script>
+    <script src="./nav.js?v=3" defer></script>
     <script type="module">
       import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
       mermaid.initialize({ startOnLoad: true, theme: "neutral" });
@@ -14,99 +14,168 @@
   <body>
     <div class="wrap">
       <header class="hero">
-        <h1>개념 지도 — KSEPT · LLM로 만들기</h1>
+        <h1>Build with LLMs</h1>
+        <p class="tldr">
+          Seven hands-on modules. You don't just read about LLM apps —
+          you <strong>build four small ones</strong>, one idea at a time, then assemble your own.
+        </p>
         <p class="muted">
-          이 사이트는 <strong>7개 모듈</strong> 튜토리얼의 개념 노트 모음입니다.
-          각 모듈은 ① 한 줄 요약 → ② 비유 → ③ 이 앱에서는 → ④ 더 깊이 →
-          ⑤ 미니 퀴즈 형식으로, 비유부터 차근차근 풀어요. 아래 흐름을 따라가세요.
+          KSEPT Summer Program · Building with LLMs. Each module pairs a short concept note with a
+          starter you run on your own machine. By the end you can take an LLM from
+          "<em>a chat box</em>" to "<em>an app that searches your documents and acts on a database</em>."
         </p>
         <div class="callout">
-          <strong>42에서 이미 해봤어요.</strong> 새 개념이라기보다, 당신이 만든
-          프로젝트의 LLM 버전입니다. <code>ft_inception</code>의 nginx + 여러 컨테이너,
-          <code>ft_transcendence</code>의 SPA + 백엔드 + 로그인 경험이 여기
-          <em>두 서버 + 프록시</em>, <em>React fetch + stateless</em> 이야기로 그대로 이어집니다.
+          🌏 <strong>Note on language:</strong> the concept notes are written in <strong>Korean</strong> so
+          the ideas land clearly, but every <strong>diagram, code sample, and project</strong> is in English.
+          New to LLMs? Start at Module&nbsp;1 and go in order — each page builds on the one before.
         </div>
-        <p class="muted">→ 커밋마다 한 일은 <a href="./history.html">변경 이력</a>에서.</p>
+        <div class="callout analogy">
+          🛠️ <strong>Already built a web app</strong> with a frontend, a backend, and a login screen?
+          Then you've done the hard parts. This is the <em>LLM version</em> of what you already know —
+          same two-server shape, plus one new skill per module.
+        </div>
       </header>
 
-      <!-- ───────────────── FLOW ───────────────── -->
-      <section id="flow">
-        <h2>전체 흐름</h2>
-        <p class="tldr">Setup에서 출발해 한 모듈씩 쌓아 올려 Workshop(빌드 데이)로 끝납니다.</p>
+      <!-- ───────────────── WHAT YOU BUILD ───────────────── -->
+      <section id="build">
+        <h2>What you'll build</h2>
+        <p class="tldr">Four tiny apps. Each one isolates a single concept and adds one new power.</p>
+        <p class="entitle">Every project adds one capability on top of the last</p>
+        <div class="mermaid">
+flowchart LR
+    A["💬 chat-app<br/>Module 2<br/>talk"] --> B["🧩 extractor<br/>Module 3<br/>structure"]
+    B --> C["📚 RAG app<br/>Module 4<br/>knowledge"]
+    C --> D["🤖 data agent<br/>Module 5<br/>action"]
+    D --> E["🚀 your own app<br/>Module 6–7<br/>ship it"]
+        </div>
+
+        <div class="concept">
+          <span class="tag">💬 Module 2 · chat-app</span>
+          <h3><a href="./02-2-chat-app.html">Talk to Claude — a real chat app</a></h3>
+          <p>
+            A streaming chat with <strong>conversation memory</strong>, loading states, and honest
+            error handling. You'll learn the one fact that trips up every beginner:
+            the API is <em>stateless</em> — it forgets you between requests, so <em>you</em> carry the memory.
+          </p>
+        </div>
+
+        <div class="concept">
+          <span class="tag">🧩 Module 3 · job-post extractor</span>
+          <h3><a href="./03-tools.html#project">Turn messy text into clean data</a></h3>
+          <p>
+            Point Claude at a free-text job posting and get back <strong>validated JSON</strong> —
+            title, pay, location, requirements. The trick is <em>tool use</em>: you force the model
+            to fill a schema instead of writing prose, then validate before you trust it.
+          </p>
+        </div>
+
+        <div class="concept">
+          <span class="tag">📚 Module 4 · RAG app</span>
+          <h3><a href="./04-context.html#project">Answer questions over your own documents</a></h3>
+          <p>
+            Index a small corpus, <strong>retrieve only the relevant chunks</strong>, and answer with
+            <strong>citations you can check</strong>. This is how you give an LLM knowledge it was never
+            trained on — without stuffing a whole library into the prompt.
+          </p>
+        </div>
+
+        <div class="concept">
+          <span class="tag">🤖 Module 5 · data-analyst agent</span>
+          <h3><a href="./05-agents.html#project">Ask in English, get answers from a database</a></h3>
+          <p>
+            A <strong>~20-line agent loop</strong> calls read-only SQL tools, reads the rows, and explains
+            the result in plain language. This same little loop is the engine inside Claude Code, Cursor,
+            and every "agent" you've heard about.
+          </p>
+        </div>
+      </section>
+
+      <!-- ───────────────── THE PATH ───────────────── -->
+      <section id="path">
+        <h2>The learning path</h2>
+        <p class="tldr">Start at Setup, add one skill per module, finish by building something of your own.</p>
         <div class="mermaid">
 flowchart TB
-    M1["1 · Setup"]
-    M2["2 · Foundations"]
-    M3["3 · Tools &amp; Structure"]
-    M4["4 · Context / RAG"]
-    M5["5 · Agents"]
-    M6["6 · Production"]
-    M7["7 · Workshop"]
+    M1["1 · Setup<br/>get your tools ready"]
+    M2["2 · Foundations<br/>how an LLM app is wired"]
+    M3["3 · Tools & Structure<br/>structured output, tool use, MCP"]
+    M4["4 · Context / RAG<br/>embeddings, search, citations"]
+    M5["5 · Agents<br/>the agent loop, memory, safety"]
+    M6["6 · Production<br/>eval, security, observability"]
+    M7["7 · Workshop<br/>build your own"]
     M1 --> M2 --> M3 --> M4 --> M5 --> M6 --> M7
         </div>
         <p class="muted">
-          모든 모듈에 내용이 채워졌고, 각 섹션에 <strong>원본 슬라이드 번호</strong>(예:
-          <span class="slide">슬라이드 17</span>)와 영어 제목을 붙여
-          <a href="https://ksetp.netlify.app/" target="_blank" rel="noopener">강의 덱</a>과 맞췄습니다.
+          Every section is tagged with its <strong>original slide number</strong> (a chip like
+          <span class="slide">슬라이드 17</span>) so you can match the note to the
+          <a href="https://ksetp.netlify.app/" target="_blank" rel="noopener">lecture deck</a>.
+          Most pages end with a quick <strong>quiz</strong> you can click through to check yourself.
         </p>
       </section>
 
-      <!-- ───────────────── MODULES ───────────────── -->
+      <!-- ───────────────── MODULE BY MODULE ───────────────── -->
       <section id="modules">
-        <h2>모듈</h2>
+        <h2>Module by module — learn &amp; build</h2>
 
         <div class="concept">
-          <span class="tag">✅ 작성됨</span>
-          <h3><a href="./01-setup.html">Module 1 · Setup — 환경 구성</a></h3>
-          <p>VSCode · Git · Node.js · Python 3.11 · Claude Code CLI · Anthropic API key.</p>
+          <span class="tag">Module 1 · Setup</span>
+          <h3><a href="./01-setup.html">Get your toolchain ready</a></h3>
+          <p><strong>Learn:</strong> VSCode · Git · Node.js · Python 3.11 · Claude Code CLI · an API key.</p>
+          <p><strong>Build:</strong> a working dev environment with one shared <code>.env</code> every example reuses.</p>
         </div>
 
         <div class="concept">
-          <span class="tag">✅ 작성됨</span>
-          <h3>Module 2 · Foundations — API 기초 / 첫 앱 / 에러 처리</h3>
-          <p>두 편으로 나뉩니다:</p>
+          <span class="tag">Module 2 · Foundations</span>
+          <h3>How an LLM app is actually wired</h3>
+          <p><strong>Learn:</strong> two servers + a proxy, JSX, mount, and why the API is <em>stateless</em>.</p>
+          <p><strong>Build:</strong> in two parts —</p>
           <ul>
-            <li><a href="./02-1-foundations.html">2-1편 · 기초 (hello-world)</a> — Flask + React 두 서버, 프록시, JSX, mount, stateless</li>
-            <li><a href="./02-2-chat-app.html">2-2편 · LLM 채팅앱 (chat-app)</a> — 메모리(stateless), 로딩, 네트워크/API 에러, "결함 5가지 찾기"</li>
+            <li><a href="./02-1-foundations.html">2-1 · Foundations (hello-world)</a> — Flask + React, the plumbing.</li>
+            <li><a href="./02-2-chat-app.html">2-2 · chat-app <em>(project)</em></a> — memory, loading, network &amp; API errors, "find the 5 bugs".</li>
           </ul>
         </div>
 
         <div class="concept">
-          <span class="tag">✅ 작성됨</span>
-          <h3><a href="./03-tools.html">Module 3 · Tools &amp; Structure — 출력 구조화</a></h3>
-          <p>function/tool calling · structured output · JSON schema · MCP.</p>
+          <span class="tag">Module 3 · Tools &amp; Structure</span>
+          <h3><a href="./03-tools.html">Make the model's output machine-usable</a></h3>
+          <p><strong>Learn:</strong> 4 levels — parseable text → JSON schema → tool use → MCP.</p>
+          <p><strong>Build:</strong> a <a href="./03-tools.html#project">job-post extractor</a> that returns validated, structured fields.</p>
         </div>
 
         <div class="concept">
-          <span class="tag">✅ 작성됨</span>
-          <h3><a href="./04-context.html">Module 4 · Context Management — Indexing / RAG</a></h3>
-          <p>embeddings · vector DB · chunking · RAG · memory.</p>
+          <span class="tag">Module 4 · Context / RAG</span>
+          <h3><a href="./04-context.html">Give the model knowledge it wasn't trained on</a></h3>
+          <p><strong>Learn:</strong> embeddings, chunking, vector search (ANN/HNSW), citations, memory.</p>
+          <p><strong>Build:</strong> a <a href="./04-context.html#project">RAG app</a> that answers over a corpus and cites its sources.</p>
         </div>
 
         <div class="concept">
-          <span class="tag">✅ 작성됨</span>
-          <h3><a href="./05-agents.html">Module 5 · Architecture &amp; Agents — agent loop</a></h3>
-          <p>agent loop · Claude Code 내부 · subagents · memory scope · 멀티모델.</p>
+          <span class="tag">Module 5 · Agents</span>
+          <h3><a href="./05-agents.html">The engine behind every agent</a></h3>
+          <p><strong>Learn:</strong> the ~20-line agent loop, subagents, memory scopes, computer use, safety.</p>
+          <p><strong>Build:</strong> a <a href="./05-agents.html#project">data-analyst agent</a> over a read-only SQL database.</p>
         </div>
 
         <div class="concept">
-          <span class="tag">✅ 작성됨</span>
-          <h3><a href="./06-production.html">Module 6 · Production Considerations</a></h3>
-          <p>eval/testing · guardrails/security · observability.</p>
+          <span class="tag">Module 6 · Production</span>
+          <h3><a href="./06-production.html">Make it trustworthy and operable</a></h3>
+          <p><strong>Learn:</strong> the eval ladder, prompt-injection defense, observability &amp; latency.</p>
+          <p><strong>Build:</strong> guardrails, evals, and telemetry around the app you already made.</p>
         </div>
 
         <div class="concept">
-          <span class="tag">✅ 작성됨</span>
-          <h3><a href="./07-workshop.html">Module 7 · Workshop — 빌드 데이</a></h3>
-          <p>배운 것을 모아 직접 만들기 — 이전 프로젝트 확장 또는 신규.</p>
+          <span class="tag">Module 7 · Workshop</span>
+          <h3><a href="./07-workshop.html">Build your own — the build day</a></h3>
+          <p><strong>Learn:</strong> nothing new — it's all assembly now.</p>
+          <p><strong>Build:</strong> extend one of your projects, or start something fresh. Small but shippable.</p>
         </div>
       </section>
 
       <footer>
         <p>
           llm-app-lab · KSEPT Summer Program — Building with LLMs ·
-          이 사이트는 <code>docs/</code>에서 GitHub Pages로 서빙되고,
-          <code>history.html</code>은 push마다 <code>git log</code>로부터 자동 생성됩니다.
+          this site is served from <code>docs/</code> on GitHub Pages, and the
+          <a href="./history.html">change log</a> is generated from <code>git log</code> on every push.
         </p>
       </footer>
     </div>

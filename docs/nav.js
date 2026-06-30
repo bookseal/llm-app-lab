@@ -16,7 +16,7 @@
   // Pages whose sections have NO id → {t: <EXACT h2 text>}; we slug it the same
   // way the page does at runtime, so the anchor still resolves.
   const OUTLINE = [
-    { href: "index.html", num: "·", label: "개념 지도", sections: [] },
+    { href: "index.html", num: "★", label: "Start here", sections: [] },
     { href: "01-setup.html", num: "1", label: "Setup", sections: [
       { t: "1.1 · Install VSCode", id: "vscode" },
       { t: "1.2 · Install Git", id: "git" },
@@ -33,7 +33,7 @@
       { t: "2-1.8 · Mount (마운트)", id: "mount" }, { t: "2-1.9 · Stateless", id: "stateless" },
       { t: "2-1.10 · 스스로 점검 (코드 읽기)", id: "selfcheck" },
     ] },
-    { href: "02-2-chat-app.html", num: "2-2", label: "chat-app", sections: [
+    { href: "02-2-chat-app.html", num: "2-2", label: "chat-app (project)", sections: [
       { t: "2-2.1 · 전체 그림 — 서버가 셋", id: "llm" }, { t: "2-2.2 · 메모리 (stateless)", id: "memory" },
       { t: "2-2.3 · 비동기 & 로딩", id: "async" }, { t: "2-2.4 · 네트워크 실패", id: "network" },
       { t: "2-2.5 · API 에러", id: "apierror" }, { t: "2-2.6 · 입력 검증 & 그 외", id: "missing" },
@@ -43,7 +43,7 @@
       { t: "3.1 · Live demo (BigQuery SQL)", id: "demo" }, { t: "3.2 · 4 Levels", id: "levels" },
       { t: "3.3 · L1 · Parseable output", id: "level1" }, { t: "3.4 · L2 · Structured output", id: "level2" },
       { t: "3.5 · L3 · Tool use (agent loop)", id: "level3" }, { t: "3.6 · L4 · MCP", id: "level4" },
-      { t: "3.7 · Project · structured extractor", id: "project" },
+      { t: "3.7 · Project: job-post extractor", id: "project" },
     ] },
     { href: "04-context.html", num: "4", label: "Context / RAG", sections: [
       { t: "4.1 · Why not giant context", id: "why" },
@@ -54,7 +54,7 @@
       { t: "4.6 · RAG in 30 lines", id: "rag" },
       { t: "4.7 · Citations", id: "cite" },
       { t: "4.8 · Memory", id: "memory" },
-      { t: "4.9 · Project", id: "project" },
+      { t: "4.9 · Project: RAG over a corpus", id: "project" },
     ] },
     { href: "05-agents.html", num: "5", label: "Agents", sections: [
       { t: "5.1 · The agent loop", id: "loop" },
