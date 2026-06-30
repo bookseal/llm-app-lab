@@ -157,6 +157,44 @@ graph LR
           1, 직각이면 0, 반대면 −1. <strong>길이가 아니라 방향</strong>을 보기 때문에 문장 길이가 달라도
           "뜻"만 비교할 수 있어요. 검색은 결국 "쿼리 벡터와 cosine이 가장 큰 K개 청크 찾기"입니다.
         </div>
+        <div class="concept">
+          <span class="tag">🧪 직접 해보기 — <code>embedding-similarity/similarity.py</code></span>
+          <p>
+            두 문장을 입력하면 <strong>cosine similarity</strong>를 찍어주는 작은 콘솔 앱이에요.
+            로컬 <strong>multilingual</strong> 임베딩 모델을 써서 <em>API 키가 필요 없고</em>, 서로 다른
+            언어끼리도 뜻이 같으면 가깝게 나옵니다.
+          </p>
+          <pre><code>cd embedding-similarity
+python3.11 -m venv .venv &amp;&amp; source .venv/bin/activate
+pip install -r requirements.txt        # 첫 실행 때 모델 ~470MB 1회 다운로드
+
+python similarity.py                    # 대화형: 두 문장 입력
+python similarity.py "cat" "고양이"      # 한 방 모드</code></pre>
+          <p class="muted">출력엔 벡터 앞 5개 숫자 미리보기 · 두 벡터의 <strong>각도</strong> · cosine 점수가 같이 나와요.</p>
+          <p><strong>이런 쌍을 넣어 직접 비교해 보세요 — 점수를 먼저 예측하고 실행:</strong></p>
+          <ul>
+            <li><code>강아지가 공원에서 뛴다</code> ↔ <code>a puppy sprints across the grass</code> — 교차언어인데도 높음</li>
+            <li><code>king</code> ↔ <code>queen</code> — 관련 깊지만 같진 않음 (중간)</li>
+            <li><code>cat</code> ↔ <code>고양이</code> — 거의 같은 뜻 (높음)</li>
+            <li><code>I love this</code> ↔ <code>I hate this</code> — 감정은 정반대인데 <strong>−1이 아니라 오히려 높게</strong> (아래 퀴즈)</li>
+          </ul>
+        </div>
+        <div class="callout cs">
+          ⚙️ <strong>왜 cosine이 그냥 내적(dot product)으로 계산되나:</strong> 이 앱은 벡터를
+          <code>normalize_embeddings=True</code>로 <strong>길이 1</strong>로 정규화해 저장해요. 단위 벡터끼리는
+          <em>cos(각도) = 내적</em>이라, <code>cosine = va · vb = Σ vaᵢ·vbᵢ</code> 한 줄로 끝납니다.
+        </div>
+        <div class="quiz" data-answer="2">
+          <p class="q">"I love this movie"와 "I hate this movie"의 cosine similarity는 대략?</p>
+          <button class="opt">−1에 가깝다 — 감정이 정반대니까</button>
+          <button class="opt">정확히 0 — 아무 관계 없으니까</button>
+          <button class="opt">의외로 꽤 높다 — 같은 주제(영화 평)라 방향이 대체로 비슷하고, 감정 차이는 일부 성분일 뿐</button>
+          <p class="explain">
+            임베딩은 <strong>주제·구조까지 통째로</strong> 담아요. 두 문장은 "이 영화에 대한 내 감정"이라는
+            큰 방향을 공유해서 cosine이 높게 나오고, love↔hate 차이는 그 안의 작은 성분으로 들어갑니다.
+            그래서 cosine을 <em>감정 분석기</em>로 오해하면 안 돼요 — 그건 "의미적 유사"이지 "같은 입장"이 아닙니다.
+          </p>
+        </div>
         <p class="entitle">차원 수의 트레이드오프</p>
         <div class="mermaid">
 flowchart LR
