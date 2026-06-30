@@ -26,18 +26,18 @@
       { t: "1.6 · Claude Code CLI", id: "cli" },
       { t: "1.7 · Anthropic API key", id: "apikey" },
     ] },
-    { href: "02-1-foundations.html", num: "2-1", label: "Foundations", sections: [
-      { t: "2-1.1 · 전체 그림", id: "overview" }, { t: "2-1.2 · Flask", id: "flask" },
-      { t: "2-1.3 · 엔드포인트 (endpoint)", id: "endpoint" }, { t: "2-1.4 · CORS", id: "cors" },
-      { t: "2-1.5 · React", id: "react" }, { t: "2-1.6 · Vite", id: "vite" }, { t: "2-1.7 · JSX", id: "jsx" },
-      { t: "2-1.8 · Mount (마운트)", id: "mount" }, { t: "2-1.9 · Stateless", id: "stateless" },
-      { t: "2-1.10 · 스스로 점검 (코드 읽기)", id: "selfcheck" },
+    { href: "02-1-foundations.html", num: "2A", label: "Foundations", sections: [
+      { t: "2A.1 · 전체 그림", id: "overview" }, { t: "2A.2 · Flask", id: "flask" },
+      { t: "2A.3 · 엔드포인트 (endpoint)", id: "endpoint" }, { t: "2A.4 · CORS", id: "cors" },
+      { t: "2A.5 · React", id: "react" }, { t: "2A.6 · Vite", id: "vite" }, { t: "2A.7 · JSX", id: "jsx" },
+      { t: "2A.8 · Mount (마운트)", id: "mount" }, { t: "2A.9 · Stateless", id: "stateless" },
+      { t: "2A.10 · 스스로 점검 (코드 읽기)", id: "selfcheck" },
     ] },
-    { href: "02-2-chat-app.html", num: "2-2", label: "chat-app (project)", sections: [
-      { t: "2-2.1 · 전체 그림 — 서버가 셋", id: "llm" }, { t: "2-2.2 · 메모리 (stateless)", id: "memory" },
-      { t: "2-2.3 · 비동기 & 로딩", id: "async" }, { t: "2-2.4 · 네트워크 실패", id: "network" },
-      { t: "2-2.5 · API 에러", id: "apierror" }, { t: "2-2.6 · 입력 검증 & 그 외", id: "missing" },
-      { t: "2-2.7 · 결함 5가지 찾기", id: "selfcheck" },
+    { href: "02-2-chat-app.html", num: "2B", label: "Project: chat-app", sections: [
+      { t: "2B.1 · 전체 그림 — 서버가 셋", id: "llm" }, { t: "2B.2 · 메모리 (stateless)", id: "memory" },
+      { t: "2B.3 · 비동기 & 로딩", id: "async" }, { t: "2B.4 · 네트워크 실패", id: "network" },
+      { t: "2B.5 · API 에러", id: "apierror" }, { t: "2B.6 · 입력 검증 & 그 외", id: "missing" },
+      { t: "2B.7 · 결함 5가지 찾기", id: "selfcheck" },
     ] },
     { href: "03-tools.html", num: "3", label: "Tools & Structure", sections: [
       { t: "3.1 · Live demo (BigQuery SQL)", id: "demo" }, { t: "3.2 · 4 Levels", id: "levels" },
