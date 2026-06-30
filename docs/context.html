@@ -36,6 +36,7 @@
           <li><a href="#store">Vector stores</a></li>
           <li><a href="#rag">RAG in 30 lines</a></li>
           <li><a href="#cite">Citations &amp; 실패</a></li>
+          <li><a href="#memory">Memory (장기 기억)</a></li>
           <li><a href="#project">Project</a></li>
         </ul>
       </nav>
@@ -96,6 +97,17 @@ flowchart LR
           <li>⚠️ <strong>가장 흔한 침묵의 RAG 버그:</strong> 인덱싱과 쿼리에 <em>같은 임베딩 모델</em>을 안 쓰는 것. 제공자마다 좌표계가 달라 섞으면 비교 불가.</li>
         </ul>
         <p class="muted">놀거리: <a href="https://projector.tensorflow.org" target="_blank" rel="noopener">TensorFlow Embedding Projector</a>로 임베딩을 3D로 탐색.</p>
+        <div class="quiz" data-answer="1">
+          <p class="q">인덱싱할 때와 검색할 때 <strong>서로 다른</strong> 임베딩 모델을 쓰면 어떻게 될까요?</p>
+          <button class="opt">두 모델 장점이 합쳐져 검색이 더 정확해진다</button>
+          <button class="opt">좌표계가 달라 벡터 거리가 의미를 잃고, 검색이 조용히 망가진다</button>
+          <button class="opt">검색이 조금 느려질 뿐, 결과는 같다</button>
+          <p class="explain">
+            임베딩 좌표는 <strong>모델마다 다른 공간</strong>이에요. A 모델로 넣고 B 모델로 찾으면
+            cosine 거리가 무의미해지는데, <em>에러 없이</em> 그럴듯한 엉뚱한 결과를 내서 잡기 어렵습니다.
+            그래서 인덱싱·쿼리에 반드시 <strong>같은 임베딩 모델</strong>을 고정하세요.
+          </p>
+        </div>
       </section>
 
       <!-- chunking -->
@@ -197,6 +209,60 @@ valid = [n for n in used if 1 &lt;= n &lt;= len(retrieved_chunks)]</code></pre>
           <p class="explain">
             인용은 <strong>귀속 강제 = hallucination 방어</strong>예요. 컨텍스트에 없으면 "모른다"고 하게
             만들고, 받은 답의 번호가 실제 청크 범위 안인지 코드로 한 번 더 검증합니다.
+          </p>
+        </div>
+      </section>
+
+      <!-- memory -->
+      <section id="memory">
+        <h2>Memory: 모델은 매번 백지에서 시작한다 <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">개념 연결 · 슬라이드 덱 전반</a></h2>
+        <p class="tldr">
+          LLM은 <strong>stateless</strong> — 지난 대화를 스스로 기억하지 못합니다. "기억"은 우리가
+          <strong>저장하고 다시 찾아 붙여주는</strong> 것. 그리고 그 방법은 이미 배운 RAG와 똑같아요.
+        </p>
+        <div class="callout analogy">
+          🧠 <strong>비유:</strong> 모델은 매 요청마다 기억상실증에 걸린 천재예요. 똑똑하지만 어제 일을
+          못 떠올립니다. 그래서 우리가 <em>"이전에 이런 얘기 했었죠"</em> 하고 메모를 쥐여주는 거예요.
+          chat-app(2-2편)에서 대화 히스토리를 매 턴 다시 보낸 것 — 그게 가장 단순한 메모리였습니다.
+        </div>
+        <div class="concept">
+          <span class="tag">두 층위</span>
+          <ul>
+            <li>
+              <strong>단기(short-term)</strong> — 이번 대화의 최근 턴들을 그대로 다시 보냄. 단순하지만
+              길어지면 토큰이 폭증 → 오래된 턴을 <strong>요약(summarization)</strong>해 압축.
+            </li>
+            <li>
+              <strong>장기(long-term)</strong> — 대화에서 <em>기억할 사실</em>만 뽑아 vector store에 저장 →
+              나중 대화에서 관련 기억을 <strong>검색</strong>해 붙임. 즉 <strong>RAG를 "대화 기록"에
+              적용</strong>한 것. 같은 chunk→embed→store→retrieve 파이프라인을 그대로 재사용합니다.
+            </li>
+          </ul>
+        </div>
+        <div class="mermaid">
+flowchart LR
+    U["새 발화"] --> R["관련 기억 검색<br/>(vector store)"]
+    R --> A["프롬프트에 붙이기<br/>요약 + 검색된 사실"]
+    A --> G["Claude 호출"]
+    G --> X["기억할 사실 추출"]
+    X --> St["저장<br/>(user_id로 격리)"]
+    St -.다음 턴.-> R
+        </div>
+        <div class="callout cs">
+          ⚠️ <strong>설계 함정:</strong> ① <em>전부 저장하면 노이즈</em> — 무엇을 기억할지 골라야 검색
+          품질이 삽니다. ② <em>관련성 ≠ 최신성</em> — "지난주엔 채식"이 "오늘은 고기"를 덮어쓰면 곤란
+          (타임스탬프·갱신 규칙 필요). ③ <em>사용자 격리</em> — 메타데이터 <code>user_id</code> 필터로
+          남의 기억이 새어들지 않게.
+        </div>
+        <div class="quiz" data-answer="1">
+          <p class="q">장기 대화 메모리를 구현하는 가장 자연스러운 방법은?</p>
+          <button class="opt">context window를 최대로 키워서 모든 대화를 다 넣는다</button>
+          <button class="opt">기억할 사실을 vector store에 저장하고 필요할 때 검색한다 — RAG를 대화 기록에 적용</button>
+          <button class="opt">매 요청에 전체 대화 로그를 통째로 다시 보낸다</button>
+          <p class="explain">
+            장기 메모리는 <strong>새 개념이 아니라 RAG의 재사용</strong>이에요. 사실을 chunk·embed해 저장하고,
+            새 발화가 오면 관련 기억만 top-K로 찾아 붙입니다. context를 무한정 키우거나 전체 로그를 매번
+            재전송하는 건 이 모듈 첫 섹션의 4가지 이유(Scale·Cost·Latency·Accuracy)에 정면으로 부딪혀요.
           </p>
         </div>
       </section>
