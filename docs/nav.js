@@ -27,17 +27,17 @@
       { t: "1.7 · Anthropic API key", id: "apikey" },
     ] },
     { href: "02-1-foundations.html", num: "2A", label: "Foundations", sections: [
-      { t: "2A.1 · 전체 그림", id: "overview" }, { t: "2A.2 · Flask", id: "flask" },
-      { t: "2A.3 · 엔드포인트 (endpoint)", id: "endpoint" }, { t: "2A.4 · CORS", id: "cors" },
+      { t: "2A.1 · Big picture", id: "overview" }, { t: "2A.2 · Flask", id: "flask" },
+      { t: "2A.3 · Endpoints", id: "endpoint" }, { t: "2A.4 · CORS", id: "cors" },
       { t: "2A.5 · React", id: "react" }, { t: "2A.6 · Vite", id: "vite" }, { t: "2A.7 · JSX", id: "jsx" },
-      { t: "2A.8 · Mount (마운트)", id: "mount" }, { t: "2A.9 · Stateless", id: "stateless" },
-      { t: "2A.10 · 스스로 점검 (코드 읽기)", id: "selfcheck" },
+      { t: "2A.8 · Mount", id: "mount" }, { t: "2A.9 · Stateless", id: "stateless" },
+      { t: "2A.10 · Self-check", id: "selfcheck" },
     ] },
     { href: "02-2-chat-app.html", num: "2B", label: "Project: chat-app", sections: [
-      { t: "2B.1 · 전체 그림 — 서버가 셋", id: "llm" }, { t: "2B.2 · 메모리 (stateless)", id: "memory" },
-      { t: "2B.3 · 비동기 & 로딩", id: "async" }, { t: "2B.4 · 네트워크 실패", id: "network" },
-      { t: "2B.5 · API 에러", id: "apierror" }, { t: "2B.6 · 입력 검증 & 그 외", id: "missing" },
-      { t: "2B.7 · 결함 5가지 찾기", id: "selfcheck" },
+      { t: "2B.1 · Big picture — three servers", id: "llm" }, { t: "2B.2 · Memory (stateless)", id: "memory" },
+      { t: "2B.3 · Async & loading", id: "async" }, { t: "2B.4 · Network failure", id: "network" },
+      { t: "2B.5 · API errors", id: "apierror" }, { t: "2B.6 · Input validation & more", id: "missing" },
+      { t: "2B.7 · Find the 5 bugs", id: "selfcheck" },
     ] },
     { href: "03-tools.html", num: "3", label: "Tools & Structure", sections: [
       { t: "3.1 · Live demo (BigQuery SQL)", id: "demo" }, { t: "3.2 · 4 Levels", id: "levels" },
@@ -77,14 +77,6 @@
       { t: "7.2 · Project options", id: "options" },
       { t: "7.3 · What you've built so far", id: "recap" },
       { t: "7.4 · Final Quiz", id: "final-quiz" },
-    ] },
-    { href: "infra.html", num: "⚙", label: "부록 · Infra", sections: [
-      { t: "A.1 · nginx ↔ k8s 한눈에", id: "overview" },
-      { t: "A.2 · 요청이 들어오는 길", id: "edge" },
-      { t: "A.3 · 와일드카드 TLS", id: "tls" },
-      { t: "A.4 · 배포의 현실", id: "deploy" },
-      { t: "A.5 · 이 사이트 자체의 배포", id: "thissite" },
-      { t: "A.6 · 미니 퀴즈", id: "quiz" },
     ] },
   ];
 
