@@ -1,128 +1,136 @@
 # llm-app-lab
 
-**KSEPT Summer Program — Building with LLMs** practice repo.
-A hands-on lab: start from a single LLM API call, then build up through tool use,
-RAG, agents, and production — learning by building real LLM apps yourself.
+> Learning to **build with LLMs** the hands-on way — one small, working app at a time.
 
-> 📚 **Learning site (GitHub Pages): <https://bookseal.github.io/llm-app-lab/>**
-> Concept notes + Mermaid diagrams + per-module quizzes. It re-organizes the
-> original slides ([ksetp.netlify.app](https://ksetp.netlify.app/)) around *how
-> things actually work*.
->
-> 📑 **Full curriculum in one file:** [TUTORIAL.md](TUTORIAL.md) — all 7 modules, with code.
+This is my working repo for the **KSEPT Summer Program — Building with LLMs**. I'm
+going from a single API call all the way to tools, RAG, and agents, and I learn each
+idea by *shipping a tiny app that proves I understand it* — not by copying answers.
 
-## What's in this repo
+Every starter app in this course ships with **intentional bugs**. The fun part isn't
+making them go away; it's reproducing the failure, explaining *why* it happens, fixing
+it, and reading the diff before I accept it. My `git log` is the receipt.
 
-```
-.
-├── backend/             Flask API (GET /api/hello)      — full-stack hello-world
-├── frontend/            React + Vite app (fetch on mount) — full-stack hello-world
-├── extract-starter/     Module 3 starter — structured extraction (forced tool_use + Pydantic)
-├── instructor-extractor/ Module 3 extension — instructor-posting extraction web app
-├── docs/                learning site source (served via GitHub Pages)
-├── scripts/             docs generation scripts
-├── .github/             Pages build workflow
-└── TUTORIAL.md          full curriculum reference
-```
+📚 **Learning site (my concept notes):** <https://bookseal.github.io/llm-app-lab/>
+&nbsp;·&nbsp; 📑 **Full curriculum:** [TUTORIAL.md](TUTORIAL.md)
+&nbsp;·&nbsp; 🧱 Stack: **Flask · React + Vite · Anthropic SDK (`claude-sonnet-4-6`)**
 
-The root `backend/` + `frontend/` are the Module 2 full-stack hello-world. The
-per-module example apps (chat-app, rag-starter, agent-app, etc.) each come as
-their own starter zip.
+---
 
-## A built-from-scratch example — instructor-extractor (Module 3)
+## 🔬 The hands-on builds
 
-This extends Module 3's (Tools & Structure) `extract-starter` into **a real web app**.
-Paste an instructor job post (copied from email or chat) → it extracts structured
-fields, flags **empty fields with ⚠️ missing**, and even drafts a **follow-up email**
-that asks for the missing details.
+The stuff I actually built and broke and fixed. Each one isolates *one* LLM concept.
+
+| Build | What it is | The concept it nails |
+|---|---|---|
+| **[instructor-extractor](instructor-extractor/)** | Paste a messy job post → structured fields + auto follow-up email | Forced `tool_use` **vs.** free-text generation |
+| **[extract-starter](extract-starter/)** | Single-turn structured extraction template | Forced tool call **+ Pydantic validation** as a safety layer |
+| **[embedding-similarity](embedding-similarity/)** | Console playground: two phrases → cosine similarity | What embeddings *measure* (cross-lingual, no API) |
+| **[chat-app](chat-app/)** | Minimal Claude chat over `/api/chat` | Stateless single-turn — and the 5 gaps to production |
+| **[backend](backend/) + [frontend](frontend/)** | Full-stack `Hello from Flask` | Two servers, a dev proxy, `fetch` on mount |
+
+### ⭐ instructor-extractor — the one I extended into a real web app
+
+Paste an instructor job post (copied from email or KakaoTalk). Claude extracts five
+structured fields, flags the blanks as **⚠️ missing**, copies everything as a TSV row
+for a spreadsheet, and then *drafts a polite follow-up email asking only for the
+fields that are missing*.
 
 ![instructor-extractor demo](docs/assets/instructor-extractor.png)
 
-- **Both directions of LLM use on one screen** — extraction (text → data, forced
-  `tool_choice`) + generation (data → text, free-form).
-- **Incremental development** — UI mockup first → fake data → real Claude extraction
-  → add fields one at a time.
-- Stack: single Flask server. See [instructor-extractor/README.md](instructor-extractor/README.md) to run it.
+What I find genuinely cool about it — **the same model, used two opposite ways on one
+screen**:
 
-## How to study this
+- **Extraction = text → data.** The output is machine-readable, so I *force* the shape
+  with `tool_choice={"type": "tool", "name": "record_posting"}`. Every field is
+  nullable, and the system prompt says *"return null rather than guess."*
+- **Email = data → text.** The output is for a human, so I drop the tool entirely and
+  let Claude write free-form prose.
 
-### 1. One module at a time, in order
+That contrast — *the output format decides whether you force a tool* — is the whole
+lesson, and I built an app to feel it instead of just reading it.
+&nbsp; → run it: [instructor-extractor/README.md](instructor-extractor/README.md)
 
-Use the learning site's [concept map](https://bookseal.github.io/llm-app-lab/) as
-your table of contents. For each module, go **concept note (docs) → original slides
-→ starter-app practice → mini quiz**.
+### 🧭 embedding-similarity — building intuition for vectors
 
-| # | Module | One line |
+A tiny REPL: type two phrases, get their cosine similarity on a −1…1 scale. It runs a
+**local multilingual model** (`paraphrase-multilingual-MiniLM-L12-v2`), so `"cat"` and
+`"고양이"` score *high* across languages — no API key, no cost. Great for feeling why
+`"I love this"` vs `"I hate this"` is **not** near −1 (same topic, opposite sentiment).
+
+---
+
+## 🗺️ The path I'm walking
+
+I take the course's [concept map](https://bookseal.github.io/llm-app-lab/) one module
+at a time: **concept note → original slides → build the starter → mini quiz.**
+
+| # | Module | What I take from it |
 |---|------|------|
-| 1 | Setup | Install 6 tools + save your API key once in a shared `.env` |
-| 2 | Foundations | First API call, chat app, **fix 5 built-in bugs**, SSE streaming |
-| 3 | Tools & Structure | 4 steps to structured output: parseable → schema → tool-loop → MCP |
+| 1 | Setup | Six tools + one shared `.env` for the API key |
+| 2 | Foundations | First API call, a chat app, **fixing 5 built-in bugs**, SSE streaming |
+| 3 | Tools & Structure | Structured output, 4 levels: parseable → schema → tool-loop → MCP |
 | 4 | Context | Indexing pipeline + RAG (chunking, embeddings, vector store, citations) |
-| 5 | Architecture & Agents | ~20-line agent loop, subagents, memory scope, multi-model |
+| 5 | Architecture & Agents | A ~20-line agent loop, subagents, memory scope, multi-model |
 | 6 | Production | Eval ladder, prompt-injection defense, observability |
-| 7 | Workshop | Build something small enough to finish |
+| 7 | Workshop | Build something small enough to actually finish |
 
-### 2. The "learning loop" this course teaches
+### My learning loop (why the `git log` is the point)
 
-Each module's starter has **intentional bugs**. The point isn't to copy the answer —
-it's to run this loop:
+Each starter is **broken on purpose**. For every fix I run the same loop:
 
-1. **Reproduce** — see the bug with your own eyes (e.g. the bot forgets the previous turn).
-2. **Diagnose** — dig until you can explain *why* it happens.
-3. **Fix** — tell Claude Code the *behavior you want*, not the implementation, and ask for a plan first.
-4. **Read the diff** — understand what changes before you accept it.
-5. **Verify** — re-run the failure from step 1 to confirm it's fixed.
-6. **Commit** — `git commit -am "fix: <bug>"`. One commit per fix.
+1. **Reproduce** — see the bug myself (e.g. the bot forgets the previous turn).
+2. **Diagnose** — dig until I can explain the *mechanism*, not just the symptom.
+3. **Fix** — tell Claude Code the *behavior I want*, ask for a plan first.
+4. **Read the diff** — understand every change before accepting it.
+5. **Verify** — re-run the original failure to confirm it's gone.
+6. **Commit** — one commit per fix: `git commit -am "fix: <bug>"`.
 
-→ Then your `git log` becomes **your learning journal**. When presenting, `git show <hash>`
-lets you "walk the diff" commit by commit and explain each fix.
+→ So `git log` becomes my learning journal, and I can `git show <hash>` to walk anyone
+through each fix, one diff at a time.
 
-### 3. When you're stuck
+---
 
-- Concept not clicking? → Start with that module's note on the learning site (analogy-first + Mermaid).
-- "The server is up but it doesn't work"? → Don't trust the startup log — **send a real
-  request to the endpoint** and judge by the status code and response body (`curl -i ...`).
+## ▶️ Run the full-stack hello-world
 
-## Run locally (full-stack hello-world)
-
-There are two servers, so you need **two terminals**.
-
-### Terminal 1 — backend
+Two servers, so you need **two terminals**.
 
 ```bash
+# Terminal 1 — backend
 python -m venv .venv          # first time only
 source .venv/bin/activate     # Windows: .venv\Scripts\activate
 pip install -r backend/requirements.txt
-python backend/app.py         # serves on http://localhost:5001
+python backend/app.py         # → http://localhost:5001
 ```
 
-### Terminal 2 — frontend
-
 ```bash
+# Terminal 2 — frontend
 cd frontend
 npm install                   # first time only
-npm run dev                   # serves on http://localhost:5173
+npm run dev                   # → http://localhost:5173
 ```
 
-Open **http://localhost:5173** — the page calls `/api/hello` (proxied to Flask)
-and shows `Hello from Flask`.
+Open **http://localhost:5173** — the page calls `/api/hello` (proxied to Flask) and
+shows `Hello from Flask`. Details: [backend/README.md](backend/README.md) ·
+[frontend/README.md](frontend/README.md). Each build has its own README to run it.
 
-For details, see [backend/README.md](backend/README.md) and [frontend/README.md](frontend/README.md).
+---
 
-## Learning site & change log (GitHub Pages)
+## 📒 About the learning site
 
-The [`docs/`](docs/) folder is served at **<https://bookseal.github.io/llm-app-lab/>**.
+The [`docs/`](docs/) folder is served at <https://bookseal.github.io/llm-app-lab/>. It's
+my own **concept notes** — written in Korean (analogy-first), with English Mermaid
+diagrams and instantly-graded mini quizzes for each module. The
+[change log](https://bookseal.github.io/llm-app-lab/history.html) is auto-generated
+from `git log` on every push to `main`
+([scripts/gen_history.py](scripts/gen_history.py)).
 
-- **Concept map** (`docs/index.html`): a multi-page learning site linking each
-  module's note (setup · foundations · chat-app · tools · context · agents ·
-  production · workshop). Korean explanations + English Mermaid diagrams +
-  instantly-graded mini quizzes.
-- **Change log** (`docs/history.html`): auto-generated on every push to `main` —
-  GitHub Actions reads `git log` ([scripts/gen_history.py](scripts/gen_history.py),
-  workflow at [.github/workflows/pages.yml](.github/workflows/pages.yml)).
-
-To preview the history page locally:
-
-```bash
-python3 scripts/gen_history.py   # generates docs/history.html (inside a git repo)
+```
+.
+├── instructor-extractor/  ⭐ extended web app — extract + follow-up email
+├── extract-starter/          Module 3 starter — forced tool_use + Pydantic
+├── embedding-similarity/     embeddings playground — cosine similarity
+├── chat-app/                 minimal Claude chat
+├── backend/ + frontend/      full-stack hello-world (Flask + React/Vite)
+├── docs/                     my concept notes (GitHub Pages)
+└── TUTORIAL.md               full curriculum reference
 ```
