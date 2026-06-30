@@ -333,6 +333,30 @@ h2 .slide, h3 .slide { letter-spacing: 0; }
 .commit .subject { font-weight: 600; font-size: 1.05rem; }
 .commit .body { color: var(--muted); white-space: pre-wrap; margin-top: .4rem; }
 
+/* "Run it live" button on project pages */
+.runbox {
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+  flex-wrap: wrap;
+  margin: 1.25rem 0;
+}
+.runbtn {
+  font: inherit;
+  font-weight: 700;
+  color: #0d1117;
+  background: var(--accent2);
+  border: none;
+  border-radius: 8px;
+  padding: .6rem 1.1rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: filter .15s;
+}
+.runbtn:hover:not(:disabled) { filter: brightness(1.1); }
+.runbtn:disabled { opacity: .7; cursor: progress; }
+.runstate { color: var(--muted); font-size: .9rem; }
+
 footer {
   margin-top: 4rem;
   padding-top: 1.5rem;

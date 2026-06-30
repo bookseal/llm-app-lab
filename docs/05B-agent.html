@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>llm-app-lab — Module 5B · Project: data-analyst agent</title>
+    <link rel="stylesheet" href="./style.css?v=3" />
+    <script src="./nav.js?v=6" defer></script>
+    <script src="./run.js?v=1" defer></script>
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({ startOnLoad: true, theme: "neutral" });
+    </script>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="hero">
+        <p class="muted"><a href="./index.html">← Start here</a> · Module 5B · Project</p>
+        <h1>Module 5B · Project — data-analyst agent</h1>
+        <p class="tldr">
+          영어로 질문하면 <strong>read-only SQL 도구</strong>를 돌려 답을 찾아 설명하는 에이전트.
+          Module 5의 ~20줄 agent loop를 실제로 굴려봅니다.
+        </p>
+        <div class="callout">
+          🤖 개념은 <a href="./05-agents.html">Module 5 · Agents</a>에서 · 이 프로젝트는
+          <a href="./05-agents.html#project">5.7 Project</a>(안전 패턴 2개 기구현)를 실행하는 곳이에요.
+        </div>
+        <div class="callout cs">
+          🚧 <strong>이 앱도 스타터에서 빌드합니다.</strong> 저장소에 완성본이 없어요 —
+          <code>agent-app.zip</code>(SQLite + read-only SQL 도구 3개)에서 시작합니다. "Run it live"는
+          앱을 빌드한 뒤 켜집니다.
+        </div>
+      </header>
+
+      <nav class="toc">
+        <strong>목차</strong>
+        <ul>
+          <li><a href="#what">5B.1 · What it builds</a></li>
+          <li><a href="#how">5B.2 · How it works</a></li>
+          <li><a href="#run">5B.3 · Run it live</a></li>
+          <li><a href="#local">5B.4 · Build &amp; run locally</a></li>
+          <li><a href="#key">5B.5 · The key idea</a></li>
+        </ul>
+      </nav>
+
+      <section id="what">
+        <h2>5B.1 · What it builds</h2>
+        <p class="tldr">"지난달 매출 상위 5개 카테고리는?" 같은 질문 → 에이전트가 SQL을 돌려 답.</p>
+        <div class="concept">
+          <span class="tag">기구현된 안전 패턴 2개</span>
+          <ul>
+            <li><strong>구조적 read-only</strong> — <code>run_select</code>만 주고 쓰기 도구는 안 줌(안전 1)</li>
+            <li><strong>max-steps 예산</strong> — 루프가 N스텝 넘으면 강제 종료(안전 2)</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="how">
+        <h2>5B.2 · How it works</h2>
+        <div class="mermaid">
+flowchart LR
+    U(["natural-language question"]) --> Ag["agent loop (~20 lines)"]
+    Ag -->|list_tables| DB[("read-only SQLite")]
+    Ag -->|describe_table| DB
+    Ag -->|run_select| DB
+    DB -.rows.-> Ag
+    Ag --> Ans(["plain-language answer"])
+        </div>
+        <p class="muted">
+          모델이 매 턴 "다음에 어떤 도구를 부를지"만 정하고, 결과를 보고 다음 도구를 부르길
+          <code>end_turn</code>까지 반복해요. 이 루프가 곧 엔진(<a href="./05-agents.html#loop">5.1</a>).
+        </p>
+      </section>
+
+      <section id="run">
+        <h2>5B.3 · Run it live</h2>
+        <p class="tldr">빌드해 두면, 버튼이 서버에서 잠깐 띄워 URL을 돌려줍니다.</p>
+        <div class="runbox" data-app="agent" data-local="#local"></div>
+        <div class="callout cs">
+          ⚙️ 런처가 <code>agent</code> 이미지를 띄울 수 있을 때 활성화됩니다. 그 전엔 버튼이 아래
+          <a href="#local">빌드 &amp; 로컬 실행</a>으로 안내해요.
+        </div>
+      </section>
+
+      <section id="local">
+        <h2>5B.4 · Build &amp; run locally</h2>
+        <pre><code># 스타터: agent-app.zip (SQLite + read-only SQL 도구 3개 + max-steps)
+#   https://ksetp.netlify.app/assets/agents/agent-app.zip
+unzip agent-app.zip && cd agent-app
+python3.11 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+
+python app.py            # → http://localhost:5000  (질문을 영어로 입력)</code></pre>
+        <p class="muted">
+          <code>ANTHROPIC_API_KEY</code>는 공유 <code>.env</code>를 그대로 씁니다. 위험 도구를 애초에 안 주는
+          게 가장 튼튼한 안전장치라는 걸 코드에서 확인해 보세요.
+        </p>
+      </section>
+
+      <section id="key">
+        <h2>5B.5 · The key idea — the loop is the engine</h2>
+        <p class="tldr">"모델 호출 → 도구 실행 → 결과 append → 반복" 이 ~20줄이 모든 에이전트의 본질.</p>
+        <div class="quiz" data-answer="2">
+          <p class="q">이 에이전트에 <code>run_select</code>만 주고 임의 SQL 실행을 안 주는 이유는?</p>
+          <button class="opt">SELECT가 더 빨라서</button>
+          <button class="opt">프롬프트를 짧게 하려고</button>
+          <button class="opt">도구 셋 자체를 read-only로 좁혀, 모델이 데이터를 망칠 길을 구조적으로 차단하려고</button>
+          <p class="explain">
+            가장 튼튼한 안전장치는 <strong>위험한 도구를 애초에 안 주는 것</strong>이에요. 모델이 헷갈려도
+            줄 수 있는 게 SELECT뿐이면 DROP/UPDATE는 불가능합니다(프롬프트 경고보다 확실).
+          </p>
+        </div>
+      </section>
+
+      <footer>
+        <p>
+          <a href="./index.html">← Start here</a> ·
+          개념: <a href="./05-agents.html">Module 5 · Agents</a> ·
+          이전: <a href="./04B-rag.html">4B · RAG</a> ·
+          다음: <a href="./06-production.html">Module 6 · Production →</a>
+        </p>
+        <p>llm-app-lab · Module 5B · Project · starter: <code>agent-app.zip</code></p>
+      </footer>
+    </div>
+    <script>
+      document.querySelectorAll(".quiz").forEach((quiz) => {
+        const answer = Number(quiz.dataset.answer);
+        quiz.querySelectorAll(".opt").forEach((opt, i) => {
+          opt.addEventListener("click", () => {
+            if (quiz.classList.contains("solved")) return;
+            if (i === answer) { opt.classList.add("correct"); quiz.classList.add("solved"); }
+            else { opt.classList.add("wrong"); opt.disabled = true; }
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

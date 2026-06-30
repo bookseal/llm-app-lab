@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>llm-app-lab — Module 4B · Project: RAG over a corpus</title>
+    <link rel="stylesheet" href="./style.css?v=3" />
+    <script src="./nav.js?v=6" defer></script>
+    <script src="./run.js?v=1" defer></script>
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({ startOnLoad: true, theme: "neutral" });
+    </script>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="hero">
+        <p class="muted"><a href="./index.html">← Start here</a> · Module 4B · Project</p>
+        <h1>Module 4B · Project — RAG over a corpus</h1>
+        <p class="tldr">
+          작은 문서 묶음을 인덱싱하고, 질문에 <strong>관련 조각만 검색해</strong> 인용과 함께 답하는 앱.
+          Module 4의 retrieve → augment → generate를 끝까지 굴려봅니다.
+        </p>
+        <div class="callout">
+          📚 개념은 <a href="./04-context.html">Module 4 · Context / RAG</a>에서 · 채점 루브릭과 코퍼스는
+          <a href="./04-context.html#project">4.9 Project</a> &amp; <code>rag-contest/CONTEST.md</code>.
+        </div>
+        <div class="callout cs">
+          🚧 <strong>이 앱은 당신이 빌드합니다.</strong> chat-app·extractor와 달리 RAG 앱은 저장소에 완성본이
+          없어요 — 스타터(<code>rag-starter.zip</code>)에서 직접 만들어 채워 넣는 캡스톤입니다. 그래서 아래
+          "Run it live"는 앱을 빌드한 뒤에 켜집니다.
+        </div>
+      </header>
+
+      <nav class="toc">
+        <strong>목차</strong>
+        <ul>
+          <li><a href="#what">4B.1 · What it builds</a></li>
+          <li><a href="#how">4B.2 · How it works</a></li>
+          <li><a href="#run">4B.3 · Run it live</a></li>
+          <li><a href="#local">4B.4 · Build &amp; run locally</a></li>
+          <li><a href="#key">4B.5 · The key idea</a></li>
+        </ul>
+      </nav>
+
+      <section id="what">
+        <h2>4B.1 · What it builds</h2>
+        <p class="tldr">20개 문서(Apollo 코퍼스)에 대해 질문하면 <strong>출처 번호가 달린 답</strong>을 주는 챗.</p>
+        <div class="concept">
+          <span class="tag">하는 일</span>
+          <ul>
+            <li>문서를 청크로 쪼개 임베딩 → 벡터 스토어에 저장(indexing)</li>
+            <li>질문을 임베딩해 가장 가까운 top-K 청크 검색(retrieve)</li>
+            <li><code>[n]</code> 번호 블록으로 붙여(augment) Claude 한 번 호출(generate)</li>
+            <li>코퍼스에 없는 질문(예: Artemis)은 <strong>모른다</strong>고 거절</li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="how">
+        <h2>4B.2 · How it works</h2>
+        <div class="mermaid">
+flowchart LR
+    Q(["question"]) --> E["embed query"]
+    E --> V[("vector store<br/>indexed corpus")]
+    V -->|"top-K chunks"| A["augment<br/>[1][2][3] + cite rule"]
+    A --> C["Claude (1 call)"]
+    C --> Ans(["answer with [n] citations"])
+        </div>
+        <p class="muted">
+          인덱싱은 질문이 오기 <em>전에</em> 한 번 돌려 둡니다. 런타임엔 retrieve → augment → generate만
+          반복해요. 자세한 실패 모드(다양성 부족·과도한 컨텍스트 등)는 <a href="./04-context.html#rag">4.6</a>에.
+        </p>
+      </section>
+
+      <section id="run">
+        <h2>4B.3 · Run it live</h2>
+        <p class="tldr">앱을 빌드해 두면, 버튼이 서버에서 잠깐 띄워 URL을 돌려줍니다.</p>
+        <div class="runbox" data-app="rag" data-local="#local"></div>
+        <div class="callout cs">
+          ⚙️ 런처가 <code>rag</code> 이미지를 띄울 수 있을 때 활성화됩니다. 그 전엔 버튼이 아래
+          <a href="#local">빌드 &amp; 로컬 실행</a>으로 안내해요.
+        </div>
+      </section>
+
+      <section id="local">
+        <h2>4B.4 · Build &amp; run locally</h2>
+        <p class="tldr">스타터를 받아 인덱싱 → RAG 백엔드를 채우고 실행.</p>
+        <pre><code># 1) 스타터 받기 (documents/, indexer.py, RAG 스텁 backend 포함)
+#    https://ksetp.netlify.app/assets/context/rag-starter.zip
+unzip rag-starter.zip && cd rag-starter
+python3.11 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+
+# 2) 코퍼스 인덱싱 (chunk → embed → store)
+python indexer.py documents/
+
+# 3) RAG 백엔드 실행 (retrieve · augment · generate 채워 넣기)
+python app.py            # → http://localhost:5000</code></pre>
+        <p class="muted">
+          코퍼스·채점 기준은 <code>rag-contest/CONTEST.md</code>(100점 루브릭, 5개 질문, Apollo 20문서)를 보세요.
+        </p>
+      </section>
+
+      <section id="key">
+        <h2>4B.5 · The key idea — retrieve, then ground</h2>
+        <p class="tldr">모델에 도서관을 통째로 주지 말고, <strong>관련 몇 페이지만</strong> 골라 인용을 강제.</p>
+        <div class="quiz" data-answer="0">
+          <p class="q">코퍼스에 없는 걸 물으면 좋은 RAG 앱은?</p>
+          <button class="opt">"모른다/출처 없음"이라고 답한다 — 인용 규칙이 환각을 막는다</button>
+          <button class="opt">그럴듯하게 지어낸다</button>
+          <button class="opt">검색을 더 많이 해서라도 무조건 답한다</button>
+          <p class="explain">
+            인용 강제 = <strong>근거 없으면 답하지 말 것</strong>이에요. 받은 답의 <code>[n]</code>이 실제 청크
+            범위 안인지 코드로 한 번 더 검증해 환각을 거릅니다(<a href="./04-context.html#cite">4.7</a>).
+          </p>
+        </div>
+      </section>
+
+      <footer>
+        <p>
+          <a href="./index.html">← Start here</a> ·
+          개념: <a href="./04-context.html">Module 4 · Context</a> ·
+          이전: <a href="./03B-extractor.html">3B · extractor</a> ·
+          다음: <a href="./05B-agent.html">5B · data agent →</a>
+        </p>
+        <p>llm-app-lab · Module 4B · Project · starter: <code>rag-starter.zip</code> · spec: <code>rag-contest/</code></p>
+      </footer>
+    </div>
+    <script>
+      document.querySelectorAll(".quiz").forEach((quiz) => {
+        const answer = Number(quiz.dataset.answer);
+        quiz.querySelectorAll(".opt").forEach((opt, i) => {
+          opt.addEventListener("click", () => {
+            if (quiz.classList.contains("solved")) return;
+            if (i === answer) { opt.classList.add("correct"); quiz.classList.add("solved"); }
+            else { opt.classList.add("wrong"); opt.disabled = true; }
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

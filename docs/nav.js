@@ -45,6 +45,13 @@
       { t: "3.5 · L3 · Tool use (agent loop)", id: "level3" }, { t: "3.6 · L4 · MCP", id: "level4" },
       { t: "3.7 · Project: job-post extractor", id: "project" },
     ] },
+    { href: "03B-extractor.html", num: "3B", label: "Project: extractor", sections: [
+      { t: "3B.1 · What it builds", id: "what" },
+      { t: "3B.2 · How it works", id: "how" },
+      { t: "3B.3 · Run it live", id: "run" },
+      { t: "3B.4 · Run it locally", id: "local" },
+      { t: "3B.5 · The key idea", id: "key" },
+    ] },
     { href: "04-context.html", num: "4", label: "Context / RAG", sections: [
       { t: "4.1 · Why not giant context", id: "why" },
       { t: "4.2 · Embeddings", id: "embed" },
@@ -56,6 +63,13 @@
       { t: "4.8 · Memory", id: "memory" },
       { t: "4.9 · Project: RAG over a corpus", id: "project" },
     ] },
+    { href: "04B-rag.html", num: "4B", label: "Project: RAG", sections: [
+      { t: "4B.1 · What it builds", id: "what" },
+      { t: "4B.2 · How it works", id: "how" },
+      { t: "4B.3 · Run it live", id: "run" },
+      { t: "4B.4 · Build & run locally", id: "local" },
+      { t: "4B.5 · The key idea", id: "key" },
+    ] },
     { href: "05-agents.html", num: "5", label: "Agents", sections: [
       { t: "5.1 · The agent loop", id: "loop" },
       { t: "5.2 · What is Claude Code", id: "claude-code" },
@@ -64,6 +78,13 @@
       { t: "5.5 · Patterns (routing·caching·async)", id: "patterns" },
       { t: "5.6 · Computer use & Safety", id: "safety" },
       { t: "5.7 · Project: data-analyst agent", id: "project" },
+    ] },
+    { href: "05B-agent.html", num: "5B", label: "Project: data agent", sections: [
+      { t: "5B.1 · What it builds", id: "what" },
+      { t: "5B.2 · How it works", id: "how" },
+      { t: "5B.3 · Run it live", id: "run" },
+      { t: "5B.4 · Build & run locally", id: "local" },
+      { t: "5B.5 · The key idea", id: "key" },
     ] },
     { href: "06-production.html", num: "6", label: "Production", sections: [
       { t: "6.1 · Three questions before you ship", id: "three-questions" },
