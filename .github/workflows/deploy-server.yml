@@ -1,0 +1,31 @@
+name: Deploy to bit-habit server
+
+# On every push to main, tell the bit-habit server to `git pull` so the
+# k3s-hosted site (llm-app-lab.bit-habit.com) serves the latest docs/.
+# Runs alongside pages.yml (which publishes the same docs/ to GitHub Pages).
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Never let two deploys overlap; a newer push cancels an in-flight one.
+concurrency:
+  group: deploy-server
+  cancel-in-progress: true
+
+jobs:
+  pull:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH to server (key is locked to a forced `git pull`)
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          # The server-side authorized_keys entry forces this key to run only
+          # `cd .../llm-app-lab && git pull --ff-only`, so the command we ask
+          # for ("true") is ignored — the server pulls and prints the result.
+          ssh -i ~/.ssh/id_ed25519 \
+            -o StrictHostKeyChecking=accept-new \
+            -o IdentitiesOnly=yes \
+            ubuntu@158.180.71.122 true

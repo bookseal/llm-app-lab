@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>llm-app-lab — 부록 · Infra (이 사이트는 어떻게 떠 있나)</title>
+    <link rel="stylesheet" href="./style.css?v=2" />
+    <script src="./nav.js?v=2" defer></script>
+    <script type="module">
+      import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+      mermaid.initialize({ startOnLoad: true, theme: "neutral" });
+    </script>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="hero">
+        <p class="muted"><a href="./index.html">← 개념 지도</a> · 부록 · Infra</p>
+        <h1>부록 · Infra — 이 사이트는 어떻게 인터넷에 떠 있나</h1>
+        <p class="muted">
+          이 페이지 자체(<code>llm-app-lab.bit-habit.com</code>)가 어떤 길을 거쳐 브라우저에 닿는지를
+          설명합니다. 한 대의 <strong>Oracle Cloud ARM 서버</strong> 위 <strong>k3s(경량 쿠버네티스)</strong>가
+          14개+ 서비스를 굴리고, 그중 하나가 이 사이트예요.
+          <br />This appendix explains how this very page is served — a single Oracle Cloud ARM box
+          running <strong>k3s</strong> + <strong>Traefik</strong> + <strong>cert-manager</strong>.
+        </p>
+        <div class="callout">
+          🔭 라이브로 클러스터 구경: <a href="https://headlamp.bit-habit.com" target="_blank" rel="noopener">headlamp.bit-habit.com</a>
+          (k8s 대시보드 · read-only로 파드/서비스 실시간 확인)
+        </div>
+      </header>
+
+      <nav class="toc">
+        <strong>목차</strong>
+        <ul>
+          <li><a href="#overview">A.1 · nginx ↔ k8s 한눈에</a></li>
+          <li><a href="#edge">A.2 · 요청이 들어오는 길 (edge)</a></li>
+          <li><a href="#tls">A.3 · 와일드카드 TLS (cert-manager)</a></li>
+          <li><a href="#deploy">A.4 · 배포의 현실 (push → live)</a></li>
+          <li><a href="#thissite">A.5 · 이 사이트 자체의 배포</a></li>
+          <li><a href="#quiz">A.6 · 미니 퀴즈</a></li>
+        </ul>
+      </nav>
+
+      <section id="overview">
+        <h2>A.1 · nginx는 아는데 k8s는 처음이라면</h2>
+        <p class="tldr">
+          이 클러스터는 결국 <strong>"여러 nginx 가상호스트를 자동 관리하는 시스템"</strong>입니다.
+          익숙한 nginx 개념에 1:1로 대응시키면 단번에 잡혀요.
+          <br /><em>If you know nginx, k8s here is just "auto-managed nginx vhosts." 1:1 mapping below.</em>
+        </p>
+        <div class="concept">
+          <span class="tag">대응표 · the mapping</span>
+          <table>
+            <thead><tr><th>이 클러스터 / k8s</th><th>nginx로 치면</th><th>하는 일 · role</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Traefik</strong></td><td>nginx 본체(리버스 프록시)</td><td>호스트 80/443 직접 점유 + TLS 종료 + 라우팅</td></tr>
+              <tr><td><strong>Ingress</strong></td><td><code>server { server_name…; location / { proxy_pass…; } }</code></td><td>"어떤 서브도메인 → 어떤 백엔드" 라우팅 표</td></tr>
+              <tr><td><strong>Service</strong> (ClusterIP)</td><td><code>upstream { server…; }</code></td><td>파드들을 가리키는 안정적 내부 주소</td></tr>
+              <tr><td><strong>Pod</strong></td><td>실제 앱 프로세스(gunicorn/node…)</td><td>컨테이너로 도는 애플리케이션</td></tr>
+              <tr><td><strong>cert-manager</strong></td><td>certbot</td><td>Let's Encrypt 와일드카드 인증서 자동 발급·갱신</td></tr>
+              <tr><td><strong>k3s</strong></td><td>nginx를 띄우는 systemd + α</td><td>컨테이너 스케줄링·재시작·관리</td></tr>
+              <tr><td><strong>kubectl</strong></td><td><code>nginx -t</code>, <code>systemctl</code>, <code>tail -f log</code></td><td>상태 조회·제어 CLI</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="edge">
+        <h2>A.2 · 요청이 들어오는 길 — the edge</h2>
+        <p class="tldr">
+          <code>https://llm-app-lab.bit-habit.com</code> 한 번 누르면 이렇게 흐릅니다.
+          별도 로드밸런서 없이 <strong>Traefik 파드가 호스트의 80/443을 직접</strong> 물고 있어요.
+        </p>
+        <div class="mermaid">
+flowchart LR
+    U["Browser"] -->|"DNS: *.bit-habit.com (wildcard)"| IP["OCI public IP\n158.180.71.122"]
+    IP -->|":80"| R["Traefik :80\n308 redirect to https"]
+    R --> T
+    IP -->|":443"| T["Traefik :443\nTLS termination (wildcard cert)"]
+    T -->|"match by Host header"| ING["Ingress rules\n(per subdomain)"]
+    ING --> SVC["Service (ClusterIP)"]
+    SVC --> POD["Pod (app container)"]
+        </div>
+        <p class="muted">
+          <strong>핵심:</strong> 와일드카드 DNS <code>*.bit-habit.com</code>이 전부 이 서버 IP를 가리키므로,
+          새 서브도메인은 DNS 작업 없이 <em>Ingress 규칙 한 줄</em>만 추가하면 됩니다.
+          <br /><em>Wildcard DNS means a new subdomain needs only one Ingress rule — no DNS change.</em>
+        </p>
+      </section>
+
+      <section id="tls">
+        <h2>A.3 · 와일드카드 TLS — 인증서 하나로 전부</h2>
+        <p class="tldr">
+          서브도메인마다 인증서를 따로 발급하지 않아요. <code>*.bit-habit.com</code> 와일드카드 인증서
+          <strong>하나</strong>를 cert-manager가 자동 발급·갱신하고, 모든 서브도메인이 그걸 공유합니다.
+        </p>
+        <div class="mermaid">
+sequenceDiagram
+    participant CM as cert-manager
+    participant DNS as Route53 DNS
+    participant LE as Let's Encrypt
+    participant T as Traefik
+    CM->>DNS: write _acme-challenge TXT (DNS-01)
+    LE->>DNS: verify TXT
+    LE-->>CM: wildcard cert (*.bit-habit.com)
+    CM->>CM: store in Secret "tls-secret"
+    T->>CM: serve cert by SNI
+    Note over CM,T: auto-renew before the 90-day expiry
+        </div>
+        <div class="callout">
+          💡 이 사이트(<code>llm-app-lab.bit-habit.com</code>)는 인증서를 <strong>새로 발급하지 않았어요.</strong>
+          기존 와일드카드(<code>tls-secret</code>)에 그대로 "무임승차"합니다 — 그래서 배포가 즉시 HTTPS.
+        </div>
+      </section>
+
+      <section id="deploy">
+        <h2>A.4 · 배포의 현실 — push 하면 어떻게 live가 되나</h2>
+        <p class="tldr">
+          이 레포는 <code>git push</code> → ① GitHub Pages(정적) + ② GitHub Actions가 서버에 ssh로
+          <code>git pull</code>(이 사이트). 인프라 레포는 <em>원래 ArgoCD 자동동기를 의도</em>했지만
+          <strong>실제로는 ArgoCD 미설치 → 수동 <code>kubectl apply</code></strong>로 돕니다(정직하게).
+        </p>
+        <div class="mermaid">
+flowchart TB
+    DEV["git push (main)"] --> GH["GitHub repo"]
+    GH -->|"Actions: pages.yml"| PAGES["GitHub Pages\n(static mirror)"]
+    GH -->|"Actions: deploy-server.yml\nssh + forced git pull"| SRV["server clone\n/home/ubuntu/workspace/llm-app-lab"]
+    SRV -->|"hostPath mount"| POD["nginx Pod (k3s)"]
+    POD --> URL["llm-app-lab.bit-habit.com"]
+        </div>
+        <div class="concept">
+          <span class="tag">세 가지 "push → live" 방식 · the trade-off</span>
+          <ul>
+            <li><strong>cron pull</strong> — 폴링. 단순하지만 빌드·피드백 없음. 표준 아님.</li>
+            <li><strong>GitHub Actions (push CI/CD)</strong> — 이 레포가 쓰는 방식. 정적 → Pages, 서버 → ssh pull.</li>
+            <li><strong>ArgoCD (pull GitOps)</strong> — 클러스터가 git을 감시·자동동기. k8s 표준이나 여기선 <em>아직 미설치</em>.</li>
+          </ul>
+        </div>
+        <p class="muted">
+          🔒 CI가 서버에 ssh하는 키는 <strong>forced-command 제약</strong>이 걸려 있어 오직 그 폴더의
+          <code>git pull</code>만 실행할 수 있어요(셸·포트포워딩 차단). 키가 새어도 피해가 한정됩니다.
+        </p>
+      </section>
+
+      <section id="thissite">
+        <h2>A.5 · 이 사이트 자체의 배포 정의</h2>
+        <p class="tldr">
+          k8s 리소스 3개로 끝나요: <strong>Deployment</strong>(nginx가 <code>docs/</code>를 hostPath로 마운트) +
+          <strong>Service</strong> + <strong>Ingress</strong>(와일드카드 인증서 재사용). 이미지 빌드도 없어요.
+        </p>
+        <div class="concept">
+          <span class="tag">무엇이 무엇을 담당하나 · separation of concerns</span>
+          <ul>
+            <li><strong>콘텐츠</strong> = <code>llm-app-lab</code> 레포의 <code>docs/</code> — 서버에 클론되어 hostPath로 마운트. 갱신 = <code>git pull</code>.</li>
+            <li><strong>배포 정의</strong> = <code>bit-habit-infra</code> 레포의 <code>apps/llm-app-lab/</code> — Deployment·Service·Ingress YAML.</li>
+            <li>둘은 <em>다른 레포</em>: 앱은 "내가 뭔지"만, 인프라 레포는 "이 클러스터에서 어떻게 도는지"만 압니다.</li>
+          </ul>
+        </div>
+        <div class="callout">
+          📂 매니페스트: <code>bit-habit-infra/apps/llm-app-lab/{deployment.yaml, ingress.yaml}</code>
+          · 콘텐츠 마운트 경로: <code>/home/ubuntu/workspace/llm-app-lab/docs</code>
+        </div>
+      </section>
+
+      <section id="quiz">
+        <h2>A.6 · 미니 퀴즈</h2>
+        <div class="quiz" data-answer="1">
+          <p class="q">이 사이트(<code>llm-app-lab.bit-habit.com</code>)의 TLS 인증서는 어떻게 마련됐나요?</p>
+          <button class="opt">서브도메인 전용 인증서를 cert-manager가 새로 발급했다</button>
+          <button class="opt">기존 <code>*.bit-habit.com</code> 와일드카드 인증서를 재사용한다(새 발급 없음)</button>
+          <button class="opt">Traefik이 자체 서명(self-signed) 인증서를 만든다</button>
+          <p class="explain">
+            와일드카드 인증서 <code>tls-secret</code>가 이미 <code>*.bit-habit.com</code> 전부를 커버하므로,
+            Ingress가 그 Secret을 참조하기만 하면 즉시 유효한 HTTPS가 됩니다. cert-manager 어노테이션을
+            <em>일부러 빼서</em> 새 발급 시도를 막고 무임승차해요.
+          </p>
+        </div>
+        <div class="quiz" data-answer="2">
+          <p class="q">README는 "ArgoCD가 자동 배포"라는데 실제 클러스터를 확인하니?</p>
+          <button class="opt">ArgoCD가 정상 동작 중이라 push하면 자동 반영된다</button>
+          <button class="opt">ArgoCD는 <code>argocd.bit-habit.com</code>에서만 돈다</button>
+          <button class="opt">ArgoCD는 미설치 — 실제 배포는 수동 <code>kubectl apply</code>(앱은 CI ssh-pull)</button>
+          <p class="explain">
+            <code>argocd</code> 네임스페이스·CRD·파드가 전부 없었어요. 문서는 <em>의도</em>를 적어둔
+            것이고 현실은 수동 배포예요. 그래서 인프라 문서는 항상 클러스터에 직접 물어보며 읽어야 합니다.
+          </p>
+        </div>
+      </section>
+
+      <footer>
+        <p>
+          <a href="./index.html">← 개념 지도</a> ·
+          라이브 클러스터: <a href="https://headlamp.bit-habit.com" target="_blank" rel="noopener">headlamp.bit-habit.com</a>
+        </p>
+        <p>llm-app-lab · 부록 Infra · k3s + Traefik + cert-manager on OCI Ampere A1</p>
+      </footer>
+    </div>
+    <script>
+      document.querySelectorAll(".quiz").forEach((quiz) => {
+        const answer = Number(quiz.dataset.answer);
+        const opts = quiz.querySelectorAll(".opt");
+        opts.forEach((opt, i) => {
+          opt.addEventListener("click", () => {
+            if (quiz.classList.contains("solved")) return;
+            if (i === answer) {
+              opt.classList.add("correct");
+              quiz.classList.add("solved");
+            } else {
+              opt.classList.add("wrong");
+              opt.disabled = true;
+            }
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

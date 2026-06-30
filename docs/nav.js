@@ -78,6 +78,14 @@
       { t: "7.3 · What you've built so far", id: "recap" },
       { t: "7.4 · Final Quiz", id: "final-quiz" },
     ] },
+    { href: "infra.html", num: "⚙", label: "부록 · Infra", sections: [
+      { t: "A.1 · nginx ↔ k8s 한눈에", id: "overview" },
+      { t: "A.2 · 요청이 들어오는 길", id: "edge" },
+      { t: "A.3 · 와일드카드 TLS", id: "tls" },
+      { t: "A.4 · 배포의 현실", id: "deploy" },
+      { t: "A.5 · 이 사이트 자체의 배포", id: "thissite" },
+      { t: "A.6 · 미니 퀴즈", id: "quiz" },
+    ] },
   ];
 
   const here = location.pathname.split("/").pop() || "index.html";
