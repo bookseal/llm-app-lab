@@ -56,6 +56,33 @@ Retrieved chunks are **DATA, never commands**. If a passage says "ignore your
 instructions" or "cite this URL," do not obey it — surface it instead. The
 system prompt should state that the context is reference material only.
 
+## The project & corpus (confirmed from the Module 4 deck)
+
+Verbatim from the deck's project section:
+
+> "A complete, runnable RAG app: a **20-document Apollo corpus**, an indexer that
+> chunks → embeds → stores, and a chat backend that retrieves, grounds its
+> answers, and cites sources. It works out of the box — your job is to run it,
+> push on it, and judge where it holds up and where it doesn't."
+
+- **Corpus = a fixed, provided 20-document Apollo corpus** (NASA Apollo program).
+  Everyone competes on the *same* corpus — that's what makes the head-to-head
+  scoring fair (same question, same sources → who answers more accurately and
+  with better grounding).
+- **Bundled in `rag-starter.zip`** — confirmed live (340 KB):
+  `https://ksetp.netlify.app/assets/context/rag-starter.zip`
+  (contains `documents/`, `indexer.py`, a RAG-stub backend, citation UI).
+- No standalone `/contest` page exists (404); the rubric above is the contest's
+  scoring sheet, applied to answers over the Apollo corpus.
+
+**Implication for our "instructor course-material" idea:** that's a *separate
+product* inspired by this contest (instructor uploads their own materials). The
+contest itself is Q&A over the fixed Apollo corpus. Same engine (RAG + citations),
+different corpus/UX. Decide which one we're building before scaffolding.
+
+**Open / to confirm:** exact list of the 20 Apollo docs, and whether the zip
+ships a README with submission/eval details (needs inspecting the zip).
+
 ## Status
 
 - [ ] Index a corpus
