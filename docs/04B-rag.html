@@ -1,133 +1,728 @@
 <!doctype html>
-<html lang="ko">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>llm-app-lab — Module 4B · Project: RAG over a corpus</title>
+    <title>llm-app-lab — Module 4B · Project: RAG over a corpus (end-to-end flow)</title>
     <link rel="stylesheet" href="./style.css?v=3" />
-    <script src="./nav.js?v=7" defer></script>
-    <script src="./run.js?v=1" defer></script>
+    <script src="./nav.js?v=8" defer></script>
+    <style>
+      /* This page's mermaid diagrams are dark-node (built for a dark canvas), so
+         override the site's default white .mermaid background for this page only
+         and wrap each diagram in a themed .diagram card. */
+      .diagram { background: var(--panel); border: 1px solid var(--border);
+        border-radius: 10px; padding: 1.1rem; margin: 1.1rem 0; overflow-x: auto; }
+      .diagram .mermaid { background: transparent; padding: 0; margin: 0; }
+      .diagram svg { max-width: none; }
+      /* Before/after framing for each problem→fix pair. */
+      .diagram.before { border-color: #f8514955; }
+      .diagram.after { border-color: #3fb95055; }
+      .ba { font-size: .72rem; font-weight: 700; letter-spacing: .07em;
+        text-transform: uppercase; margin: .9rem 0 0; }
+      .ba.bad { color: #f85149; }
+      .ba.good { color: var(--accent2); }
+      /* Per-concept deep-dive card + its small diagram (reuses site .concept). */
+      .concept h4 { margin: .2rem 0 .4rem; color: var(--accent); font-size: 1.05rem; }
+      .concept .why { color: var(--muted); font-size: .92rem; }
+      .concept .diagram { margin: .35rem 0 .6rem; padding: .7rem; }
+      /* Legend swatches under the full diagram. */
+      .legend { display: flex; flex-wrap: wrap; gap: .5rem 1.2rem; margin: .5rem 0 0; }
+      .legend span { display: inline-flex; align-items: center; gap: .4rem;
+        color: var(--muted); font-size: .85rem; }
+      .swatch { width: .9rem; height: .9rem; border-radius: 3px; border: 1px solid var(--border); }
+      /* Inline mono chip for a symbol referenced in prose. */
+      .ptag { display: inline-block; background: var(--code-bg); color: var(--accent);
+        border-radius: 4px; padding: .05rem .4rem; font-size: .82rem; font-family: var(--mono); }
+      h4 { font-size: 1rem; margin: 1.1rem 0 .3rem; }
+    </style>
     <script type="module">
       import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
-      mermaid.initialize({ startOnLoad: true, theme: "neutral" });
+      mermaid.initialize({
+        startOnLoad: true,
+        theme: "dark",
+        themeVariables: {
+          background: "#161b22",
+          primaryColor: "#161b22",
+          primaryTextColor: "#e6edf3",
+          lineColor: "#8b949e",
+          fontFamily: "-apple-system, system-ui, sans-serif",
+        },
+        flowchart: { curve: "basis", nodeSpacing: 40, rankSpacing: 55 },
+      });
     </script>
   </head>
   <body>
     <div class="wrap">
       <header class="hero">
         <p class="muted"><a href="./index.html">← Start here</a> · Module 4B · Project</p>
-        <h1>Module 4B · Project — RAG over a corpus</h1>
+        <h1>🛩️ Module 4B · Project — RAG over a corpus</h1>
         <p class="tldr">
-          작은 문서 묶음을 인덱싱하고, 질문에 <strong>관련 조각만 검색해</strong> 인용과 함께 답하는 앱.
-          Module 4의 retrieve → augment → generate를 끝까지 굴려봅니다.
+          The end-to-end flow of the champion RAG app: index a corpus of 14&nbsp;CFR (FAA) documents once,
+          then answer every question with cited sources. Two phases — <strong>offline indexing</strong> and
+          <strong>online query</strong> — joined by a self-describing index on disk.
         </p>
         <div class="callout">
-          📚 개념은 <a href="./04A-context.html">Module 4 · Context / RAG</a>에서 · 채점 루브릭과 코퍼스는
-          <a href="./04A-context.html#project">4.9 Project</a> &amp; <code>rag-contest/CONTEST.md</code>.
+          📚 Concepts live in <a href="./04A-context.html">Module 4 · Context / RAG</a>; the rubric &amp; corpus are in
+          <a href="./04A-context.html#project">4A.9 Project</a> &amp; <code>rag-contest/CONTEST.md</code>.
         </div>
         <div class="callout cs">
-          🚧 <strong>이 앱은 당신이 빌드합니다.</strong> chat-app·extractor와 달리 RAG 앱은 저장소에 완성본이
-          없어요 — 스타터(<code>rag-starter.zip</code>)에서 직접 만들어 채워 넣는 캡스톤입니다. 그래서 아래
-          "Run it live"는 앱을 빌드한 뒤에 켜집니다.
+          🔎 <strong>This is the reference walkthrough of the finished solution.</strong> It zooms in five times —
+          60&nbsp;seconds → 5 → 10 → 20 minutes → every detail — so you can read it at whatever depth you need. The
+          matching code is in <code>rag-contest/rag-starter/</code> and <code>rag-contest/harness/</code>.
         </div>
       </header>
 
       <nav class="toc">
-        <strong>목차</strong>
+        <strong>Contents</strong>
         <ul>
-          <li><a href="#what">4B.1 · What it builds</a></li>
-          <li><a href="#how">4B.2 · How it works</a></li>
-          <li><a href="#run">4B.3 · Run it live</a></li>
-          <li><a href="#local">4B.4 · Build &amp; run locally</a></li>
-          <li><a href="#key">4B.5 · The key idea</a></li>
+          <li><a href="#sixty">4B.1 · The 60-second version</a></li>
+          <li><a href="#five">4B.2 · The 5-minute version</a></li>
+          <li><a href="#ten">4B.3 · The 10-minute version</a></li>
+          <li><a href="#twenty">4B.4 · The 20-minute version</a></li>
+          <li><a href="#whole">4B.5 · The whole picture</a></li>
+          <li><a href="#why">4B.6 · Why it's built this way</a></li>
+          <li><a href="#files">4B.7 · File map</a></li>
         </ul>
       </nav>
 
-      <section id="what">
-        <h2>4B.1 · What it builds</h2>
-        <p class="tldr">20개 문서(Apollo 코퍼스)에 대해 질문하면 <strong>출처 번호가 달린 답</strong>을 주는 챗.</p>
-        <div class="concept">
-          <span class="tag">하는 일</span>
-          <ul>
-            <li>문서를 청크로 쪼개 임베딩 → 벡터 스토어에 저장(indexing)</li>
-            <li>질문을 임베딩해 가장 가까운 top-K 청크 검색(retrieve)</li>
-            <li><code>[n]</code> 번호 블록으로 붙여(augment) Claude 한 번 호출(generate)</li>
-            <li>코퍼스에 없는 질문(예: Artemis)은 <strong>모른다</strong>고 거절</li>
-          </ul>
-        </div>
-      </section>
+      <section id="sixty">
+        <h2>4B.1 · The 60-second version 🧒</h2>
+        <p>Think of it like a <b>librarian</b>. First you get the library ready <b>once</b>. Then, every time someone asks a
+          question, the librarian grabs just the right notes and answers — and tells you which note it came from.</p>
 
-      <section id="how">
-        <h2>4B.2 · How it works</h2>
-        <div class="mermaid">
+        <div class="diagram">
+          <pre class="mermaid">
 flowchart LR
-    Q(["question"]) --> E["embed query"]
-    E --> V[("vector store<br/>indexed corpus")]
-    V -->|"top-K chunks"| A["augment<br/>[1][2][3] + cite rule"]
-    A --> C["Claude (1 call)"]
-    C --> Ans(["answer with [n] citations"])
+  subgraph ONCE["🗂️ &nbsp;STEP 1 — Get ready &nbsp;(just once)"]
+    direction LR
+    A["📚<br/>Our<br/>documents"] --> B["✂️<br/>Cut into<br/>small notes"] --> C["🗄️<br/>File them<br/>on a shelf"]
+  end
+  subgraph EVERY["💬 &nbsp;STEP 2 — Answer a question &nbsp;(every time)"]
+    direction LR
+    D["🧑<br/>You ask a<br/>question"] --> E["🔍<br/>Grab the few<br/>matching notes"] --> F["🤖<br/>Read them &amp;<br/>write an answer"] --> G["✅<br/>Answer +<br/>📎 where it's from"]
+  end
+  C -. "shelf is ready" .-> E
+
+  classDef once fill:#11271a,stroke:#3fb95088,color:#e6edf3,font-size:15px;
+  classDef every fill:#0d1f33,stroke:#1f6feb88,color:#e6edf3,font-size:15px;
+  class A,B,C once;
+  class D,E,F,G every;
+          </pre>
         </div>
-        <p class="muted">
-          인덱싱은 질문이 오기 <em>전에</em> 한 번 돌려 둡니다. 런타임엔 retrieve → augment → generate만
-          반복해요. 자세한 실패 모드(다양성 부족·과도한 컨텍스트 등)는 <a href="./04A-context.html#rag">4A.6</a>에.
-        </p>
+        <p class="muted">That's the whole idea. 🟢 top row is done once when we build the app; 🔵 bottom row happens on every
+          question. Below we zoom in: the real steps, then every last detail.</p>
       </section>
 
-      <section id="run">
-        <h2>4B.3 · Run it live</h2>
-        <p class="tldr">앱을 빌드해 두면, 버튼이 서버에서 잠깐 띄워 URL을 돌려줍니다.</p>
-        <div class="runbox" data-app="rag" data-local="#local"></div>
-        <div class="callout cs">
-          ⚙️ 런처가 <code>rag</code> 이미지를 띄울 수 있을 때 활성화됩니다. 그 전엔 버튼이 아래
-          <a href="#local">빌드 &amp; 로컬 실행</a>으로 안내해요.
+      <section id="five">
+        <h2>4B.2 · The 5-minute version 🔎</h2>
+        <p>Same two lanes, now with the real machinery. The trick that makes it work: <b>embeddings</b> turn every chunk (and
+          your question) into a <b>vector</b> — a list of numbers where <i>similar meaning → nearby vectors</i>. So "find the
+          relevant notes" becomes "find the closest vectors", and the answer is written using <b>only</b> those retrieved
+          chunks, each tagged with a number so it can be cited.</p>
+
+        <div class="diagram">
+          <pre class="mermaid">
+flowchart TB
+  subgraph BUILD["🏗️ &nbsp;BUILD THE INDEX — once"]
+    direction LR
+    D["📄<br/>Documents"] --> CH["✂️ Chunk<br/>split into<br/>passages"] --> EM["🔢 Embed<br/>text → vector"] --> IX[("💾 Index<br/>vectors + text")]
+  end
+  subgraph ASK["💬 &nbsp;ANSWER A QUESTION — every time"]
+    direction LR
+    Q["❓<br/>Question"] --> QE["🔢 Embed<br/>the question"] --> FIND["🔍 Find the top-5<br/>closest chunks"] --> CTX["📋 Numbered context<br/>[1] [2] … [5]"] --> LLM["🤖 Claude<br/>answers from<br/>the context only"] --> SR["📎 Answer +<br/>Sources [n]"]
+  end
+  IX -. "search in here" .-> FIND
+  NOTE["💡 <b>closest = closest in meaning.</b><br/>Same idea in different words still matches,<br/>because it lands on a nearby vector."]
+  FIND -.- NOTE
+
+  classDef build fill:#11271a,stroke:#3fb95088,color:#e6edf3;
+  classDef serve fill:#0d1f33,stroke:#1f6feb88,color:#e6edf3;
+  classDef disk fill:#2a2410,stroke:#d2932288,color:#e6edf3;
+  classDef note fill:#161b22,stroke:#8b949e66,color:#e6edf3,stroke-dasharray:4 3;
+  class D,CH,EM build;
+  class Q,QE,FIND,CTX,LLM,SR serve;
+  class IX disk;
+  class NOTE note;
+          </pre>
         </div>
+        <p class="muted">New words that matter: <b>chunk</b> (a passage-sized piece), <b>embedding / vector</b> (text as numbers),
+          <b>index</b> (all the vectors saved to disk), <b>top-K</b> (the K=5 best matches), <b>context</b> (the numbered chunks
+          handed to the model), <b>citation [n]</b> (which chunk a sentence came from). The 10-minute version keeps these words
+          and adds the engineering that makes them trustworthy.</p>
       </section>
 
-      <section id="local">
-        <h2>4B.4 · Build &amp; run locally</h2>
-        <p class="tldr">스타터를 받아 인덱싱 → RAG 백엔드를 채우고 실행.</p>
-        <pre><code># 1) 스타터 받기 (documents/, indexer.py, RAG 스텁 backend 포함)
-#    https://ksetp.netlify.app/assets/context/rag-starter.zip
-unzip rag-starter.zip && cd rag-starter
-python3.11 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
+      <section id="ten">
+        <h2>4B.3 · The 10-minute version 🛠️</h2>
+        <p>Let's build it the honest way. First a <b>naive pipeline</b> that already works — it retrieves and answers. Then we
+          watch it break in <b>three quiet ways</b>, fix each, and redraw the same pipeline with the fixes in place.</p>
 
-# 2) 코퍼스 인덱싱 (chunk → embed → store)
-python indexer.py documents/
+        <h3>Start simple — the naive pipeline</h3>
+        <p>Here's the smallest thing that runs. Documents are chunked one blind way, embedded, and stored as bare vectors. A
+          question is embedded, the closest 5 chunks come back, and Claude answers. It works… but the three ⚠️ marks are where
+          it quietly goes wrong — one per stage, which we take in order right after.</p>
 
-# 3) RAG 백엔드 실행 (retrieve · augment · generate 채워 넣기)
-python app.py            # → http://localhost:5000</code></pre>
-        <p class="muted">
-          코퍼스·채점 기준은 <code>rag-contest/CONTEST.md</code>(100점 루브릭, 5개 질문, Apollo 20문서)를 보세요.
-        </p>
-      </section>
+        <div class="diagram before">
+          <pre class="mermaid">
+flowchart TB
+  subgraph BUILD["🏗️ &nbsp;BUILD (naive) — once"]
+    direction LR
+    D["📄 documents"] --> CH["✂️ chunk — one<br/>blind way for all"] --> EM["🔢 embed"] --> IX[("💾 index.pkl<br/>bare vectors")]
+  end
+  subgraph QRY["💬 &nbsp;QUERY (naive) — every time"]
+    direction LR
+    Q["❓ question"] --> RET["🔍 top-5<br/>closest"] --> LLM["🤖 Claude<br/>answers freely"] --> ANS["💬 answer<br/>(no sources)"]
+  end
+  IX -. search .-> RET
+  W1(["⚠️ ① a rule gets<br/>sliced in half"])
+  W2(["⚠️ ② which model<br/>built these vectors?"])
+  W3(["⚠️ ③ nothing forces the<br/>answer to use them"])
+  CH -.- W1
+  IX -.- W2
+  LLM -.- W3
 
-      <section id="key">
-        <h2>4B.5 · The key idea — retrieve, then ground</h2>
-        <p class="tldr">모델에 도서관을 통째로 주지 말고, <strong>관련 몇 페이지만</strong> 골라 인용을 강제.</p>
+  classDef build fill:#11271a,stroke:#3fb95088,color:#e6edf3;
+  classDef serve fill:#0d1f33,stroke:#1f6feb88,color:#e6edf3;
+  classDef disk fill:#2a2410,stroke:#d2932288,color:#e6edf3;
+  classDef warn fill:#2d1215,stroke:#f8514988,color:#e6edf3;
+  class D,CH,EM build;
+  class Q,RET,LLM,ANS serve;
+  class IX disk;
+  class W1,W2,W3 warn;
+          </pre>
+        </div>
+
+        <h3>Where it quietly breaks 🔬</h3>
+        <p>Taking the three ⚠️ marks in order. For each we do the same thing: watch it break
+          (<b style="color:#f85149">before</b>), name the flaw, then bring in the fix (<b style="color:var(--accent2)">after</b>).
+          The <i>name</i> for each idea arrives only after you've felt the problem.</p>
+
+        <div class="concept">
+          <h4>① Problem: a single rule, sliced in half</h4>
+          <p><b>What goes wrong:</b> chunk every file the same blind way — a cut every ~1000 characters — and a regulation like
+            §91.151 gets split across two chunks. Half the rule lands in chunk&nbsp;7, the other half in chunk&nbsp;8.</p>
+          <p class="ba bad">❌ Before — one blind cut for everything</p>
+          <div class="diagram before"><pre class="mermaid">
+flowchart LR
+  D["📄 §91.151<br/>(one whole rule)"] --> CUT["✂️ blind<br/>1000-char cut"]
+  CUT --> A["chunk 7<br/>…first half"]
+  CUT --> B["chunk 8<br/>second half…"]
+  A --> X["❌ retrieval gets a fragment<br/>no chunk IS §91.151 → can't cite it"]
+  B --> X
+  classDef s fill:#0d1f33,stroke:#1f6feb88,color:#e6edf3;
+  classDef danger fill:#2d1215,stroke:#f8514988,color:#e6edf3;
+  class D,CUT,A,B s;
+  class X danger;
+          </pre></div>
+          <p class="why"><b>The flaw:</b> the clause is broken, so the model only ever sees a piece of it — and because no chunk
+            equals §91.151, the answer has nothing to cite.</p>
+          <p><b>The fix:</b> look at the text <i>first</i>. FAA files carry <code>&lt;!-- §… --&gt;</code> tags, so cut on those §
+            boundaries — one whole rule per chunk, keeping its section + part. Untagged text keeps the fixed windows. Routing the
+            text to the right chunker by its content is <b>content-routed chunking</b>.</p>
+          <p class="ba good">✅ After — route by content</p>
+          <div class="diagram after"><pre class="mermaid">
+flowchart LR
+  T["📄 a document"] --> Q{"has § tags?"}
+  Q -->|"yes · FAA"| S["chunk_by_section<br/>1 chunk = 1 rule<br/>✅ cite §91.151 (Part 91)"]
+  Q -->|no| C["chunk_text<br/>~1000 chars + overlap"]
+  classDef b fill:#11271a,stroke:#3fb95088,color:#e6edf3;
+  classDef d fill:#241a2e,stroke:#a371f788,color:#e6edf3;
+  class T,S,C b;
+  class Q d;
+          </pre></div>
+        </div>
+
+        <div class="concept">
+          <h4>② Problem: which model built this index?</h4>
+          <p><b>What goes wrong:</b> the index is just a pile of vectors on disk. Nothing on it records which embedding model
+            produced them. Weeks later you query with a different model — say <code>minilm</code> instead of the <code>bge</code>
+            you built with.</p>
+          <p class="ba bad">❌ Before — vectors with no label</p>
+          <div class="diagram before"><pre class="mermaid">
+flowchart LR
+  BLD["🏗️ build with bge"] --> PKL[("index.pkl<br/>just vectors,<br/>no label")]
+  PKL --> QRY["🔎 query with minilm<br/>(different model)"]
+  QRY --> X["💥 incompatible vectors<br/>meaningless matches — and no error"]
+  classDef s fill:#0d1f33,stroke:#1f6feb88,color:#e6edf3;
+  classDef k fill:#2a2410,stroke:#d2932288,color:#e6edf3;
+  classDef danger fill:#2d1215,stroke:#f8514988,color:#e6edf3;
+  class BLD,QRY s;
+  class PKL k;
+  class X danger;
+          </pre></div>
+          <p class="why"><b>The flaw:</b> vectors from two models live in different spaces (often different sizes). The "nearest"
+            chunks come back as nonsense — and nothing crashes, so it's confident garbage you might never notice.</p>
+          <p><b>The fix:</b> stamp the model name into a sidecar, <code>index.meta.json</code> (e.g.
+            <code>{"embed_model": "bge"}</code>). The query reads it first and loads the <b>same</b> model. An index that carries
+            its own build settings is a <b>self-describing index</b> — the single source of truth.</p>
+          <p class="ba good">✅ After — the index carries its model</p>
+          <div class="diagram after"><pre class="mermaid">
+flowchart LR
+  BLD["🏗️ build with bge"] --> PKL[("index.pkl")]
+  BLD --> MJ[("index.meta.json<br/>model = bge")]
+  MJ -. "read first" .-> QRY["🔎 query with bge<br/>✅ same model"]
+  PKL --> QRY
+  classDef b fill:#11271a,stroke:#3fb95088,color:#e6edf3;
+  classDef s fill:#0d1f33,stroke:#1f6feb88,color:#e6edf3;
+  classDef k fill:#2a2410,stroke:#d2932288,color:#e6edf3;
+  class BLD b;
+  class QRY s;
+  class PKL,MJ k;
+          </pre></div>
+        </div>
+
+        <div class="concept">
+          <h4>③ Problem: the model just makes things up</h4>
+          <p><b>What goes wrong:</b> hand the question straight to Claude and it answers from its own training memory — fluent,
+            confident, and sometimes wrong. No sources attached, no way for the reader to check.</p>
+          <p class="ba bad">❌ Before — answer from memory</p>
+          <div class="diagram before"><pre class="mermaid">
+flowchart LR
+  Q["❓ question"] --> M["🤖 answers from<br/>its own memory"]
+  M --> X["❌ fluent but unsourced,<br/>sometimes invented (hallucination)"]
+  classDef s fill:#0d1f33,stroke:#1f6feb88,color:#e6edf3;
+  classDef danger fill:#2d1215,stroke:#f8514988,color:#e6edf3;
+  class Q,M s;
+  class X danger;
+          </pre></div>
+          <p class="why"><b>The flaw:</b> nothing forces the answer to come from <i>your</i> documents, so there's no grounding
+            and nothing to cite — exactly where hallucinations slip in.</p>
+          <p><b>The fix:</b> wrap the call in a <code>SYSTEM_PROMPT</code> with hard rules — use <b>only</b> the CONTEXT, cite
+            every claim <code>[n]</code>, and if the context doesn't cover it, <b>say so</b>. Invalid <code>[n]</code> get
+            dropped in code afterward. Tying the answer to the retrieved sources this way is a <b>grounded prompt</b>.</p>
+          <p class="ba good">✅ After — answer only from context</p>
+          <div class="diagram after"><pre class="mermaid">
+flowchart TB
+  CX["📋 CONTEXT [1]…[5]<br/>+ your QUESTION"] --> M["🤖 Claude"]
+  RU["📏 RULES<br/>only use context ·<br/>cite [n] · no context → say so"] --> M
+  M --> A["✅ grounded answer<br/>every claim tagged [n]"]
+  A --> D["🧹 code drops<br/>any invalid [n]"]
+  classDef s fill:#0d1f33,stroke:#1f6feb88,color:#e6edf3;
+  classDef r fill:#241a2e,stroke:#a371f788,color:#e6edf3;
+  class CX,M,A,D s;
+  class RU r;
+          </pre></div>
+        </div>
+
+        <h3>The fixed pipeline ✅</h3>
+        <p>Now the same skeleton with all three holes closed: chunking <b>routes by content</b>, the index ships an
+          <code>index.meta.json</code> so the query embeds with the <i>same</i> model, and a <b>grounded SYSTEM_PROMPT</b> forces
+          cited, context-only answers (invalid <code>[n]</code> dropped). Compare it to the naive diagram above — same shape, the
+          three ⚠️ gone.</p>
+
+        <div class="diagram after">
+          <pre class="mermaid">
+flowchart TB
+  subgraph BUILD["🏗️ &nbsp;BUILD — python indexer.py &nbsp;(once)"]
+    direction TB
+    D["📄 documents/"] --> RT{"route by<br/>content"}
+    RT -->|"§-tagged (FAA)"| SEC["chunk_by_section<br/>1 chunk per §<br/>keeps section + part"]
+    RT -->|plain text| CHR["chunk_text<br/>~1000 chars + overlap"]
+    SEC --> EMB["embed chunks<br/>(chosen model)"]
+    CHR --> EMB
+    EMB --> SV["save_index"]
+    SV --> PKL[("💾 index.pkl<br/>vectors + text<br/>+ section/part")]
+    SV --> MET[("📝 index.meta.json<br/>which model built it")]
+  end
+  subgraph QUERY["💬 &nbsp;QUERY — app.py / streamlit &nbsp;(every time)"]
+    direction TB
+    LD["load index<br/>+ its embed model"] --> Q["❓ question"]
+    Q --> RET["retrieve top-5<br/>vector · cosine similarity"]
+    RET --> FMT["format_context<br/>numbered [1] … [5]"]
+    FMT --> SP["+ SYSTEM_PROMPT<br/>answer only from context ·<br/>cite [n] · say “don’t know” if missing"]
+    SP --> LLM["🤖 Claude generates"]
+    LLM --> CI["parse [n] · drop invented · dedupe"]
+    CI --> OUT["📎 Answer + Sources<br/>§xxx (Part nn)"]
+  end
+  PKL -. "loaded once" .-> LD
+  MET -. "query with the SAME model<br/>(single source of truth)" .-> RET
+
+  classDef build fill:#11271a,stroke:#3fb95088,color:#e6edf3;
+  classDef serve fill:#0d1f33,stroke:#1f6feb88,color:#e6edf3;
+  classDef disk fill:#2a2410,stroke:#d2932288,color:#e6edf3;
+  classDef decision fill:#241a2e,stroke:#a371f788,color:#e6edf3;
+  class D,SEC,CHR,EMB,SV build;
+  class LD,Q,RET,FMT,SP,LLM,CI,OUT serve;
+  class PKL,MET disk;
+  class RT decision;
+          </pre>
+        </div>
+
+        <h3>Quick self-check ✅</h3>
+        <div class="quiz" data-answer="1">
+          <p class="q">Why split FAA regulations one-chunk-per-§ instead of into fixed 1000-char windows?</p>
+          <button class="opt">It makes the <code>index.pkl</code> file smaller.</button>
+          <button class="opt">So each chunk is a whole regulation and a citation can name the exact clause.</button>
+          <button class="opt">Because every § section is exactly 1000 characters long.</button>
+          <p class="explain">A § is a natural unit — keeping one rule per chunk means the model sees the complete clause and can
+            cite <b>§91.151 (Part 91)</b>. Untagged text has no such boundaries, so it uses fixed windows with overlap instead.</p>
+        </div>
+        <div class="quiz" data-answer="2">
+          <p class="q">You build the index with <code>bge</code> but query it with <code>minilm</code>. What happens?</p>
+          <button class="opt">Nothing — any embedding model can read any index.</button>
+          <button class="opt">Answers lose their citations, but retrieval still works.</button>
+          <button class="opt">The matches become meaningless (or the dimensions don't match) — the two models make incompatible vectors.</button>
+          <p class="explain">Vectors from different models aren't comparable. That's exactly why <code>index.meta.json</code>
+            records the build model — so the query uses the <b>same</b> one. Single source of truth.</p>
+        </div>
         <div class="quiz" data-answer="0">
-          <p class="q">코퍼스에 없는 걸 물으면 좋은 RAG 앱은?</p>
-          <button class="opt">"모른다/출처 없음"이라고 답한다 — 인용 규칙이 환각을 막는다</button>
-          <button class="opt">그럴듯하게 지어낸다</button>
-          <button class="opt">검색을 더 많이 해서라도 무조건 답한다</button>
-          <p class="explain">
-            인용 강제 = <strong>근거 없으면 답하지 말 것</strong>이에요. 받은 답의 <code>[n]</code>이 실제 청크
-            범위 안인지 코드로 한 번 더 검증해 환각을 거릅니다(<a href="./04A-context.html#cite">4A.7</a>).
-          </p>
+          <p class="q">The retrieved context doesn't contain the answer. What should the grounded model do?</p>
+          <button class="opt">Say it doesn't know, rather than guess.</button>
+          <button class="opt">Fill the gap from its own training knowledge.</button>
+          <button class="opt">Invent a plausible <code>[n]</code> so the answer still looks cited.</button>
+          <p class="explain">Grounding means answer only from context and admit when the sources fall short — that's the
+            anti-hallucination rule. Any invalid <code>[n]</code> the model does emit is dropped in code afterwards.</p>
+        </div>
+      </section>
+
+      <section id="twenty">
+        <h2>4B.4 · The 20-minute version 🚀 <span class="muted" style="font-weight:400;font-size:1rem">— from correct to production</span></h2>
+        <p>The 10-minute pipeline is <i>correct</i>. But the moment real users chat with the live app
+          (<code>streamlit_app.py</code>), three new problems appear that a clean pipeline never shows — and there's one
+          genuinely hard design call. Same problem-first, before → after treatment.</p>
+
+        <h3>The live app, one turn end to end</h3>
+        <p>Here's what actually happens on a single question in the deployed chat. The three fixes below are the boxes the
+          10-minute pipeline didn't have: contextualize a follow-up, cap the context with <code>select_context</code>, and
+          stream while showing a live retrieval panel.</p>
+
+        <div class="diagram">
+          <pre class="mermaid">
+flowchart TB
+  subgraph LIVE["🚀 &nbsp;ONE LIVE TURN — streamlit_app.py"]
+    direction TB
+    Q["🧑 question"] --> FU{"bare<br/>follow-up?"}
+    FU -->|yes| CTX["prepend the previous question<br/>so it inherits the topic"]
+    FU -->|"no · standalone"| RAW["search as-is"]
+    CTX --> RET["retrieve top-5 §-sections"]
+    RAW --> RET
+    RET --> SEL["select_context<br/>split into ~500-char windows,<br/>keep those closest to the question<br/>up to a ~5000-char budget"]
+    SEL --> STR["🤖 stream the answer<br/>token-by-token ▌"]
+    STR --> REN["renumber [n] to 1…N ·<br/>inline source cards ·<br/>Cornell verify links"]
+  end
+  PANEL["🔍 live retrieval panel:<br/>real steps + token counts,<br/>and it persists under the answer"]
+  RET -.- PANEL
+  SEL -.- PANEL
+
+  classDef serve fill:#0d1f33,stroke:#1f6feb88,color:#e6edf3;
+  classDef decision fill:#241a2e,stroke:#a371f788,color:#e6edf3;
+  classDef note fill:#161b22,stroke:#8b949e66,color:#e6edf3,stroke-dasharray:4 3;
+  class Q,CTX,RAW,RET,SEL,STR,REN serve;
+  class FU decision;
+  class PANEL note;
+          </pre>
+        </div>
+
+        <h3>Three problems that only show up in production 🔬</h3>
+
+        <div class="concept">
+          <h4>④ Problem: one §-section blows the token budget</h4>
+          <p><b>What goes wrong:</b> §-sections vary wildly — median ~1,000 chars, but some run to ~200,000. Stuff the raw top-5
+            into the prompt and a single giant section pushes past 15k input tokens: slow and costly. The obvious fix — just
+            keep the first few thousand characters — is worse: the answer often lives in a <i>late</i> subsection like
+            <code>(a)(1)(iv)</code>, which front-truncation throws away.</p>
+          <p class="ba bad">❌ Before — stuff the raw sections (or truncate the front)</p>
+          <div class="diagram before"><pre class="mermaid">
+flowchart LR
+  H["top-5 §-sections<br/>(one is ~200k chars)"] --> CX["📋 stuff all 5<br/>into CONTEXT"]
+  CX --> X["💥 15k+ input tokens — slow &amp; costly<br/>(or front-truncate → drop clause (a)(1)(iv))"]
+  classDef s fill:#0d1f33,stroke:#1f6feb88,color:#e6edf3;
+  classDef danger fill:#2d1215,stroke:#f8514988,color:#e6edf3;
+  class H,CX s;
+  class X danger;
+          </pre></div>
+          <p class="why"><b>The flaw:</b> position is the wrong thing to cut on. The relevant clause can sit anywhere in a long
+            section, so keeping the <i>front</i> both wastes tokens and risks dropping the answer.</p>
+          <p><b>The fix:</b> cut on <i>relevance</i>, not position. <code>select_context</code> splits each hit into ~500-char
+            windows, ranks them by similarity to the <b>question</b>, and keeps the best ones up to a ~5,000-char budget — about
+            1,250 tokens. Same budget, better recall, no re-index (it runs at request time on the already-loaded model).</p>
+          <p class="ba good">✅ After — sub-chunk rerank (select_context)</p>
+          <div class="diagram after"><pre class="mermaid">
+flowchart LR
+  H["top-5 §-sections"] --> W["✂️ split into<br/>~500-char windows"]
+  W --> R["rank windows by<br/>similarity to the QUESTION"]
+  R --> K["keep best-first<br/>up to ~5,000 chars"]
+  K --> OK["✅ ≈1,250 tokens,<br/>keeps the right clause<br/>even if it's (a)(1)(iv)"]
+  classDef s fill:#0d1f33,stroke:#1f6feb88,color:#e6edf3;
+  classDef b fill:#11271a,stroke:#3fb95088,color:#e6edf3;
+  class H,W,R,K s;
+  class OK b;
+          </pre></div>
+        </div>
+
+        <div class="concept">
+          <h4>⑤ Problem: a follow-up question loses its topic</h4>
+          <p><b>What goes wrong:</b> someone asks "What are the fuel-reserve requirements?" then follows with
+            "what about at night?". Embed that follow-up on its own and there are no topic words to match — retrieval returns
+            random sections and the app wrongly says "out of scope".</p>
+          <p class="ba bad">❌ Before — embed the bare follow-up alone</p>
+          <div class="diagram before"><pre class="mermaid">
+flowchart LR
+  P["Q1: fuel reserves,<br/>day vs night?"] -.-> Q2["Q2: “what about<br/>at night?”"]
+  Q2 --> E["🔍 embed “what about<br/>at night?” by itself"]
+  E --> X["❌ no topic words →<br/>retrieves unrelated §§ →<br/>false “out of scope”"]
+  classDef s fill:#0d1f33,stroke:#1f6feb88,color:#e6edf3;
+  classDef danger fill:#2d1215,stroke:#f8514988,color:#e6edf3;
+  class P,Q2,E s;
+  class X danger;
+          </pre></div>
+          <p class="why"><b>The flaw — and the trap:</b> the follow-up needs the previous topic. But blindly prepending the prior
+            question to <i>every</i> query is also wrong — a full standalone question gets polluted (a "Class B/C airspace"
+            prefix once buried a fuel-reserve question and retrieved airspace §§ instead).</p>
+          <p><b>The fix:</b> only prepend when the turn <i>looks like</i> a bare follow-up (≤5 words, or opens with a cue like
+            "what about"). Standalone questions search on their own. Generation still gets the full history either way. This is
+            <b>query contextualization</b>.</p>
+          <p class="ba good">✅ After — contextualize only bare follow-ups</p>
+          <div class="diagram after"><pre class="mermaid">
+flowchart LR
+  Q2["Q2: “what about at night?”"] --> D{"bare follow-up?<br/>≤5 words / cue"}
+  D -->|yes| J["prepend Q1's topic →<br/>“fuel reserves … at night”"]
+  D -->|"no · standalone"| S["search as-is<br/>(don't pollute it)"]
+  J --> OK["✅ inherits the topic →<br/>finds §91.151"]
+  classDef s fill:#0d1f33,stroke:#1f6feb88,color:#e6edf3;
+  classDef b fill:#11271a,stroke:#3fb95088,color:#e6edf3;
+  classDef d fill:#241a2e,stroke:#a371f788,color:#e6edf3;
+  class Q2,S s;
+  class J,OK b;
+  class D d;
+          </pre></div>
+        </div>
+
+        <div class="concept">
+          <h4>⑥ Problem: the user stares at a frozen screen</h4>
+          <p><b>What goes wrong:</b> retrieval + generation take several seconds. A plain spinner shows nothing, then the whole
+            answer appears at once. It feels broken, and you can't see <i>how</i> the answer was found — which is exactly what a
+            reviewer wants to inspect.</p>
+          <p class="ba bad">❌ Before — spinner, then a wall of text</p>
+          <div class="diagram before"><pre class="mermaid">
+flowchart LR
+  Q["🧑 question"] --> WsP["⏳ spinner…<br/>5–10s of nothing"]
+  WsP --> A["answer dumps<br/>all at once"]
+  A --> X["❌ feels frozen ·<br/>no view into retrieval"]
+  classDef s fill:#0d1f33,stroke:#1f6feb88,color:#e6edf3;
+  classDef danger fill:#2d1215,stroke:#f8514988,color:#e6edf3;
+  class Q,WsP,A s;
+  class X danger;
+          </pre></div>
+          <p class="why"><b>The flaw:</b> no feedback during the wait, and the retrieval reasoning is invisible.</p>
+          <p><b>The fix:</b> <b>stream</b> the answer token-by-token behind a live cursor, and drive a <b>process panel</b> that
+            prints the real steps (embed → top-5 sections → trim N→M chars) with actual numbers — which then persists in a
+            collapsed panel under the answer, so it's re-viewable later.</p>
+          <p class="ba good">✅ After — stream + live retrieval panel</p>
+          <div class="diagram after"><pre class="mermaid">
+flowchart LR
+  Q["🧑 question"] --> P["🔍 live panel:<br/>embed → top-5 → trim<br/>(real numbers)"]
+  P --> S["✍️ answer streams<br/>token-by-token ▌"]
+  S --> OK["✅ fast &amp; transparent;<br/>trace persists under the answer"]
+  classDef s fill:#0d1f33,stroke:#1f6feb88,color:#e6edf3;
+  classDef b fill:#11271a,stroke:#3fb95088,color:#e6edf3;
+  class Q,P,S s;
+  class OK b;
+          </pre></div>
+        </div>
+
+        <h3>One hard call: single-shot vs agentic 🧭</h3>
+        <p>A multi-part question — "make a table covering all airspace classes" — exposes a real limit of single-shot RAG: the
+          operating rules live in Part&nbsp;91 while the class <i>designations</i> live in Part&nbsp;71, and one retrieval can
+          miss a part. An <b>agentic</b> loop, where the model calls a <code>search_cfr</code> tool as many times as it needs,
+          recovers them — but each search is resent in the history, so tokens grow roughly quadratically.</p>
+
+        <div class="diagram"><pre class="mermaid">
+flowchart TB
+  Q["❓ “table of all airspace classes”<br/>(spans Part 91 + Part 71)"] --> A["single-shot<br/>1 retrieve → 1 answer"]
+  Q --> B["agentic loop<br/>model calls search_cfr<br/>up to 3× (capped)"]
+  A --> AR["✅ cheap &amp; fast<br/>⚠️ can miss a part in another Part"]
+  B --> BR["✅ recovers every part<br/>💰 tokens grow ~quadratically"]
+  AR --> DEC["🏁 shipped: single-shot<br/>agentic kept as an experiment"]
+  BR --> DEC
+  classDef s fill:#0d1f33,stroke:#1f6feb88,color:#e6edf3;
+  classDef warn fill:#2a2410,stroke:#d2932288,color:#e6edf3;
+  classDef win fill:#11271a,stroke:#3fb95088,color:#e6edf3;
+  class Q,A,B s;
+  class AR,BR warn;
+  class DEC win;
+          </pre></div>
+        <p class="muted">The trade-off was decided by <i>cost vs quality</i>: single-shot answers the typical question well for a
+          fraction of the tokens, so it ships; the agentic loop stays in <code>harness/agent_rag.py</code> as a documented
+          experiment. The full story is in the <a href="./rag-slides.html">slide deck →</a>.</p>
+
+        <h3>Quick self-check ✅</h3>
+        <div class="quiz" data-answer="2">
+          <p class="q">A relevant §-section is 200k characters. Why not just keep its first ~5,000 chars?</p>
+          <button class="opt">Truncating the front is fine — regulations always state the key rule up top.</button>
+          <button class="opt">Because the first 5,000 chars are always the least relevant part.</button>
+          <button class="opt">The answer can sit in a late subsection like (a)(1)(iv); <code>select_context</code> keeps the windows closest to the question, wherever they are.</button>
+          <p class="explain">Cut on <i>relevance</i>, not position: split into ~500-char windows, rank by similarity to the
+            question, keep best-first up to the budget. Same tokens, but the right clause survives.</p>
+        </div>
+        <div class="quiz" data-answer="1">
+          <p class="q">Why prepend the previous question only for bare follow-ups, not for every question?</p>
+          <button class="opt">To save tokens — shorter queries embed faster.</button>
+          <button class="opt">A full standalone question already has its own topic words; prepending an unrelated prior question pollutes its embedding and retrieves the wrong sections.</button>
+          <button class="opt">Because the model can't read more than one question at a time.</button>
+          <p class="explain">A "Class B/C airspace" prefix once buried a fuel-reserve question → airspace §§ instead of §91.151.
+            So contextualize only when the turn looks bare (≤5 words / a cue word).</p>
+        </div>
+        <div class="quiz" data-answer="0">
+          <p class="q">The agentic loop gave great answers on multi-part questions. Why ship single-shot instead?</p>
+          <button class="opt">Cost — each search is resent in the history, so tokens grow ~quadratically; single-shot answers the typical question well for far fewer.</button>
+          <button class="opt">The agentic loop couldn't cite its sources.</button>
+          <button class="opt">Single-shot is more accurate on every question.</button>
+          <p class="explain">It's a cost/quality trade-off. Agentic recovers parts a single retrieval misses, but at many times
+            the tokens — so it stays an experiment while single-shot ships.</p>
+        </div>
+      </section>
+
+      <section id="whole">
+        <h2>4B.5 · The whole picture <span class="muted" style="font-weight:400;font-size:1rem">— every detail</span></h2>
+        <p>Read it top-to-bottom. The left column runs <b>once</b> (<span class="ptag">python indexer.py</span>); the right column
+          runs <b>on every question</b>. They never talk directly — they meet only through the two files in the middle
+          (<code>index.pkl</code> + <code>index.meta.json</code>), which is what keeps build-time and query-time from silently diverging.
+          Still not drawn until here: the fail-loud <b>dimension check</b>, the <b>BM25 / hybrid</b> options, and the
+          <code>CHAMPION_*</code> config that pins one deployed setup.</p>
+
+        <div class="diagram">
+          <pre class="mermaid">
+flowchart TB
+  %% ── OFFLINE: build the index ──────────────────────────────
+  subgraph BUILD["🏗️ &nbsp;OFFLINE — Indexing &nbsp;(python indexer.py)"]
+    direction TB
+    D["📄 documents/<br/>14 CFR markdown"]
+    R{"pick_chunker /<br/>_chunk"}
+    SEC["chunk_by_section<br/>one chunk per §-section<br/>(carries section + part)"]
+    CHAR["chunk_text<br/>~1000 chars, 100 overlap<br/>paragraph boundaries"]
+    EMB["embed()<br/>champion model = bge<br/>doc-side prefix + normalize"]
+    REC["records[]<br/>chunk_id · source · section<br/>part · text · embedding"]
+    SAVE["save_index()"]
+    D --> R
+    R -->|"§-tagged (FAA)"| SEC
+    R -->|plain text| CHAR
+    SEC --> EMB
+    CHAR --> EMB
+    EMB --> REC --> SAVE
+  end
+
+  %% ── DISK: the meeting point ───────────────────────────────
+  subgraph DISK["💾 &nbsp;ON DISK — single source of truth"]
+    direction TB
+    PKL[("index.pkl<br/>vectors + text + meta")]
+    META[("index.meta.json<br/>embed_model = bge (A1)")]
+  end
+  SAVE --> PKL
+  SAVE --> META
+
+  %% ── ONLINE: answer a question ─────────────────────────────
+  subgraph SERVE["🛩️ &nbsp;ONLINE — Query &nbsp;(app.py / streamlit_app.py)"]
+    direction TB
+    BOOT["startup<br/>load_index() + load_index_embed_model()<br/>build_bm25 if hybrid/bm25"]
+    PROBE{"dimension probe<br/>query-dim == index-dim?"}
+    FAIL["💥 SystemExit<br/>rebuild the index"]
+    Q["🧑 user question"]
+    RET["retrieve()<br/>method=vector · k=5<br/>embed query · cosine · top-K"]
+    FMT["format_context()<br/>numbered block  [1] … [5]"]
+    UC["user_content<br/>CONTEXT + QUESTION"]
+    LLM["client.messages.create<br/>claude-sonnet-4-6<br/>+ SYSTEM_PROMPT (grounding + balanced)"]
+    ANS["answer text with [n] markers"]
+    CITE["_build_citations / _cited<br/>parse [n] · drop out-of-range · dedupe"]
+    OUT["📎 reply + Sources<br/>§xxx (Part nn) cards"]
+    BOOT --> PROBE
+    PROBE -->|mismatch| FAIL
+    PROBE -->|ok| Q
+    Q --> RET --> FMT --> UC --> LLM --> ANS --> CITE --> OUT
+  end
+
+  %% ── cross-phase links ─────────────────────────────────────
+  PKL -.->|loaded once| BOOT
+  META -.->|"which model built it?<br/>query with the SAME one"| RET
+  CFG["⚙️ CHAMPION_* config<br/>chunker=section · embed=bge<br/>method=vector · k=5"]
+  CFG -.-> EMB
+  CFG -.-> RET
+
+  classDef build fill:#11271a,stroke:#3fb95055,color:#e6edf3;
+  classDef serve fill:#0d1f33,stroke:#1f6feb55,color:#e6edf3;
+  classDef disk fill:#2a2410,stroke:#d2932255,color:#e6edf3;
+  classDef decision fill:#241a2e,stroke:#a371f755,color:#e6edf3;
+  classDef danger fill:#2d1215,stroke:#f8514955,color:#e6edf3;
+  classDef cfg fill:#161b22,stroke:#8b949e77,color:#e6edf3,stroke-dasharray:4 3;
+  class D,SEC,CHAR,EMB,REC,SAVE build;
+  class BOOT,Q,RET,FMT,UC,LLM,ANS,CITE,OUT serve;
+  class PKL,META disk;
+  class R,PROBE decision;
+  class FAIL danger;
+  class CFG cfg;
+          </pre>
+        </div>
+
+        <div class="legend">
+          <span><span class="swatch" style="background:#11271a;border-color:#3fb950"></span>Offline / build</span>
+          <span><span class="swatch" style="background:#0d1f33;border-color:#1f6feb"></span>Online / query</span>
+          <span><span class="swatch" style="background:#2a2410;border-color:#d29322"></span>On disk</span>
+          <span><span class="swatch" style="background:#241a2e;border-color:#a371f7"></span>Decision</span>
+          <span><span class="swatch" style="background:#2d1215;border-color:#f85149"></span>Fail-loud guard</span>
+          <span><span class="swatch" style="background:#161b22;border-color:#8b949e"></span>Champion config (dashed)</span>
+        </div>
+      </section>
+
+      <section id="why">
+        <h2>4B.6 · Why it's built this way</h2>
+        <h3>① One config, two phases — <span class="ptag">CHAMPION_*</span></h3>
+        <p>The four <code>CHAMPION_*</code> constants in <code>indexer.py</code> (chunker=<code>section</code>,
+          embed=<code>bge</code>, method=<code>vector</code>, k=<code>5</code>) are the <b>only</b> place the deployed retrieval
+          setup is defined. The index is <i>built</i> with them and the app <i>queries</i> with them, so build-time and
+          query-time can't drift apart. Swap a champion → edit these four lines → re-run the indexer.</p>
+
+        <h3>② The index describes itself — <span class="ptag">A1</span></h3>
+        <p><code>index.meta.json</code> records which embedding model produced the vectors. A reader loads that model back via
+          <code>load_index_embed_model()</code>, so you can never silently query a <code>bge</code> index with
+          <code>minilm</code>. The startup <b>dimension probe</b> is the backstop: if the query model's output dimension
+          doesn't match the stored vectors, the app exits loudly instead of returning meaningless nearest neighbours.</p>
+
+        <h3>③ Two chunkers, content-routed — <span class="ptag">pick_chunker</span></h3>
+        <p>FAA text carries <code>&lt;!-- §91.151 | part91 --&gt;</code> tags, so <code>chunk_by_section</code> makes one chunk
+          per regulation and keeps <code>section</code>/<code>part</code> on each record — that's what lets an answer cite
+          <code>§91.151 (Part 91)</code> exactly. Anything untagged falls back to the generic ~1000-char sliding window with
+          overlap so no information is lost across a cut.</p>
+
+        <h3>④ Shared numbering — <span class="ptag">format_context</span></h3>
+        <p><code>format_context()</code> produces the <code>[1] … [5]</code> block for the prompt. The <b>same</b> function is
+          used by the live app and the experiment harness, so the <code>[n]</code> the model cites always maps to the same
+          chunk everywhere. Citation parsing then drops any <code>[n]</code> out of range or invented by the model.</p>
+
+        <h3>⑤ Two frontends, one retrieval</h3>
+        <p><code>backend/app.py</code> (Flask + React) and <code>streamlit_app.py</code> both call the identical
+          <code>retrieve()</code> with the identical <code>CHAMPION_*</code> config — only the UI differs. Streamlit copies the
+          system prompt inline <i>temporarily</i> to avoid importing <code>app.py</code>'s module-level side effects (index
+          load, Anthropic client, Flask app).</p>
+      </section>
+
+      <section id="files">
+        <h2>4B.7 · File map</h2>
+        <div class="concept">
+          <ul>
+            <li><code>rag-starter/indexer.py</code> — chunk → embed → save; owns <code>CHAMPION_*</code> and <code>embed()</code></li>
+            <li><code>harness/retrieval.py</code> — <code>retrieve()</code> (vector / bm25 / hybrid), <code>format_context()</code>, <code>select_context()</code></li>
+            <li><code>rag-starter/backend/app.py</code> — Flask <code>/api/chat</code>: retrieve → prompt → Claude → citations</li>
+            <li><code>rag-starter/streamlit_app.py</code> — same retrieval, Streamlit UI, streaming, live panel, inline source cards</li>
+            <li><code>harness/agent_rag.py</code> — the agentic-loop experiment (search_cfr tool), kept for comparison</li>
+            <li><code>rag-starter/phase0_smoke.py</code> — one-shot smoke test through the real <code>/api/chat</code> path</li>
+            <li><code>index.pkl</code> / <code>index.meta.json</code> — the self-describing index the two phases meet through</li>
+          </ul>
         </div>
       </section>
 
       <footer>
         <p>
           <a href="./index.html">← Start here</a> ·
-          개념: <a href="./04A-context.html">Module 4 · Context</a> ·
-          이전: <a href="./03B-extractor.html">3B · extractor</a> ·
-          다음: <a href="./05B-agent.html">5B · data agent →</a>
+          concepts: <a href="./04A-context.html">Module 4 · Context</a> ·
+          prev: <a href="./03B-extractor.html">3B · extractor</a> ·
+          next: <a href="./05B-agent.html">5B · data agent →</a>
         </p>
-        <p>llm-app-lab · Module 4B · Project · starter: <code>rag-starter.zip</code> · spec: <code>rag-contest/</code></p>
+        <p>llm-app-lab · Module 4B · Project · code: <code>rag-contest/rag-starter/</code> · spec: <code>rag-contest/CONTEST.md</code> · slides: <a href="./rag-slides.html">deck</a></p>
       </footer>
     </div>
+
     <script>
+      // Per-question multiple-choice quiz: mark correct/wrong, reveal the
+      // explanation once the right option is chosen (site convention).
       document.querySelectorAll(".quiz").forEach((quiz) => {
         const answer = Number(quiz.dataset.answer);
         quiz.querySelectorAll(".opt").forEach((opt, i) => {

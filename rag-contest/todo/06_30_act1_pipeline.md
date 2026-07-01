@@ -1,0 +1,328 @@
+# 1막 (A) 파이프라인 — 스타터 스모크 → FAA 코퍼스 투입 + §인용 + 실험 기록 스키마
+
+> 🎬 **1막 = 파이프라인 고도화 + 실험 하네스 제작.** 이 문서는 그 중 **(A) 파이프라인**(단계 1~5, ✅완료). **(B) 하네스**(holdout 라벨 검증·채점기·오케스트레이터·인용검증)는 → [`06_30_act1_harness.md`](06_30_act1_harness.md). 하네스까지 끝나야 2막(밤샘 자동실험)을 돌릴 수 있다.
+
+## 사용자 시나리오 (가장 먼저 읽힌다)
+
+- **누가**: 홍정민 — 대회 전날, RAG 챗봇을 *아폴로 예제*에서 *FAA 항공법*으로 갈아끼우는 사람.
+- **언제**: 스타터(`rag-starter/`)가 자기 예제로 도는 걸 확인한 직후, 진짜 코퍼스를 넣으려는 순간.
+- **어떻게**:
+  1. 스타터를 *아폴로 예제 그대로* 한 번 켜서 "RAG가 돈다"를 눈으로 본다. (스모크 테스트)
+  2. FAA PDF 6개를 텍스트로 뽑아내고, **조항(§) 단위로 잘라** 꼬리표를 붙인다.
+  3. 아폴로 문서를 치우고 **FAA만** 남긴 뒤, 색인 만들기(`indexer.py`)를 다시 돌린다.
+  4. 채팅 UI를 열고 *"What are the day VFR fuel-reserve requirements?"* 를 물어본다.
+- **결과**: 챗봇이 **FAA 조항을 근거로** 답하고, Sources 줄에 **`§91.151 (Part 91)`** 같은 *진짜 조항 번호*가 뜬다. → "이제 우리 챗봇은 항공법 오픈북 학생이 됐다."
+- **잘 안 될 때(실패 시 보이는 것)**:
+  - PDF 추출이 지저분하면 → 답에 *머리말·쪽번호·깨진 표 글자*가 섞여 보인다(part67 의료기준 표가 위험).
+  - §꼬리표가 안 붙으면 → Sources가 여전히 *"part91.md, 12번 조각"* 처럼 파일명으로만 뜬다(= 25점 인용 항목을 못 먹음).
+
+> 비유: 도서관에 책(PDF)을 들여놓고, **조항 번호 색인 카드**를 끼워, 사서(챗봇)가 "몇 조 몇 항"을 짚어 답하게 만드는 작업.
+
+---
+
+## 배경
+
+- 스타터는 동작하는 완성형 RAG지만 예제가 *아폴로 위키*다. 우리 대회 코퍼스는 **FAA 14 CFR 6개 PDF**(`corpus/documents/*.pdf`).
+- `indexer.py`는 `.md/.txt`만 읽고, 레코드에 **§·part 메타가 없다**. → PDF를 §태그 붙은 마크다운으로 바꾸고, 인덱서가 그 메타를 저장하게 해야 한다.
+- 이후 2막(야간 그리드 실험)이 이 인덱스 위에 올라선다. 그래서 **실험 기록 포맷(runs.jsonl)을 지금 못박아** 모든 실행이 같은 형식으로 쌓이게 한다. (EXPERIMENTS.md §4·[비판적 수정 4/5]와 연결)
+
+## 목표
+
+1. 스타터가 내 환경에서 RAG로 도는 것을 스모크로 확인 (Phase 0).
+2. **모든 실험을 성공·실패 가리지 않고 append**하는 `runs.jsonl` + `index_manifest.jsonl` 스키마와 로거 확정.
+3. FAA 6 PDF → **§태그 마크다운** → §·part 메타를 품은 `index.pkl` 적재 (Phase 1).
+4. 채팅 답변의 Sources가 **`§91.151 (Part 91)`** 형태로 뜬다 (시나리오 결과 장면 실현).
+
+## 변경 대상 파일
+
+### 수정
+- `rag-starter/indexer.py` — §경계 청커 추가 + 레코드에 `section`·`part` 메타 저장
+- `rag-starter/backend/app.py` — 인용 응답에 `section`·`part` 실어 보내기
+
+### 신규
+- `harness/__init__.py` — `harness`를 패키지로(임포트 경로 고정, [리뷰 T1])
+- `harness/recorder.py` — JSONL 로거(append) + 스키마 정의(성공·실패 모두 기록)
+- `harness/extract_faa.py` — PDF → §태그 마크다운 (`rag-starter/documents/*.md`)
+- `harness/tests/test_recorder.py` — JSONL 왕복·malformed 단위테스트 ([리뷰 T3])
+- `harness/tests/test_section_parser.py` — §/part 추출 테스트(vol1 멀티파트·§누락) ([리뷰 T3])
+- `experiments/runs.jsonl`, `experiments/index_manifest.jsonl` — 실행 기록 원천(자동 생성)
+
+---
+
+## 중요 규칙
+
+- 각 단계를 통과(검증)하지 않으면 다음 단계로 넘어가지 않는다.
+- **기록은 버리지 않는다** — recall=0, 추출 실패, 깨진 표도 `status:"failed"`로 한 줄 남긴다. *왜 안 됐는지*가 대시보드의 핵심 신호이기 때문.
+- 정답 § 라벨이 검증되기 전(§ [비판적 수정 5])엔 Recall 점수를 신뢰하지 않는다 — 이 문서는 *인덱스까지*만, 채점은 이후 페이즈.
+- 핵심 로직만 간결하게, 방어 코드 최소화.
+
+> **🔧 엔지니어링 리뷰 반영(2026-06-30):** P1 3건 + 테스트/스모크 병합 완료 — T1(harness 패키징)·T2(part는 §번호에서 유도 + § 추출 하드게이트)·T3(pytest)·T5(end-to-end runs.jsonl 스모크 + atomic append). **리뷰 디퍼(P2, 미반영):** `pick_chunker(path)` 명시화 + 비-FAA 파일(`06-changelog.md`) 화이트리스트 — 단계 4에서 여유 되면.
+
+---
+
+## 실행계획
+
+### 각 단계 요약 (쉽게 + UI 변화)
+
+- **단계 1 — 스모크**: 스타터를 아폴로 예제로 한 번 돌려 "RAG가 돈다"를 확인.
+  UI: 변화 없음 (터미널로만 확인).
+- **단계 2 — 기록 스키마**: 실험 한 줄이 어떻게 생겼는지(JSON 한 줄) 형식을 정하고 로거를 만든다.
+  UI: 변화 없음 (나중 대시보드의 *연료 탱크*를 만드는 단계).
+- **단계 3-1 — PDF 추출**: FAA 6 PDF를 깨끗한 평문 마크다운으로 변환.
+  UI: 변화 없음 (`documents/`에 FAA 텍스트 생김).
+- **단계 3-2 — §·part 태깅**: 그 평문에 "이건 §91.151 (part91)" 꼬리표를 단다 + 파서 테스트.
+  UI: 변화 없음 (md에 `<!-- §… -->` 주석 박힘).
+- **단계 4 — FAA 인덱싱**: 아폴로를 빼고 FAA만 색인. 각 조각에 "이건 §91.151" 꼬리표.
+  UI: 변화 없음 (`index.pkl`이 FAA로 교체).
+- **단계 5 — § 인용 표시**: 답변 Sources에 조항 번호를 노출.
+  UI: **Sources 줄이 `part91.md` → `§91.151 (Part 91)`로 바뀐다.** ← 시나리오 결과 장면.
+
+```
+UI 진행 한눈
+─────────────────────────────────────────────
+단계 1  [터미널] Q: Apollo 11? → 답+citations 출력            (화면 변화 없음)
+단계 2  (백그라운드) runs.jsonl 한 줄 형식 확정                (화면 변화 없음)
+단계 3-1 (백그라운드) documents/ 에 part61.md … part91.md 평문 생성 (화면 변화 없음)
+단계 3-2 (백그라운드) 그 md에 <!-- §… --> §·part 태그 삽입         (화면 변화 없음)
+단계 4  (백그라운드) index.pkl ← FAA §태그 인덱스               (화면 변화 없음)
+단계 5  [채팅 UI] Q: VFR fuel reserve?
+        ┌───────────────────────────────────────────┐
+        │ A: For day VFR, an airplane must carry      │
+        │    enough fuel to fly to the first point of │
+        │    intended landing plus 30 minutes [1].    │
+        │ ─────────────────────────────────────────── │
+        │ Sources:                                    │
+        │   [1] §91.151 (Part 91)   ← 여기가 바뀜      │
+        └───────────────────────────────────────────┘
+        라벨러/사용자가 "진짜 조항 인용"을 처음 보는 시점.
+─────────────────────────────────────────────
+```
+
+---
+
+### [x] 단계 1: 스타터 스모크 테스트 (Phase 0) ✅ 4761d04
+
+**변경 파일**: 없음 (실행·확인만)
+
+**변경 내용**:
+- venv에 의존성 설치: `rag-starter/backend/requirements.txt` (`sentence-transformers` 최초 ~470MB).
+- `.env`의 `ANTHROPIC_API_KEY` 확인(이미 교체·검증됨).
+- 아폴로 예제로 인덱스 빌드 후 스모크 실행.
+
+**통과 기준**:
+- `cd rag-contest/rag-starter && python indexer.py` → `✓ Indexed N chunks` 출력(N>0).
+- `python phase0_smoke.py` → `REPLY`에 아폴로 관련 답 + `CITATIONS`에 `[1] apollo-*.md` 1개 이상.
+- `ruff check .` (있으면) 에러 0.
+
+**마지막 — 커밋 제안**:
+- 이 단계는 *코드 변경 없음(실행·확인만)* → `/simplify` 생략, 바로 커밋 제안.
+
+**검증 통과 시 커밋**:
+`chore(rag): verify starter RAG runs end-to-end (apollo smoke)`
+
+---
+
+### [x] 단계 2: 실험 기록 스키마 + 로거 (`harness/recorder.py`) ✅ a158bc5
+
+**변경 파일**: `harness/__init__.py`·`harness/recorder.py` (신규), `harness/tests/test_recorder.py` (신규), `experiments/.gitkeep`
+
+> **[리뷰 T1 — 임포트 경로 고정]** `harness/`는 `rag-contest/harness/`, 인덱서/앱은 `rag-starter/`에서 실행 → `from harness.recorder` 가 그냥은 **ImportError**. 전략 통일: `harness/__init__.py`로 패키지화하고, `recorder.py`는 `experiments/` 경로를 *리포 기준 절대경로*로 잡는다(`Path(__file__).parent.parent / "experiments"`). indexer가 부를 땐 `app.py`처럼 `sys.path.insert(0, <rag-contest>)` 후 `from harness.recorder import ...`. 검증 커맨드는 **`cd rag-contest`** 기준으로 적는다.
+
+**변경 내용** — 두 종류의 레코드를 **append-only JSONL**로. *모든* 실행을 성공·실패 가리지 않고 한 줄씩 남긴다.
+
+- `experiments/index_manifest.jsonl` — 인덱스 빌드 1회 = 1줄:
+  ```json
+  {"kind":"index_build","build_id":"idx_001","ts":"2026-06-30T15:30:00Z",
+   "config":{"chunking":"section","chunk_chars":null,"overlap":null,
+             "embed_model":"paraphrase-multilingual-MiniLM-L12-v2","corpus":"faa"},
+   "result":{"status":"ok","n_chunks":1840,"n_sections":1620,"n_docs":6,"build_secs":42.1},
+   "error":null}
+  ```
+- `experiments/runs.jsonl` — (설정 × 질문) 실행 1회 = 1줄:
+  ```json
+  {"kind":"run","run_id":"r0007","ts":"...","build_id":"idx_001",
+   "config":{"chunking":"section","embed_model":"bge-large-en-v1.5","retrieval":"hybrid",
+             "alpha":0.5,"topk":5,"rerank":false,"gen_model":"sonnet-4-6","prompt":"A"},
+   "question_id":"H03","stage":"retrieval",
+   "retrieval":{"topk_sections":["§91.151","§91.167"],"recall":1.0,"coverage":1.0,"mrr":1.0},
+   "generation":null,"tokens":null,"latency_ms":120,
+   "status":"ok","error":null}
+  ```
+
+**효과적 기록의 원칙 (이 단계가 정의하는 계약)**:
+1. **append-only, 한 줄=한 실행** — 밤새 돌다 죽어도 이미 쓴 줄은 멀쩡(크래시 내성).
+2. **성공도 실패도 모두 기록** — `status ∈ {ok, failed, error}` + `error`(메시지). recall=0·깨진 추출·낮은 심판점수도 *지우지 않는다*. 대시보드가 분포·실패 패턴("bge는 표에서 늘 실패")을 봐야 하니까.
+3. **자기 완결(self-describing)** — 각 줄이 *전체 config를 인라인*으로 품어, 한 줄만 봐도 해석된다(참조 ID로 미루지 않음).
+4. **대시보드 친화 평면 필드** — `config.*`·`retrieval.recall`·`generation.judge` 등 *경로가 고정*돼 필터/정렬이 쉽다.
+5. **안정적 ID** — `run_id`·`build_id`·`question_id`로 조인. 원천(runs.jsonl)과 파생(leaderboard.md)을 분리.
+
+- `recorder.py` API: `log_index_build(record: dict)`, `log_run(record: dict)`, `new_id(prefix)` — 각자 해당 파일에 한 줄 append.
+- **[리뷰 A2 — atomic append]** 레코드당 `json.dumps(record, ensure_ascii=False) + "\n"` 을 **단일 `write()`** 로 기록(`open(path, "a")` = O_APPEND). POSIX에서 한 줄이 `PIPE_BUF`(4096B) 미만이면 단일 append-write는 원자적 → 2막에서 병렬화해도 줄이 안 섞임. (줄이 4096B 넘을 일 없게 `text` 같은 큰 필드는 runs.jsonl에 넣지 않거나 잘라 담는다.)
+
+**통과 기준**:
+- `cd rag-contest && python -c "from harness.recorder import log_run; log_run({'kind':'run','run_id':'r_test','status':'ok'})"` → `experiments/runs.jsonl`에 1줄 추가.
+- `cd rag-contest && python -c "import json; [json.loads(l) for l in open('experiments/runs.jsonl')]"` → 파싱 에러 없음(유효 JSONL).
+- **[리뷰 T3]** `cd rag-contest && python -m pytest harness/tests/test_recorder.py -q` → 통과. 커버: ①레코드 write→read 왕복 동일, ②`status:"failed"` 레코드도 정상 append·파싱, ③malformed 입력 시 동작 정의(예외 or 스킵).
+
+**마지막 — /simplify 후 커밋 제안 (의무)**:
+- 위 통과 기준을 모두 만족하면 **먼저 `/simplify`를 돌려** 정리·리뷰를 반영한 뒤, 아래 커밋을 제안한다. (순서: 검증 → /simplify → 커밋)
+
+**검증 통과 시 커밋**:
+`feat(harness): append-only runs.jsonl/index_manifest schema + logger + tests`
+
+---
+
+### [x] 단계 3-1: FAA PDF → 깨끗한 텍스트 추출 (`harness/extract_faa.py`) ✅ 9fe97ef
+
+> 관심사 ①: *"PDF에서 깨끗한 텍스트를 빼낸다."* (추출 품질) — §태깅은 3-2.
+
+**변경 파일**: `harness/extract_faa.py` (신규, 추출부), `harness/requirements.txt`(pdf 라이브러리)
+
+**변경 내용**:
+- `pdfplumber`(또는 `pymupdf`)로 `corpus/documents/CFR-*.pdf` 6개 텍스트 추출.
+- 정리: 반복 머리말/꼬리말·쪽번호 제거, 과한 공백 정돈.
+- 출력: `rag-starter/documents/part61.md … part91.md` (+ `vol1.md`) — **이 단계는 평문(§태그 아직 없음)**.
+
+**통과 기준**:
+- `ls rag-starter/documents/*.md` → FAA 6개 파일 생성, 각 파일 비어있지 않음.
+- **눈검수**: part67(의료기준 표) 1개 열어 표 글자가 통째로 살아있는지 확인. 깨지면 `index_manifest`에 `status:"failed"` + 보정 메모.
+- `python -c "assert open('rag-starter/documents/part91.md').read().strip()"` → 정상 읽힘·비어있지 않음.
+
+**마지막 — /simplify 후 커밋 제안 (의무)**:
+- 통과 후 **먼저 `/simplify`** → 정리 반영 → 아래 커밋 제안. (순서: 검증 → /simplify → 커밋)
+
+**검증 통과 시 커밋**:
+`feat(corpus): extract + clean FAA 14 CFR PDFs to markdown`
+
+---
+
+### [x] 단계 3-2: §·part 태깅 + 파서 테스트 (`harness/extract_faa.py`) ✅ 51eba47
+
+> 관심사 ②: *"깨끗한 텍스트에 §/part 꼬리표를 단다."* (정규식 정확성) — 추출은 3-1.
+
+#### 🟢 쉬운 설명 (비유: 법전 책에 포스트잇 붙이기 📖)
+
+먼저 어려운 말부터:
+
+- **태그 / 꼬리표** = 문서 조각에 붙이는 *이름표*. "이 부분은 91조 151항"이라 적은 포스트잇.
+- **패턴 매칭** = 글에서 *특정 모양*을 찾아내는 규칙. "숫자.숫자 모양을 찾아라".
+- **글리프** = 화면에 찍힌 하나의 *기호 그림*. 여기선 조항 기호 **`§`**.
+- **SPOF (단일 장애점)** = *딱 하나에 의존하다 그게 무너지면 전부 무너지는* 약점. (기둥 하나에 의지하는 다리)
+- **파서** = 글을 읽어 *의미 조각으로 분해*하는 코드. 여기선 "§91.151, part91"을 뽑아내는 함수.
+
+**전체 그림:** 3-1에서 PDF를 *그냥 글자 덩어리*로 만들었다. 여기엔 "몇 조 몇 항"이라는 표시가 없다. 3-2는 그 덩어리를 훑으며 **조항이 시작되는 자리마다 포스트잇(꼬리표)을 붙이는** 작업. 이 포스트잇이 있어야 나중에 챗봇이 "출처: §91.151"이라고 조항을 짚는다.
+
+**① 다중 패턴 매칭 — "`§` 기호 하나만 믿지 않는다"**
+법전엔 조항 번호가 `§ 91.151` · `Sec. 91.151` · `Section 91.151` 세 모양으로 나온다. `§`만 찾으면 될 것 같지만, **PDF 추출에서 `§` 기호가 깨져 사라지면 포스트잇이 0개** = 챗봇이 조항 인용을 아예 못 함. 그래서 세 모양을 다 잡는다(기둥 하나가 아니라 셋 → SPOF 방지).
+
+**② part는 §번호 앞자리에서 뽑는다 — "파일 이름 말고 번호를 봐라"**
+편(part)은 조항 번호의 앞자리로 구한다: `§91.151 → part91`, `§61.5 → part61`. 파일 이름을 안 쓰는 이유: `vol1.md` 한 파일에 **1편~59편이 섞여** 있어 파일명으로 하면 전부 "vol1편"으로 틀림. 번호 앞자리를 보면 같은 파일 안에서도 각 조항이 제 편을 정확히 찾아간다.
+
+**③ 하드 게이트 — "포스트잇이 너무 적으면 즉시 중단"**
+규칙이 어긋나 포스트잇이 거의 안 붙었는데도 "성공~" 하고 넘어가면 *문제를 모른 채* 다음 단계로 간다(조용한 실패 = 최악). 그래서 **"§ 포스트잇이 50개 미만이면 빌드 실패 + 로그에 실패 기록."** 수십 개짜리 part91에서 5개만 잡히면 고장이니 큰소리로 멈춘다.
+
+**④ 파서 테스트 — "번호 뽑는 함수를 따로 떼서 검증"**
+번호 뽑는 로직을 `parse_sections()` 작은 함수로 분리해 3가지를 자동 확인: (a) 패턴 3종 다 `(§91.151, part91)`로 뽑히나, (b) 한 파일에 섞인 `§1.1`(part1)·`§61.5`(part61)이 각각 나뉘나, (c) § 없는 글에선 *크래시 없이* 빈 결과를 내나.
+
+> 💡 **왜 25점짜리인가**: 채점에 *조항 인용 정확도*가 걸려 있다. 답이 맞아도 근거가 "part91.md 12번 조각"이면 감점 — "§91.151"을 정확히 짚어야 점수. 이 꼬리표가 그 점수의 연료다.
+> 💡 **왜 "조용한 실패"가 최악인가**: 에러를 내면 고칠 수 있지만, *성공한 척 0개를 붙이면* 대회 당일까지 모른다. ③ 하드 게이트가 그 안전장치.
+
+**변경 파일**: `harness/extract_faa.py` (수정, 태깅부), `harness/tests/test_section_parser.py` (신규)
+
+**변경 내용**:
+- **§경계 분할 + 메타 주석**: 3-1의 평문을 읽어 조항 시작마다 `<!-- §91.151 | part91 -->` 삽입.
+  - **[리뷰 A3 — § 글리프는 SPOF]** `§` 하나에만 의존 금지. `§`가 추출에서 떨어지면 *모든 태그가 조용히 null* → Recall·인용 동시 붕괴. 매칭은 다중 패턴: `(?:§|Sec\.|Section)\s?(\d+\.\d+\w?)`.
+  - **[리뷰 A1 — part는 §번호에서 유도]** 파일명 기반 금지(vol1은 Parts 1–59가 한 파일이라 틀림). part는 **§번호 앞자리**: `§91.151 → part91`, `§1.1 → part1`. 단일 규칙이라 per-Part도 자동으로 맞음.
+- 파서 로직은 `parse_sections(text) -> list[(section, part)]`로 분리(테스트 가능하게).
+
+**통과 기준**:
+- **[리뷰 A3 — 하드 게이트]** `grep -c '<!-- §' rag-starter/documents/part91.md` → § 블록 수가 임계(>50) **미만이면 빌드 실패 처리** + `index_manifest`에 `status:"failed"`(조용한 0건 차단).
+- **[리뷰 T3]** `cd rag-contest && python -m pytest harness/tests/test_section_parser.py -q` → 통과. 커버: ①`§91.151`·`Sec. 91.151`·`Section 91.151` 모두 `(§91.151, part91)`, ②**vol1 멀티파트**(`§1.1→part1`, `§61.5→part61`이 같은 파일에서 각각), ③**§ 누락 텍스트** → 빈 결과(크래시 아님).
+
+#### 🟢 결과 — 뭐가 좋아졌나 (실측)
+
+> 한 문장: *"조항 제목에만 붙어야 할 포스트잇이, 처음엔 엉뚱한 곳에도 붙었는데 → 이제 제목에만 정확히 붙는다."*
+
+**비유:** 법전에 "새 조항 시작" 포스트잇 붙이기. 처음엔 `§ 91.107`이란 글자만 보면 무조건 붙였다. 그런데 본문엔 *"...앞서 **§ 91.107(a)(3)**에 규정된 대로..."* 처럼 다른 조항을 **가리키는 참조**(제목 아님)가 많다. 그것까지 붙여서 같은 조항에 포스트잇이 여러 장 붙었다(§91.107에 6장, §91.865에 8장).
+
+**고친 방법 — "진짜 제목 vs 참조" 구별:**
+- **진짜 제목** = 줄 맨 앞 `§ 91.107` + 뒤가 *줄끝 또는 대문자 제목* (`§ 91.107`↵`Use of safety belts`) → 붙인다.
+- **참조** = 번호 뒤에 `(a)(3)` 괄호나 소문자가 이어짐 → 안 붙인다. (정규식 **후방탐색**으로 구별)
+
+| 지표 | 처음 | 고친 후 | 의미 |
+|---|---|---|---|
+| 총 태그 | 361 | **256** | 가짜(참조) 105개 제거 |
+| 중복 | 있음(§91.107에 6장) | **0** | 조항당 딱 1장 = 제목에만 붙음 |
+| §91.151 | — | **제목 정확 태깅** ✅ | 시나리오 핵심(연료 조항) 성공 |
+
+> 💡 **"중복 0"이 왜 강력한 증거인가**: 조항 *제목*은 문서에 딱 한 번 나오지만 *참조*는 여러 번 반복된다. "같은 번호 포스트잇 여러 장" = 참조를 잘못 잡은 신호. 중복이 0 = 이제 *한 번뿐인 제목*만 잡는다는 뜻 → 숫자 하나로 품질을 증명.
+> 💡 **왜 25점에 중요한가**: 포스트잇이 엉뚱히 붙으면 4단계에서 조각의 "출처 번호"가 틀린다. 연료 규정 조각인데 참조 때문에 "§91.865"로 표시되면 챗봇이 틀린 조항 인용 → 감점.
+
+**마지막 — /simplify 후 커밋 제안 (의무)**:
+- 통과 후 **먼저 `/simplify`** → 정리 반영 → 아래 커밋 제안. (순서: 검증 → /simplify → 커밋)
+
+**검증 통과 시 커밋**:
+`feat(corpus): tag §-sections + §-derived part (multi-pattern) with parser tests`
+
+---
+
+### [x] 단계 4: FAA 인덱싱 + §·part 메타 (`indexer.py`) ✅ a2f9339 (⚠️ 다른 세션 docs 커밋에 섞여 랜딩)
+
+**변경 파일**: `rag-starter/indexer.py` (수정), `rag-starter/documents/_apollo_backup/`(이동)
+
+**변경 내용**:
+- 아폴로 `.md`를 `documents/_apollo_backup/`로 이동(인덱서가 하위 폴더는 건너뜀 — 확인됨).
+- `chunk_by_section(text)` 추가: `<!-- §… -->` 주석 경계로 분할(FAA 기본 청커).
+- `build_index()`에서 각 레코드에 `section`·`part` 추가 — **둘 다 §번호에서 유도**([리뷰 A1], 단계 3 주석 파싱).
+- FAA 인덱싱은 §청커 사용, 아폴로/기타는 기존 `chunk_text` 유지(청킹 방식은 이후 그리드 축).
+  - _[리뷰 디퍼 T4·P2]_ 여유 되면 `pick_chunker(path)`로 라우팅 명시화 + 비-FAA(`06-changelog.md`) 화이트리스트 제외.
+- 빌드 끝에 `recorder.log_index_build({...})` 한 줄 기록(성공/실패 모두).
+- **[리뷰 T5 — end-to-end 스모크]** 빌드 후 FAA 질문 1개를 `search()` → `runs.jsonl`에 *진짜 한 줄* 적재(`stage:"retrieval"`, `topk_sections` 채움). 스키마를 *선언이 아니라 실행*으로 증명 → 다음 페이즈 채점기와의 드리프트 방지.
+
+**통과 기준**:
+- `cd rag-starter && python indexer.py` → `✓ Indexed N chunks`, N은 § 블록 수와 근접.
+- `python -c "from indexer import load_index; r=load_index(); print(r[0].keys()); print(r[0]['section'], r[0]['part'])"` → `section`·`part` 존재, `§…`/`part…`. **part가 §앞자리와 일치**(vol1 레코드로 확인: §61.x → part61).
+- `experiments/index_manifest.jsonl`에 빌드 1줄 + `experiments/runs.jsonl`에 **스모크 1줄**(T5) 추가됨, 둘 다 유효 JSONL.
+- `search('VFR fuel reserve', load_index())[0]['section']` 이 연료 관련 §를 가리키는지 눈으로.
+
+**마지막 — /simplify 후 커밋 제안 (의무)**:
+- 위 통과 기준을 모두 만족하면 **먼저 `/simplify`를 돌려** 정리·리뷰를 반영한 뒤, 아래 커밋을 제안한다. (순서: 검증 → /simplify → 커밋)
+
+**검증 통과 시 커밋**:
+`feat(index): §-boundary chunking + §-derived section/part + end-to-end runs.jsonl smoke`
+
+---
+
+### [x] 단계 5: 답변 Sources에 § 인용 노출 (`backend/app.py`) ✅ 4f50fd1
+
+**변경 파일**: `rag-starter/backend/app.py` (수정)
+
+**변경 내용**:
+- `/api/chat` 인용 응답(`citations`)에 검색 레코드의 `section`·`part`를 함께 실어 보냄.
+- 프론트가 이미 Sources를 렌더하므로, 표시 라벨을 `§{section} (Part {part})`로(없으면 파일명 폴백).
+
+**통과 기준**:
+- `python phase0_smoke.py`의 QUESTION을 FAA 질문(`"What are the day VFR fuel-reserve requirements for an airplane?"`)으로 바꿔 1회 실행 → `CITATIONS`에 `§91.151` 류가 뜸.
+- 채팅 UI에서 같은 질문 → Sources가 **`§91.151 (Part 91)`** 로 표시(시나리오 결과 장면).
+- 범위밖 질문(`"best restaurant near the airport?"`) → "출처에 없음" 류로 거부(환각 없음) 눈확인.
+
+**마지막 — /simplify 후 커밋 제안 (의무)**:
+- 위 통과 기준을 모두 만족하면 **먼저 `/simplify`를 돌려** 정리·리뷰를 반영한 뒤, 아래 커밋을 제안한다. (순서: 검증 → /simplify → 커밋)
+
+**검증 통과 시 커밋**:
+`feat(backend): surface §section (Part N) in answer citations`
+
+---
+
+## 실험 로그
+
+(작업 중 아래에 누적 기록 — 예상과 다른 결과, 추출 깨짐, 결정 변경 등)
+
+- **단계 1 (4761d04):** venv가 Python 3.9.6인데 `indexer.py:74` `_model: SentenceTransformer | None`(PEP 604, 3.10+)가 import 시 `TypeError`. → `from __future__ import annotations` 한 줄로 해결(주석 lazy 평가). venv 교체(3.12 있음) 대신 한 줄 패치 선택 — 루트 venv를 다른 하위 프로젝트와 공유해서 영향 범위 최소화 + 이식성. 아폴로 스모크 1133 chunks, 답+출처 2개 정상.
+- **단계 2 (a158bc5):** `harness/` 패키지화(T1) + `recorder.py`(append-only, atomic single-write < 4096B) + pytest 8건(왕복·failed 보존·malformed 예외·오버사이즈 거부·유니코드·new_id 증가). `experiments/*.jsonl`은 자동 생성 원천이라 `.gitignore`(`.gitkeep`만 추적). `new_id`는 파일 줄 수 기반(크래시 내성, 병렬 경쟁은 문서화). pytest는 루트 `.venv`(3.12)에 신규 설치.
+- **단계 3-1 (미커밋):** PyMuPDF로 6 PDF → 평문 md(총 ~480만자). boilerplate는 *페이지 상단 리딩 블록*(쪽번호·`14 CFR Ch.`·`Federal Aviation Administration`·바 `§ NN.NN` 러닝헤더)만 제거 — 본문 첫 줄에서 멈춤. part91 §91.151/§91.167 연료 조항 온전, boilerplate 0건 잔존 확인.
+  - **part67 결정:** 걱정한 "2단 열 뒤섞임"은 없음(본문 99% 깨끗한 번호문단). 단 **청력 audiometric 표 1개**가 셀당 한 줄로 *세로 선형화*됨(`Frequency (Hz)/500/1000/2000/3000/Better ear (Db).../35…`). 값은 검색 가능해 **pdfplumber 보정 생략**(방어코드 최소화) — 표 정확도 질문 나오면 재검토.
+  - **알려진 엣지(3-2에서 처리):** 실제 조항 제목이 `§ 91.153`\n`VFR flight plan…`처럼 *번호와 제목이 다른 줄*. 러닝헤더 §는 리딩블록에서만 지워 본문 헤딩은 생존. 단 조항이 페이지 최상단에서 시작하면 러닝헤더로 오인돼 드물게 누락 가능(§ 하드게이트 >50엔 영향 미미).
+- **단계 5 (4f50fd1):** `_build_citations`에 `section`·`part`·`label` 추가, `_citation_label`이 `§91.151 (Part 91)` 생성(§ 메타 없으면 파일명 폴백). 프론트 App.jsx는 `c.label || c.source`. API 미호출 검증: 실제 검색+합성 answer로 [1]→§91.151(Part 91)·[2]→§25.955(Part 25)·범위밖[9] 필터·비FAA 폴백 확인. 모델 인용/거부는 기존 SYSTEM_PROMPT 소관(라이브 스모크는 예산상 선택). ⚠️ 동시 세션 대비 즉시 커밋 워크플로우 채택.
+- **단계 4 (a2f9339, ⚠️섞임):** 아폴로 21개 → `_apollo_backup/` 이동(인덱서가 하위폴더 skip). §청킹 라우팅은 *내용에 `<!-- §` 있으면* §단위, 없으면 글자수(파일명 하드코딩 대신 — T4/P2 해결). 결과 **2184 chunks**(part61 140·67 37·71 20·73 12·91 256·vol1 1719), 전 레코드 section·part, **part 불일치 0**. `harness.recorder` 임포트는 indexer가 `sys.path`에 rag-contest 추가(T1). T5 스모크: "day VFR fuel-reserve" → top **§91.151**(정확!)·§91.167 등, runs.jsonl에 진짜 1줄 적재. manifest 1줄(idx0001)·runs 1줄(r0001) 유효 JSONL. venv 주의: rag-contest/.venv 사용(sentence-transformers 설치처).
+- **단계 3-2 (미커밋):** §태깅 1차엔 part91이 **361개**(과다) — `§ 91.107(a)(3)(ii) of this chapter` 같은 *줄 시작 참조*까지 잡힘(중복 태그로 드러남). 정규식에 **후방탐색(lookahead)** 추가: 번호 뒤가 `(줄끝 | 공백+대문자 제목)`일 때만 제목 인정, `(a)` 하위항·소문자 참조 배제. 또 `\s`→`[ \t]`로 `Sec.`↵`91.107` 줄건넘 오탐 제거. 결과 **256개·중복 0**(고유=총계 = 참조 오염 사라짐). §91.151 제목 정확 태깅, vol1 멀티파트(part13/21/25/27/29…) 확인. 하드게이트(part91<50→SystemExit) 실증. 파서 테스트 8건.

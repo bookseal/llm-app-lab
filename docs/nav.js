@@ -64,11 +64,13 @@
       { t: "4A.9 · Project: RAG over a corpus", id: "project" },
     ] },
     { href: "04B-rag.html", num: "4B", label: "Project: RAG", sections: [
-      { t: "4B.1 · What it builds", id: "what" },
-      { t: "4B.2 · How it works", id: "how" },
-      { t: "4B.3 · Run it live", id: "run" },
-      { t: "4B.4 · Build & run locally", id: "local" },
-      { t: "4B.5 · The key idea", id: "key" },
+      { t: "4B.1 · 60-second version", id: "sixty" },
+      { t: "4B.2 · 5-minute version", id: "five" },
+      { t: "4B.3 · 10-minute version", id: "ten" },
+      { t: "4B.4 · 20-minute version", id: "twenty" },
+      { t: "4B.5 · The whole picture", id: "whole" },
+      { t: "4B.6 · Why it's built this way", id: "why" },
+      { t: "4B.7 · File map", id: "files" },
     ] },
     { href: "05A-agents.html", num: "5A", label: "Agents", sections: [
       { t: "5A.1 · The agent loop", id: "loop" },
