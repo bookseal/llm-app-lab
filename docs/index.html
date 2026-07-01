@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Build with LLMs — llm-app-lab</title>
     <link rel="stylesheet" href="./style.css?v=3" />
-    <script src="./nav.js?v=6" defer></script>
+    <script src="./nav.js?v=7" defer></script>
     <script type="module">
       import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
       mermaid.initialize({ startOnLoad: true, theme: "neutral" });
@@ -61,7 +61,7 @@ flowchart LR
 
         <div class="concept">
           <span class="tag">🧩 Module 3 · job-post extractor</span>
-          <h3><a href="./03-tools.html#project">Turn messy text into clean data</a></h3>
+          <h3><a href="./03A-tools.html#project">Turn messy text into clean data</a></h3>
           <p>
             Point Claude at a free-text job posting and get back <strong>validated JSON</strong> —
             title, pay, location, requirements. The trick is <em>tool use</em>: you force the model
@@ -71,7 +71,7 @@ flowchart LR
 
         <div class="concept">
           <span class="tag">📚 Module 4 · RAG app</span>
-          <h3><a href="./04-context.html#project">Answer questions over your own documents</a></h3>
+          <h3><a href="./04A-context.html#project">Answer questions over your own documents</a></h3>
           <p>
             Index a small corpus, <strong>retrieve only the relevant chunks</strong>, and answer with
             <strong>citations you can check</strong>. This is how you give an LLM knowledge it was never
@@ -81,7 +81,7 @@ flowchart LR
 
         <div class="concept">
           <span class="tag">🤖 Module 5 · data-analyst agent</span>
-          <h3><a href="./05-agents.html#project">Ask in English, get answers from a database</a></h3>
+          <h3><a href="./05A-agents.html#project">Ask in English, get answers from a database</a></h3>
           <p>
             A <strong>~20-line agent loop</strong> calls read-only SQL tools, reads the rows, and explains
             the result in plain language. This same little loop is the engine inside Claude Code, Cursor,
@@ -137,23 +137,23 @@ flowchart TB
 
         <div class="concept">
           <span class="tag">Module 3 · Tools &amp; Structure</span>
-          <h3><a href="./03-tools.html">Make the model's output machine-usable</a></h3>
+          <h3><a href="./03A-tools.html">Make the model's output machine-usable</a></h3>
           <p><strong>Learn:</strong> 4 levels — parseable text → JSON schema → tool use → MCP.</p>
-          <p><strong>Build:</strong> a <a href="./03-tools.html#project">job-post extractor</a> that returns validated, structured fields.</p>
+          <p><strong>Build:</strong> a <a href="./03A-tools.html#project">job-post extractor</a> that returns validated, structured fields.</p>
         </div>
 
         <div class="concept">
           <span class="tag">Module 4 · Context / RAG</span>
-          <h3><a href="./04-context.html">Give the model knowledge it wasn't trained on</a></h3>
+          <h3><a href="./04A-context.html">Give the model knowledge it wasn't trained on</a></h3>
           <p><strong>Learn:</strong> embeddings, chunking, vector search (ANN/HNSW), citations, memory.</p>
-          <p><strong>Build:</strong> a <a href="./04-context.html#project">RAG app</a> that answers over a corpus and cites its sources.</p>
+          <p><strong>Build:</strong> a <a href="./04A-context.html#project">RAG app</a> that answers over a corpus and cites its sources.</p>
         </div>
 
         <div class="concept">
           <span class="tag">Module 5 · Agents</span>
-          <h3><a href="./05-agents.html">The engine behind every agent</a></h3>
+          <h3><a href="./05A-agents.html">The engine behind every agent</a></h3>
           <p><strong>Learn:</strong> the ~20-line agent loop, subagents, memory scopes, computer use, safety.</p>
-          <p><strong>Build:</strong> a <a href="./05-agents.html#project">data-analyst agent</a> over a read-only SQL database.</p>
+          <p><strong>Build:</strong> a <a href="./05A-agents.html#project">data-analyst agent</a> over a read-only SQL database.</p>
         </div>
 
         <div class="concept">

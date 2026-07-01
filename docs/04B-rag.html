@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>llm-app-lab — Module 4B · Project: RAG over a corpus</title>
     <link rel="stylesheet" href="./style.css?v=3" />
-    <script src="./nav.js?v=6" defer></script>
+    <script src="./nav.js?v=7" defer></script>
     <script src="./run.js?v=1" defer></script>
     <script type="module">
       import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
@@ -22,8 +22,8 @@
           Module 4의 retrieve → augment → generate를 끝까지 굴려봅니다.
         </p>
         <div class="callout">
-          📚 개념은 <a href="./04-context.html">Module 4 · Context / RAG</a>에서 · 채점 루브릭과 코퍼스는
-          <a href="./04-context.html#project">4.9 Project</a> &amp; <code>rag-contest/CONTEST.md</code>.
+          📚 개념은 <a href="./04A-context.html">Module 4 · Context / RAG</a>에서 · 채점 루브릭과 코퍼스는
+          <a href="./04A-context.html#project">4.9 Project</a> &amp; <code>rag-contest/CONTEST.md</code>.
         </div>
         <div class="callout cs">
           🚧 <strong>이 앱은 당신이 빌드합니다.</strong> chat-app·extractor와 달리 RAG 앱은 저장소에 완성본이
@@ -69,7 +69,7 @@ flowchart LR
         </div>
         <p class="muted">
           인덱싱은 질문이 오기 <em>전에</em> 한 번 돌려 둡니다. 런타임엔 retrieve → augment → generate만
-          반복해요. 자세한 실패 모드(다양성 부족·과도한 컨텍스트 등)는 <a href="./04-context.html#rag">4.6</a>에.
+          반복해요. 자세한 실패 모드(다양성 부족·과도한 컨텍스트 등)는 <a href="./04A-context.html#rag">4A.6</a>에.
         </p>
       </section>
 
@@ -112,7 +112,7 @@ python app.py            # → http://localhost:5000</code></pre>
           <button class="opt">검색을 더 많이 해서라도 무조건 답한다</button>
           <p class="explain">
             인용 강제 = <strong>근거 없으면 답하지 말 것</strong>이에요. 받은 답의 <code>[n]</code>이 실제 청크
-            범위 안인지 코드로 한 번 더 검증해 환각을 거릅니다(<a href="./04-context.html#cite">4.7</a>).
+            범위 안인지 코드로 한 번 더 검증해 환각을 거릅니다(<a href="./04A-context.html#cite">4A.7</a>).
           </p>
         </div>
       </section>
@@ -120,7 +120,7 @@ python app.py            # → http://localhost:5000</code></pre>
       <footer>
         <p>
           <a href="./index.html">← Start here</a> ·
-          개념: <a href="./04-context.html">Module 4 · Context</a> ·
+          개념: <a href="./04A-context.html">Module 4 · Context</a> ·
           이전: <a href="./03B-extractor.html">3B · extractor</a> ·
           다음: <a href="./05B-agent.html">5B · data agent →</a>
         </p>

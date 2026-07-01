@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>llm-app-lab — Module 4 · Context Management (RAG)</title>
     <link rel="stylesheet" href="./style.css?v=3" />
-    <script src="./nav.js?v=6" defer></script>
+    <script src="./nav.js?v=7" defer></script>
     <script type="module">
       import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
       mermaid.initialize({ startOnLoad: true, theme: "neutral" });
@@ -29,21 +29,21 @@
       <nav class="toc">
         <strong>목차</strong>
         <ul>
-          <li><a href="#why">4.1 · Why not a giant context</a></li>
-          <li><a href="#embed">4.2 · Embeddings</a></li>
-          <li><a href="#pipeline">4.3 · Indexing pipeline</a></li>
-          <li><a href="#chunk">4.4 · Chunking</a></li>
-          <li><a href="#store">4.5 · Vector stores</a></li>
-          <li><a href="#rag">4.6 · RAG in 30 lines</a></li>
-          <li><a href="#cite">4.7 · Citations &amp; failures</a></li>
-          <li><a href="#memory">4.8 · Memory (long-term)</a></li>
-          <li><a href="#project">4.9 · Project</a></li>
+          <li><a href="#why">4A.1 · Why not a giant context</a></li>
+          <li><a href="#embed">4A.2 · Embeddings</a></li>
+          <li><a href="#pipeline">4A.3 · Indexing pipeline</a></li>
+          <li><a href="#chunk">4A.4 · Chunking</a></li>
+          <li><a href="#store">4A.5 · Vector stores</a></li>
+          <li><a href="#rag">4A.6 · RAG in 30 lines</a></li>
+          <li><a href="#cite">4A.7 · Citations &amp; failures</a></li>
+          <li><a href="#memory">4A.8 · Memory (long-term)</a></li>
+          <li><a href="#project">4A.9 · Project</a></li>
         </ul>
       </nav>
 
       <!-- demo + why -->
       <section id="why">
-        <h2>4.1 · First, the obvious question: why not a giant context window? <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">Slide 4</a></h2>
+        <h2>4A.1 · First, the obvious question: why not a giant context window? <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">Slide 4</a></h2>
         <p class="tldr">"그냥 문서 전부를 프롬프트에 넣으면 안 되나?" — 4가지 이유로 안 됩니다.</p>
         <p class="entitle">Live demo: Solutions Manager — indexed Drive + cited chat (Slide 2)</p>
         <div class="concept">
@@ -90,7 +90,7 @@ flowchart TB
 
       <!-- embeddings -->
       <section id="embed">
-        <h2>4.2 · What is an embedding model? <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">Slide 6–7</a></h2>
+        <h2>4A.2 · What is an embedding model? <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">Slide 6–7</a></h2>
         <p class="tldr">텍스트를 <strong>고정 길이 숫자 벡터</strong>로 바꿉니다. 뜻이 비슷하면 공간적으로 가까워져요.</p>
         <pre><code>embedder.embed([
   "the cat sat on the mat",
@@ -179,7 +179,7 @@ flowchart LR
 
       <!-- pipeline -->
       <section id="pipeline">
-        <h2>4.3 · Indexing: documents → chunks → vectors → store <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">Slide 8</a></h2>
+        <h2>4A.3 · Indexing: documents → chunks → vectors → store <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">Slide 8</a></h2>
         <p class="tldr">질문이 오기 <strong>전에</strong> 문서를 쪼개고 의미 벡터로 바꿔 저장해 둡니다.</p>
         <div class="mermaid">
 flowchart LR
@@ -216,7 +216,7 @@ flowchart LR
 
       <!-- chunking -->
       <section id="chunk">
-        <h2>4.4 · Chunking is a design decision <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">Slide 9</a></h2>
+        <h2>4A.4 · Chunking is a design decision <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">Slide 9</a></h2>
         <p class="tldr">문서를 어떻게 쪼개느냐가 검색 품질을 좌우합니다. <strong>검색을 튜닝하기 전에 청킹부터</strong>.</p>
         <div class="concept">
           <span class="tag">Strategies (Slide 9)</span>
@@ -275,7 +275,7 @@ flowchart LR
 
       <!-- store -->
       <section id="store">
-        <h2>4.5 · Vector stores &amp; batch economics <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">Slide 10–13</a></h2>
+        <h2>4A.5 · Vector stores &amp; batch economics <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">Slide 10–13</a></h2>
         <p class="tldr">벡터를 저장하고 "가장 가까운 K개"를 빠르게 찾는 곳. 규모에 맞춰 고릅니다.</p>
         <div class="concept">
           <span class="tag">Options</span>
@@ -394,7 +394,7 @@ flowchart TD
 
       <!-- rag -->
       <section id="rag">
-        <h2>4.6 · RAG in 30 lines: retrieve · augment · generate <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">Slide 15–17</a></h2>
+        <h2>4A.6 · RAG in 30 lines: retrieve · augment · generate <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">Slide 15–17</a></h2>
         <p class="tldr">검색(Retrieve) → 번호 붙여 붙이기(Augment) → Claude 한 번 호출(Generate). 끝.</p>
         <pre><code># 1. RETRIEVE — 질문을 임베딩해 가장 가까운 K개 청크
 query_vec = embedder.embed([question])[0]
@@ -446,7 +446,7 @@ flowchart LR
 
       <!-- citations -->
       <section id="cite">
-        <h2>4.7 · Citations — why and how <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">Slide 18</a></h2>
+        <h2>4A.7 · Citations — why and how <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">Slide 18</a></h2>
         <p class="tldr">모든 사실 주장에 <code>[n]</code> 번호로 출처를 강제 → 사용자 검증·디버깅·hallucination 방어.</p>
         <pre><code># 모델이 쓴 인용 번호 파싱; 범위 밖 번호는 제거
 import re
@@ -489,7 +489,7 @@ flowchart TD
 
       <!-- memory -->
       <section id="memory">
-        <h2>4.8 · Memory: the model starts blank every time <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">supplement · not in the deck(20)</a></h2>
+        <h2>4A.8 · Memory: the model starts blank every time <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">supplement · not in the deck(20)</a></h2>
         <p class="tldr">
           LLM은 <strong>stateless</strong> — 지난 대화를 스스로 기억하지 못합니다. "기억"은 우리가
           <strong>저장하고 다시 찾아 붙여주는</strong> 것. 그리고 그 방법은 이미 배운 RAG와 똑같아요.
@@ -557,7 +557,7 @@ flowchart LR
 
       <!-- project -->
       <section id="project">
-        <h2>4.9 · Project: index a corpus, then add RAG to your chat app <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">Slide 19–20</a></h2>
+        <h2>4A.9 · Project: index a corpus, then add RAG to your chat app <a class="slide" href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">Slide 19–20</a></h2>
         <p class="tldr">작은 코퍼스를 인덱싱하고, 2편 chat-app에 RAG + 인용을 얹습니다.</p>
         <div class="concept">
           <span class="tag">In order</span>
@@ -587,8 +587,8 @@ flowchart LR
       <footer>
         <p>
           <a href="./index.html">← Start here</a> ·
-          이전: <a href="./03-tools.html">Module 3 · Tools</a> ·
-          다음: <a href="./05-agents.html">Module 5 · Agents →</a>
+          이전: <a href="./03A-tools.html">Module 3 · Tools</a> ·
+          다음: <a href="./05A-agents.html">Module 5 · Agents →</a>
         </p>
         <p>llm-app-lab · Module 4 · Context Management · 원본 <a href="https://ksetp.netlify.app/context" target="_blank" rel="noopener">Slide deck(20)</a></p>
       </footer>
