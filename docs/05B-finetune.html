@@ -4,11 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>llm-app-lab — Module 5 · Project: Custom Training (fine-tuning)</title>
-    <link rel="stylesheet" href="./style.css?v=6" />
+    <link rel="stylesheet" href="./style.css?v=7" />
     <script src="./nav.js?v=11" defer></script>
     <script src="./run.js?v=1" defer></script>
     <script type="module" src="./mermaid-fx.js?v=1"></script>
-    <script type="module" src="./flow-anim.js?v=1"></script>
+    <script type="module" src="./flow-anim.js?v=2"></script>
     <style>
       /* Page-local only: responsive 9:16 wrapper for the primer video. */
       .vid { position: relative; width: 320px; max-width: 100%; aspect-ratio: 9 / 16;
@@ -149,14 +149,14 @@ flowchart LR
         <p class="tldr">스타터 <code>finetune.zip</code>은 딱 두 덩어리예요: <strong>데이터</strong>(taxonomy·gold·few-shot·train)와 <strong>코드</strong>(공용 <code>common.py</code> + 스테이지 셋 + 채점기). 세 스테이지가 <em>같은 데이터·같은 채점기</em>를 공유하는 게 핵심입니다.</p>
         <div class="mermaid">
 flowchart TB
-    subgraph DATA["data/ — 고정된 재료"]
-      TAXO["taxonomy.json<br/>6 teams + 설명"]
-      GOLD["test.jsonl<br/>48 gold 티켓 (채점 척도)"]
-      SEED["seed_examples.jsonl<br/>21 few-shot 예시"]
-      TRAIN["synthetic_train.jsonl<br/>~240 학습 티켓"]
+    subgraph DATA["data/ — fixed inputs"]
+      TAXO["taxonomy.json<br/>6 teams + descriptions"]
+      GOLD["test.jsonl<br/>48 gold tickets (the yardstick)"]
+      SEED["seed_examples.jsonl<br/>21 few-shot examples"]
+      TRAIN["synthetic_train.jsonl<br/>~240 training tickets"]
     end
-    subgraph CODE["코드 — 방법마다 하나씩"]
-      COMMON["common.py<br/>공용 헬퍼"]
+    subgraph CODE["code — one per method"]
+      COMMON["common.py<br/>shared helpers"]
       ST0["stage0_zeroshot.py"]
       ST1["stage1_fewshot.py"]
       ST2["stage2_finetune.py"]
@@ -190,11 +190,8 @@ flowchart TB
 
       <section id="stages">
         <h2>5B.5 · 세 가지 방법 — 프롬프트에서 학습된 모델까지</h2>
-        <p class="tldr">같은 태스크를 푸는 세 가지 방법. <strong>방법(method)</strong>만 바뀌고, 테스트셋과 지표는 고정입니다. 아래 다이어그램을 <strong>▶ 다음</strong>으로 한 레인씩 넘겨 세 방법을 나란히 비교해 보세요.</p>
-        <div class="mermaid" data-flow="steps"
-             data-steps='[{"node":"ZERO","cap":"Stage 0 · Zero-shot — 팀 정의 + 티켓만. 예시 없음. 안 적힌 하우스룰은 놓쳐요. 티켓당 Claude 1회 호출"},
-                          {"node":"FEW","cap":"Stage 1 · Few-shot — 같은 프롬프트 + 21개 라벨 예시로 하우스룰을 시연. 여전히 티켓당 Claude 1회 호출"},
-                          {"node":"TUNE","cap":"Stage 2 · Custom-trained — 라벨 티켓으로 로컬 분류기를 학습. 추론 시 Claude 호출 0회 (embed + 행렬곱)"}]'>
+        <p class="tldr">같은 태스크를 푸는 세 가지 방법. <strong>방법(method)</strong>만 바뀌고, 테스트셋과 지표는 고정입니다.</p>
+        <div class="mermaid">
 flowchart TB
     subgraph L0["Stage 0 · Zero-shot"]
       ZERO["taxonomy + ticket → Claude<br/>1 call / ticket"]
@@ -248,15 +245,11 @@ flowchart TB
       <section id="flow">
         <h2>5B.6 · 흐름 — stage 2 파이프라인을 함수 이름으로 ★</h2>
         <p class="tldr">custom-trained 방법은 코드로 보면 <strong>다섯 함수의 직선</strong>이에요: 읽고 → 임베딩하고 → 학습하고 → 예측하고 → 채점. 그리고 점선 하나 — <em>사람이 다시 넘긴 티켓이 학습셋으로 되먹임</em>되는 피드백 루프가 이 방법을 시간이 갈수록 좋아지게 만듭니다.</p>
-        <div class="mermaid" data-flow="steps pulse-path"
-             data-steps='[{"node":"LOADJ","cap":"load_jsonl() — 라벨된 티켓 (text, team)을 한 줄씩 읽어와요 (common.py)"},
-                          {"node":"EMB","cap":"embed() — 각 티켓 텍스트를 384차원 벡터로. MiniLM, 로컬, Claude 호출 없음"},
-                          {"node":"FIT","cap":"LogisticRegression().fit(X, y) — 그 벡터들로 작은 head를 학습. embedder는 안 건드려요"},
-                          {"node":"PRED","cap":"predict() — gold 48개를 embed + 행렬곱으로 라우팅. 여기도 API 0회"},
-                          {"node":"EVAL","cap":"evaluate.py — accuracy · per-class F1 · confusion matrix로 세 방법을 나란히 채점"}]'>
+        <div class="mermaid" data-flow="pulse-path" data-cycle="LOADJ,EMB,FIT,PRED,EVAL" data-alt="EVAL,REROUTE,TRAINSET,LOADJ">
 flowchart LR
     LOADJ["load_jsonl()"] --> EMB["embed() · common.py"] --> FIT["LogisticRegression().fit(X, y)"] --> PRED["predict()"] --> EVAL["evaluate.py · F1 + confusion"]
-    REROUTE["human reroutes a ticket"] -.-> TRAINSET["training set"]
+    EVAL -. "misrouted tickets" .-> REROUTE["human reroutes a ticket"]
+    REROUTE -.-> TRAINSET["training set"]
     TRAINSET -.-> LOADJ
         </div>
         <p class="muted">
@@ -312,15 +305,12 @@ flowchart LR
 
       <section id="code">
         <h2>5B.8 · 코드로 보기 — 강제 tool + embed→fit</h2>
-        <p class="tldr">두 조각이면 프로젝트의 두 세계가 다 보여요: <strong>①</strong> prompt 스테이지가 Claude를 <em>강제 tool</em>로 부르는 <code>common.py</code>, <strong>②</strong> custom 스테이지가 <em>embed→fit→predict</em>하는 <code>stage2_finetune.py</code>. 각 다이어그램을 <strong>▶ 다음</strong>으로 넘기면 오른쪽 코드 줄이 같이 하이라이트돼요.</p>
+        <p class="tldr">두 조각이면 프로젝트의 두 세계가 다 보여요: <strong>①</strong> prompt 스테이지가 Claude를 <em>강제 tool</em>로 부르는 <code>common.py</code>, <strong>②</strong> custom 스테이지가 <em>embed→fit→predict</em>하는 <code>stage2_finetune.py</code>. 각 코드 조각 위의 미니 다이어그램이 흐름 지도예요.</p>
 
         <h3>① 강제 tool 사용 — 왜 라벨이 <em>항상</em> 유효한가 <span class="muted" style="font-weight:400;font-size:.9rem">· common.py</span></h3>
-        <div class="mermaid" data-flow="steps" data-code="#code-force"
-             data-steps='[{"node":"SCHEMA","cap":"route_tool()이 팀 이름들을 enum으로 박은 스키마를 만들어요 — 모델이 고를 수 있는 값이 6개 팀으로 제한돼요","lines":"6-9"},
-                          {"node":"FORCE","cap":"tool_choice로 이 툴을 강제 — 모델은 자유 서술이 아니라 반드시 route_ticket을 호출해야 해요","lines":"20"},
-                          {"node":"VALID","cap":"그래서 결과는 언제나 enum 안의 팀 하나 — 파싱 실패·오탈자·엉뚱한 형식이 원천 봉쇄돼요","lines":"22-23"}]'>
+        <div class="mermaid">
 flowchart LR
-    SCHEMA["route_tool()<br/>enum = team names"] --> FORCE["tool_choice = route_ticket<br/>(강제)"] --> VALID["block.input['team']<br/>always a valid team"]
+    SCHEMA["route_tool()<br/>enum = team names"] --> FORCE["tool_choice = route_ticket<br/>(forced)"] --> VALID["block.input['team']<br/>always a valid team"]
         </div>
         <pre id="code-force"><code>def route_tool(names: list[str]) -&gt; dict:
     """A forced tool whose only field is the team, constrained to a known enum."""
@@ -350,12 +340,7 @@ def classify(text: str, system: str, names: list[str]) -&gt; str:
         </p>
 
         <h3 style="margin-top:1.6rem;">② embed → fit → predict — 학습과 추론 <span class="muted" style="font-weight:400;font-size:.9rem">· stage2_finetune.py</span></h3>
-        <div class="mermaid" data-flow="steps" data-code="#code-fit"
-             data-steps='[{"node":"LOAD2","cap":"load_jsonl() — 라벨된 학습 티켓 (text, team)을 읽어와요","lines":"4"},
-                          {"node":"EMB2","cap":"embed() — 각 티켓을 384차원 벡터 X로. 로컬 임베더, Claude 호출 없음","lines":"5"},
-                          {"node":"FIT2","cap":"fit(X, y) — 벡터 X와 팀 라벨 y로 logistic-regression head를 학습","lines":"7-8"},
-                          {"node":"DUMP","cap":"joblib.dump() — 학습된 head를 classifier.joblib로 저장","lines":"9"},
-                          {"node":"PRED2","cap":"predict() — 추론은 embed + 행렬곱뿐. 여기도 API 호출 0회","lines":"14-15"}]'>
+        <div class="mermaid">
 flowchart LR
     LOAD2["load_jsonl()"] --> EMB2["embed()<br/>384-dim, local"] --> FIT2["fit(X, y)"] --> DUMP["joblib.dump()"]
     DUMP --> PRED2["predict()<br/>embed + matmul"]
@@ -412,6 +397,14 @@ python evaluate.py           # 세 방법 나란히 (F1 + confusion matrix)</cod
 
         <h3 style="margin-top:1.4rem;">스코어보드 읽는 법 — <code>evaluate.py</code>가 찍는 것</h3>
         <p class="muted">각 스테이지는 자기 리포트를 찍고, <code>evaluate.py</code>는 캐시된 예측을 읽어(추가 Claude 호출 없음) 세 방법을 <strong>progression 표</strong> 하나로 모아요:</p>
+        <div class="mermaid">
+flowchart LR
+    PREDS["cached predictions<br/>(stage 0 · 1 · 2)"] --> CMP["compare vs 48 gold labels"]
+    CMP --> CONF["confusion matrix<br/>(which team confused with which)"]
+    CMP --> MF1["accuracy + macro-F1<br/>per stage"]
+    MF1 --> TABLE(["one progression table"])
+    CONF --> TABLE
+        </div>
         <pre><code>================  PROGRESSION  ================
 stage                              accuracy  macro-F1
 Stage 0 — zero-shot prompting          ...      ...

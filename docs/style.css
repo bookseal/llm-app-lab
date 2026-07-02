@@ -172,40 +172,16 @@ nav.toc li { margin: .15rem 0; }
 .rail-proj.current-mod { color: var(--accent); background: var(--panel); font-weight: 600; }
 
 /* ── Flow-animation layer (paired with flow-anim.js) ──────────────────────
-   steps controls + caption, hot/dim node states, the loop dot, freeze/train
-   contrast, codewalk line highlight, and the fx-* teaching widgets. */
-.flowsteps { display: flex; align-items: center; gap: .45rem; margin: .4rem 0 0; }
-.flowsteps button {
-  font: inherit; font-size: .82rem; cursor: pointer;
-  background: var(--code-bg); color: var(--text);
-  border: 1px solid var(--border); border-radius: 7px; padding: .25rem .7rem;
-}
-.flowsteps button:hover { border-color: var(--accent); color: var(--accent); }
-.flowcount { margin-left: auto; font-size: .78rem; color: var(--muted); font-variant-numeric: tabular-nums; }
-.flowcap {
-  min-height: 1.5rem; margin: .35rem 0 1rem; padding: .35rem .7rem;
-  font-size: .9rem; color: var(--muted);
-  border-left: 3px solid transparent; border-radius: 0 8px 8px 0;
-  transition: color .2s, border-color .2s, background .2s;
-}
-.flowcap.on { color: var(--text); border-left-color: var(--accent); background: var(--panel); }
-.mermaid svg .fnode-dim { opacity: .32; transition: opacity .3s; }
-.mermaid svg .fnode-hot rect, .mermaid svg .fnode-hot polygon,
-.mermaid svg .fnode-hot circle, .mermaid svg .fnode-hot path {
-  stroke: var(--accent) !important; stroke-width: 2.5px;
-  filter: drop-shadow(0 0 7px rgba(88, 166, 255, .8));
-}
-@keyframes fnodepop { 0% { transform: scale(1); } 35% { transform: scale(1.12); } 100% { transform: scale(1); } }
-.mermaid svg .fnode-pop { animation: fnodepop .5s ease; }
+   The touring ball (green = the common path, yellow = a special-case branch),
+   the freeze/train contrast, and the fx-* teaching widgets. */
 .mermaid svg .flowdot { fill: #3fb950; filter: drop-shadow(0 0 5px rgba(63, 185, 80, .9)); }
+.mermaid svg .flowdot.alt { fill: #e3b341; filter: drop-shadow(0 0 5px rgba(227, 179, 65, .9)); }
 .mermaid svg .fnode-frozen { opacity: .72; filter: grayscale(.75); }
 @keyframes fbreathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.045); } }
 .mermaid svg .fnode-breathe { animation: fbreathe 2.6s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce) {
-  .mermaid svg .fnode-breathe, .mermaid svg .fnode-pop { animation: none; }
+  .mermaid svg .fnode-breathe { animation: none; }
 }
-.codewalk .cw-line { display: inline; transition: background .25s; border-radius: 3px; }
-.codewalk .hot-line { background: rgba(88, 166, 255, .18); box-shadow: -3px 0 0 var(--accent); }
 
 /* fx-* teaching widgets (dark cards like .mermaid) */
 .fx-morph, .fx-mismatch {

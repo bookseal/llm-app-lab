@@ -1,16 +1,18 @@
 // Shared flow-animation layer for the docs diagrams (pairs with mermaid-fx.js).
 // Every effect ENCODES MEANING, never decorates:
-//   motion = data flow · repetition = loop · contrast = frozen/trained ·
-//   disruption = mismatch.
+//   the green ball = the COMMON path through the flow, touring forever ·
+//   it turns YELLOW when it takes a special-case branch, then goes green again ·
+//   contrast = frozen/trained · disruption = mismatch.
 // Declarative use — pages only add attributes, never init code:
-//   <div class="mermaid" data-flow="steps pulse-path"
-//        data-steps='[{"node":"ASK","cap":"…","lines":"3-9"}]'
-//        data-cycle="OBS,VLA,ACT,SIM" data-code="#code-loop">…</div>
+//   <div class="mermaid" data-flow="pulse-path"
+//        data-cycle="CREATE,STOPQ,DISPATCH,APPEND"   ← the common (green) tour
+//        data-alt="STOPQ,DONE">…</div>               ← the special-case (yellow) branch
+//   <div class="mermaid" data-flow="freeze-train" data-frozen="EMB" data-trained="HEAD">
 //   <div class="fx-morph" data-text="My card was charged twice" data-dims="8"></div>
-//   <div class="fx-mismatch" data-model="16" data-sim="14"></div>
+//   <div class="fx-mismatch" data-model="6" data-sim="14"></div>
 // anime.js is progressive juice: if the CDN import fails, everything still
-// works via CSS classes + rAF. No autoplay of step-throughs — user-paced.
-// The matching CSS lives in style.css (.flowsteps/.flowcap/.fnode-*/.fx-*).
+// works via CSS + rAF. Honors prefers-reduced-motion.
+// The matching CSS lives in style.css (.flowdot/.fnode-*/.fx-*).
 
 let anime = null;
 try {
@@ -29,132 +31,86 @@ const findEdge = (svg, a, b) =>
   svg.querySelector(`path[id^="L_${a}_${b}"]`) ||
   svg.querySelector(`path[id*="${a}_${b}"]`);
 
-function pulseNode(el) { // spring pop on the hot node (anime if present, CSS otherwise)
-  if (REDUCED) return;
-  el.style.transformBox = "fill-box";
-  el.style.transformOrigin = "center";
-  if (anime) {
-    anime.animate(el, { scale: [1, 1.14, 1], duration: 550, ease: "outElastic(1, .6)" });
-  } else {
-    el.classList.remove("fnode-pop"); void el.getBoundingClientRect();
-    el.classList.add("fnode-pop");
-  }
-}
-
-// ── steps: functions firing in call order, user-paced ⏮ ▶ controls ──
-function initSteps(box, svg) {
-  let steps;
-  try { steps = JSON.parse(box.dataset.steps || "[]"); } catch (e) { steps = []; }
-  if (!steps.length) return;
-  const nodes = steps.map((s) => findNode(svg, s.node));
-  if (nodes.some((n) => !n)) {
-    console.warn("flow-anim steps: missing node", steps.filter((s, i) => !nodes[i]).map((s) => s.node));
-  }
-
-  // optional codewalk target: split the excerpt into line spans once
-  let codeLines = null;
-  if (box.dataset.code) {
-    const pre = document.querySelector(box.dataset.code);
-    const code = pre && pre.querySelector("code");
-    if (code && !code.dataset.cwSplit) {
-      const lines = code.textContent.split("\n");
-      code.textContent = "";
-      codeLines = lines.map((t) => {
-        const span = document.createElement("span");
-        span.className = "cw-line";
-        span.textContent = t + "\n";
-        code.appendChild(span);
-        return span;
-      });
-      code.dataset.cwSplit = "1";
-      code.__cwLines = codeLines;
-    } else if (code) {
-      codeLines = code.__cwLines || null;
-    }
-  }
-
-  const bar = document.createElement("div");
-  bar.className = "flowsteps";
-  const prev = document.createElement("button"); prev.textContent = "⏮";
-  const next = document.createElement("button"); next.textContent = "▶ 다음";
-  const reset = document.createElement("button"); reset.textContent = "⟲";
-  const count = document.createElement("span"); count.className = "flowcount";
-  const cap = document.createElement("div"); cap.className = "flowcap";
-  bar.append(prev, next, reset, count);
-  box.after(bar); bar.after(cap);
-
-  let idx = -1;
-  function render(pop) {
-    nodes.forEach((n, i) => {
-      if (!n) return;
-      n.classList.toggle("fnode-hot", i === idx);
-      n.classList.toggle("fnode-dim", idx >= 0 && i !== idx);
-    });
-    if (idx >= 0 && nodes[idx] && pop) pulseNode(nodes[idx]);
-    cap.textContent = idx >= 0 ? steps[idx].cap || "" : "";
-    cap.classList.toggle("on", idx >= 0);
-    count.textContent = idx >= 0 ? `${idx + 1} / ${steps.length}` : `${steps.length} steps`;
-    if (codeLines) {
-      codeLines.forEach((l) => l.classList.remove("hot-line"));
-      const r = idx >= 0 && steps[idx].lines;
-      if (r) {
-        const [a, b] = String(r).split("-").map(Number);
-        for (let i = (a || 1) - 1; i <= ((b || a) - 1) && i < codeLines.length; i++)
-          codeLines[i].classList.add("hot-line");
-        const first = codeLines[(a || 1) - 1];
-        if (first) first.scrollIntoView({ block: "nearest", behavior: REDUCED ? "auto" : "smooth" });
-      }
-    }
-  }
-  next.addEventListener("click", () => { if (idx < steps.length - 1) { idx++; render(true); } });
-  prev.addEventListener("click", () => { if (idx > -1) { idx--; render(true); } });
-  reset.addEventListener("click", () => { idx = -1; render(false); });
-  render(false);
-}
-
-// ── pulse-path: a dot forever touring the loop (rAF — dependency-free) ──
+// ── pulse-path: the ball tours the common path in green; every third lap it
+//    takes the special-case branch in yellow, then goes back to green. ──
 function initPulsePath(box, svg) {
   if (REDUCED) return;
-  let segs = [];
-  const cycle = (box.dataset.cycle || "").split(",").map((s) => s.trim()).filter(Boolean);
-  if (cycle.length >= 2) {
-    for (let i = 0; i < cycle.length; i++) {
-      const p = findEdge(svg, cycle[i], cycle[(i + 1) % cycle.length]);
-      if (p) segs.push(p);
+  const main = (box.dataset.cycle || "").split(",").map((s) => s.trim()).filter(Boolean);
+  const alt = (box.dataset.alt || "").split(",").map((s) => s.trim()).filter(Boolean);
+
+  // edges(a→b→c, wrap): consecutive pairs; silently skip pairs with no edge
+  // (the ball just jumps — e.g. a linear pipeline restarting at the top).
+  const edgesOf = (ids, wrap) => {
+    const out = [];
+    const last = wrap ? ids.length : ids.length - 1;
+    for (let i = 0; i < last; i++) {
+      const p = findEdge(svg, ids[i], ids[(i + 1) % ids.length]);
+      if (p) out.push(p);
     }
-  }
-  if (!segs.length) { // fallback: ride each dotted (feedback) edge
-    segs = [...svg.querySelectorAll('path.edge-pattern-dotted, path[class*="dotted"]')];
-  }
-  if (!segs.length) return;
+    return out;
+  };
 
-  const chains = cycle.length >= 2 ? [segs] : segs.map((p) => [p]); // tour vs per-edge
-  const dots = chains.map((chain) => {
-    const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    dot.setAttribute("r", "4.5");
-    dot.setAttribute("class", "flowdot");
-    chain[0].parentNode.appendChild(dot);
-    const lens = chain.map((p) => { try { return p.getTotalLength(); } catch (e) { return 0; } });
-    return { chain, lens, total: lens.reduce((a, b) => a + b, 0), dot };
-  });
+  let schedule = []; // [{paths, alt:bool}] — one entry per lap segment-group
+  if (main.length >= 2) {
+    const mainLap = edgesOf(main, true);
+    if (!mainLap.length) return;
+    if (alt.length >= 2 && main.includes(alt[0])) {
+      // green up to the branch node, then yellow along the special case
+      const upto = main.slice(0, main.indexOf(alt[0]) + 1);
+      const greenHead = edgesOf(upto, false);
+      const yellowTail = edgesOf(alt, false);
+      schedule = [
+        { paths: mainLap, alt: false },
+        { paths: mainLap, alt: false },
+        { paths: greenHead, alt: false },
+        { paths: yellowTail, alt: true },
+      ];
+    } else {
+      schedule = [{ paths: mainLap, alt: false }];
+    }
+  } else {
+    // no cycle given: ride each dotted (feedback) edge with its own green ball
+    const dotted = [...svg.querySelectorAll('path.edge-pattern-dotted, path[class*="dotted"]')];
+    if (!dotted.length) return;
+    return dotted.forEach((p) => runBall(box, svg, [{ paths: [p], alt: false }]));
+  }
+  runBall(box, svg, schedule);
+}
 
-  let running = false, raf = 0, t0 = 0;
-  const PERIOD = 2600 * (cycle.length >= 2 ? Math.max(1, chains[0].length / 2) : 1);
+function runBall(box, svg, schedule) {
+  const groups = schedule.map((g) => {
+    const lens = g.paths.map((p) => { try { return p.getTotalLength(); } catch (e) { return 0; } });
+    return { ...g, lens, total: lens.reduce((a, b) => a + b, 0) };
+  }).filter((g) => g.total > 0);
+  if (!groups.length) return;
+
+  const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+  dot.setAttribute("r", "4.5");
+  dot.setAttribute("class", "flowdot");
+  groups[0].paths[0].parentNode.appendChild(dot);
+
+  const SPEED = 190; // px per second — same feel regardless of diagram size
+  let gi = 0, dist = 0, lastTs = 0, running = false, raf = 0;
   function tick(ts) {
-    if (!t0) t0 = ts;
-    const t = ((ts - t0) % PERIOD) / PERIOD;
-    for (const d of dots) {
-      if (!d.total) continue;
-      let at = t * d.total, i = 0;
-      while (i < d.lens.length - 1 && at > d.lens[i]) { at -= d.lens[i]; i++; }
-      const pt = d.chain[i].getPointAtLength(Math.min(at, d.lens[i]));
-      d.dot.setAttribute("cx", pt.x); d.dot.setAttribute("cy", pt.y);
+    if (!lastTs) lastTs = ts;
+    dist += ((ts - lastTs) / 1000) * SPEED;
+    lastTs = ts;
+    let g = groups[gi];
+    while (dist >= g.total) { // advance to the next lap segment-group
+      dist -= g.total;
+      gi = (gi + 1) % groups.length;
+      g = groups[gi];
+      dot.setAttribute("class", g.alt ? "flowdot alt" : "flowdot");
     }
+    let at = dist, i = 0;
+    while (i < g.lens.length - 1 && at > g.lens[i]) { at -= g.lens[i]; i++; }
+    const pt = g.paths[i].getPointAtLength(Math.min(at, g.lens[i]));
+    dot.setAttribute("cx", pt.x); dot.setAttribute("cy", pt.y);
     if (running) raf = requestAnimationFrame(tick);
   }
   const io = new IntersectionObserver((es) => { // only spend CPU while visible
     es.forEach((e) => {
-      if (e.isIntersecting && !running) { running = true; raf = requestAnimationFrame(tick); }
+      if (e.isIntersecting && !running) { running = true; lastTs = 0; raf = requestAnimationFrame(tick); }
       else if (!e.isIntersecting && running) { running = false; cancelAnimationFrame(raf); }
     });
   }, { threshold: 0.1 });
@@ -282,7 +238,6 @@ function wireDiagrams() {
     const svg = box.querySelector("svg");
     if (!svg) return;
     const fx = (box.dataset.flow || "").split(/\s+/);
-    if (fx.includes("steps")) initSteps(box, svg);
     if (fx.includes("pulse-path")) initPulsePath(box, svg);
     if (fx.includes("freeze-train")) initFreezeTrain(box, svg);
   });
