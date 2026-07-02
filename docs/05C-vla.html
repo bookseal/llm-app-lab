@@ -3,11 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>llm-app-lab — Module 5C · Project: VLA on your laptop (robot.zip)</title>
-    <link rel="stylesheet" href="./style.css?v=5" />
-    <script src="./nav.js?v=9" defer></script>
+    <title>llm-app-lab — Module 5 · Project: VLA on your laptop (robot.zip)</title>
+    <link rel="stylesheet" href="./style.css?v=6" />
+    <script src="./nav.js?v=10" defer></script>
     <script src="./run.js?v=1" defer></script>
     <script type="module" src="./mermaid-fx.js?v=1"></script>
+    <script type="module" src="./flow-anim.js?v=1"></script>
     <style>
       /* Page-local: responsive video wrappers (9:16 short + 16:9 clip). */
       .vid { position: relative; width: 300px; max-width: 100%; aspect-ratio: 9 / 16;
@@ -28,15 +29,15 @@
   <body>
     <div class="wrap">
       <header class="hero">
-        <p class="muted"><a href="./index.html">← Start here</a> · Module 5C · Project</p>
-        <h1>Module 5C · Project — VLA on your laptop</h1>
+        <p class="muted"><a href="./index.html">← Start here</a> · Module 5 · Project</p>
+        <h1>Module 5 · Project — VLA on your laptop</h1>
         <p class="tldr">
           진짜 <strong>~450M 파라미터 VLA(SmolVLA)</strong>가 MuJoCo 시뮬 속 로봇 팔을 <strong>CPU만으로</strong> 구동합니다.
           <code>obs → action → step</code> 지각-행동 루프를 한 스텝씩 눈으로 확인하는 게 이 프로젝트의 전부예요.
         </p>
         <div class="callout">
           🤖 이 페이지는 <strong>스타터 <code>robot.zip</code></strong>(파일 4개)을 한 줄씩 뜯어보는 <em>코드 워크스루</em>예요.
-          VLA가 처음이면 <a href="./05B-finetune.html">Module 5B · Special Topic</a>에서 개요를 먼저 훑어도 좋습니다.
+          VLA가 처음이면 <a href="./05B-finetune.html">Project: fine-tuning</a>에서 개요를 먼저 훑어도 좋습니다.
         </div>
         <div class="callout cs">
           🚧 <strong>CPU-only · 느립니다(스텝당 ~1–3초).</strong> 첫 실행에 SmolVLA 가중치 ~1.8&nbsp;GB를 받고,
@@ -365,7 +366,7 @@ python run_demo.py --instruction "pick up the cube and pass it to the other hand
           이전: <a href="./05B-finetune.html">5B · fine-tuning</a> ·
           다음: <a href="./05D-agent.html">5D · data agent →</a>
         </p>
-        <p>llm-app-lab · Module 5C · Project · starter: <code>robot.zip</code> · 원본 <a href="https://ksetp.netlify.app/special%20topics" target="_blank" rel="noopener">Special Topics 덱</a></p>
+        <p>llm-app-lab · Module 5 · Project · starter: <code>robot.zip</code> · 원본 <a href="https://ksetp.netlify.app/special%20topics" target="_blank" rel="noopener">Special Topics 덱</a></p>
       </footer>
     </div>
     <script>

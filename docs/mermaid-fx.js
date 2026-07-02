@@ -96,3 +96,7 @@ document.querySelectorAll(".mermaid").forEach((box) => {
   btn.addEventListener("click", () => reveal(box.querySelector("svg")));
   box.appendChild(btn);
 });
+
+// signal downstream layers (flow-anim.js) that every SVG is rendered & wired
+window.__mermaidFxDone = true;
+document.dispatchEvent(new Event("mermaid-fx:done"));
