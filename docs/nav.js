@@ -149,11 +149,15 @@
     pageSections.push({ id: sec.id, el: sec });
   }
 
-  // ── build the single continuous outline ──
+  // ── build the rail in two parts: a compact module list on top, then the
+  //    CURRENT page's sections in detail below (with scroll-spy) ──
   const nav = document.createElement("nav");
   nav.className = "rail-outline";
   const linkBySectionId = new Map(); // current-page section id → its <a> (scroll-spy)
 
+  // Part 1 (top): every module, module-level links only — a quick jump table.
+  const mods = document.createElement("div");
+  mods.className = "rail-mods";
   for (const mod of OUTLINE) {
     const modA = document.createElement("a");
     modA.className = "rail-mod";
@@ -163,22 +167,33 @@
     numSpan.textContent = mod.num;
     modA.append(numSpan, document.createTextNode(mod.label));
     if (mod.href === here) modA.classList.add("current-mod");
-    nav.appendChild(modA);
+    mods.appendChild(modA);
+  }
+  nav.appendChild(mods);
 
-    if (mod.sections.length) {
-      const sub = document.createElement("div");
-      sub.className = "rail-subs";
-      for (const s of mod.sections) {
-        const id = s.id || slug(s.t);
-        const a = document.createElement("a");
-        a.className = "rail-sub";
-        a.href = "./" + mod.href + "#" + id;
-        a.textContent = s.t;
-        sub.appendChild(a);
-        if (mod.href === here) linkBySectionId.set(id, a);
-      }
-      nav.appendChild(sub);
+  // Part 2 (bottom): the current module's sections, detailed. The scroll-spy
+  // highlights whichever one you're actually reading.
+  const curMod = OUTLINE.find((m) => m.href === here);
+  if (curMod && curMod.sections.length) {
+    const detail = document.createElement("div");
+    detail.className = "rail-detail";
+    const title = document.createElement("div");
+    title.className = "rail-detail-title";
+    title.textContent = "이 페이지 · " + curMod.num;
+    detail.appendChild(title);
+    const sub = document.createElement("div");
+    sub.className = "rail-subs";
+    for (const s of curMod.sections) {
+      const id = s.id || slug(s.t);
+      const a = document.createElement("a");
+      a.className = "rail-sub";
+      a.href = "#" + id; // same page → plain anchor
+      a.textContent = s.t;
+      sub.appendChild(a);
+      linkBySectionId.set(id, a);
     }
+    detail.appendChild(sub);
+    nav.appendChild(detail);
   }
 
   // ── collapse/expand handle ──
@@ -206,9 +221,9 @@
   try { initCollapsed = localStorage.getItem("railCollapsed") === "1"; } catch (e) {}
   setCollapsed(initCollapsed);
 
-  // bring the current module into view inside the (scrollable) rail
+  // nudge the current module into view without shoving the detail list off-screen
   const cur = nav.querySelector(".current-mod");
-  if (cur) cur.scrollIntoView({ block: "center" });
+  if (cur) cur.scrollIntoView({ block: "nearest" });
 
   // ── scroll-spy: highlight the current page's section being read ──
   if (linkBySectionId.size && "IntersectionObserver" in window) {
