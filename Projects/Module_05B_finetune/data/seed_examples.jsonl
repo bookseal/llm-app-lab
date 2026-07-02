@@ -1,0 +1,21 @@
+{"text": "Why was I charged again after I cancelled my plan?", "team": "Billing"}
+{"text": "I need a refund for an accidental purchase.", "team": "Billing"}
+{"text": "I'm already a customer and want to move up to the Business plan.", "team": "Billing"}
+{"text": "Bump our subscription up by two more seats, please.", "team": "Billing"}
+{"text": "I can't log in — the password reset link isn't working.", "team": "Account Access"}
+{"text": "Locked out of my account after too many login attempts.", "team": "Account Access"}
+{"text": "Set up SSO so my team can sign in with Google.", "team": "Account Access"}
+{"text": "The app throws an error 500 when I save my settings.", "team": "Technical Support"}
+{"text": "Dashboard graphs won't load in my browser.", "team": "Technical Support"}
+{"text": "I get a broken error page when I try to log in — the site itself seems down.", "team": "Technical Support"}
+{"text": "Can I see a demo of the Business plan?", "team": "Sales"}
+{"text": "I'm new and want to purchase 10 licenses for my team.", "team": "Sales"}
+{"text": "What does the Enterprise tier cost per seat?", "team": "Sales"}
+{"text": "Someone is impersonating me on the platform.", "team": "Trust & Safety"}
+{"text": "Reporting an account that is sending phishing links.", "team": "Trust & Safety"}
+{"text": "There are charges I never authorized — I think my account was compromised.", "team": "Trust & Safety"}
+{"text": "My account was hacked and is posting on its own.", "team": "Trust & Safety"}
+{"text": "Export all the personal data you store about me.", "team": "Data Privacy"}
+{"text": "Delete my personal data permanently — this is a GDPR request.", "team": "Data Privacy"}
+{"text": "Please close and delete my whole account.", "team": "Data Privacy"}
+{"text": "How long is my data kept after I leave the service?", "team": "Data Privacy"}

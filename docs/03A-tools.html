@@ -198,8 +198,8 @@ After  MCP: 도구가 표준 스키마를 publish → 클라이언트가 자동 
         </div>
 
         <h3>What's in the starter zip</h3>
-        <p>다운로드한 <code>extract-starter.zip</code>을 풀면 이 구조가 나옵니다(레포의 <code>extract-starter/</code>와 동일):</p>
-        <pre><code>extract-starter/
+        <p>다운로드한 <code>extract-starter.zip</code>을 풀면 이 구조가 나옵니다(레포의 <code>Projects/Module_03_extractor/starter/</code>와 동일):</p>
+        <pre><code>Projects/Module_03_extractor/starter/
 ├── extract.py          # 추출 로직 — 여기만 고치면 됨
 ├── requirements.txt    # anthropic, pydantic, python-dotenv
 ├── .env.example        # ANTHROPIC_API_KEY=... 양식
@@ -212,7 +212,7 @@ After  MCP: 도구가 표준 스키마를 publish → 클라이언트가 자동 
         <p class="muted">
           스타터: <code>extract-starter.zip</code> —
           <a href="https://ksetp.netlify.app/assets/tools/extract-starter.zip" target="_blank" rel="noopener">다운로드</a>
-          · 레포에선 <code>extract-starter/README.md</code> 참고
+          · 레포에선 <code>Projects/Module_03_extractor/starter/README.md</code> 참고
         </p>
 
         <h3>Key pattern: forced <code>tool_use</code></h3>
@@ -281,7 +281,7 @@ return block.input   # 이미 input_schema를 통과한 dict</code></pre>
 
         <h3>A real extension: <code>instructor-extractor</code></h3>
         <p>
-          이 패턴을 <strong>실제 웹앱</strong>으로 키운 예제가 레포의 <code>instructor-extractor/</code>입니다.
+          이 패턴을 <strong>실제 웹앱</strong>으로 키운 예제가 레포의 <code>Projects/Module_03_extractor/webapp/</code>입니다.
           강사 구인 글(이메일·카톡 복붙)을 붙여넣으면 구조화 필드로 추출하고, 빈 필드는 <strong>⚠️ 누락</strong>으로
           표시하며, 누락 정보를 되묻는 <strong>follow-up 이메일 초안</strong>까지 Claude가 작성합니다.
         </p>
@@ -291,7 +291,7 @@ return block.input   # 이미 input_schema를 통과한 dict</code></pre>
           <code>tool_choice</code>로 양식을 강제하고, <em>이메일</em>(데이터→글)은 출력이 사람이 읽을 문장이라
           tool 없이 <strong>자유 텍스트</strong>로 받습니다. 출력이 무엇이냐가 tool 강제 여부를 가릅니다.
         </div>
-        <p class="muted">코드·실행: <a href="https://github.com/bookseal/llm-app-lab/tree/main/instructor-extractor" target="_blank" rel="noopener">instructor-extractor/</a></p>
+        <p class="muted">코드·실행: <a href="https://github.com/bookseal/llm-app-lab/tree/main/instructor-extractor" target="_blank" rel="noopener">Projects/Module_03_extractor/webapp/</a></p>
 
         <div class="quiz" data-answer="1">
           <p class="q"><code>tool_choice={"type":"tool", ...}</code>로 도구를 강제하면 무엇이 좋아지나요?</p>

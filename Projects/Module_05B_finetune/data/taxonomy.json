@@ -1,0 +1,28 @@
+{
+  "teams": [
+    {
+      "name": "Billing",
+      "description": "Invoices, charges, refunds, payment methods, and subscription plans."
+    },
+    {
+      "name": "Account Access",
+      "description": "Signing in and credentials: passwords, password resets, SSO, two-factor, locked accounts."
+    },
+    {
+      "name": "Technical Support",
+      "description": "Bugs, errors, crashes, and product features not working as expected."
+    },
+    {
+      "name": "Sales",
+      "description": "Plans, pricing, quotes, demos, trials, and purchasing."
+    },
+    {
+      "name": "Trust & Safety",
+      "description": "Abuse, fraud, spam, harassment, impersonation, and account-security concerns."
+    },
+    {
+      "name": "Data Privacy",
+      "description": "Personal-data requests and data handling: export, retention, and what data is stored or shared."
+    }
+  ]
+}

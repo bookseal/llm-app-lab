@@ -218,8 +218,8 @@ echo 'ANTHROPIC_API_KEY=sk-ant-...your-key...' &gt; .env
 flowchart TB
     Env["~/ksept-lab/.env<br/>ANTHROPIC_API_KEY=..."]
     subgraph apps["each example app"]
-      A["chat-app/"]
-      B["extract-starter/"]
+      A["Projects/Module_02_chat-app/"]
+      B["Projects/Module_03_extractor/starter/"]
       C["rag-starter/"]
     end
     A -.walks up to find.-> Env

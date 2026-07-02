@@ -1,0 +1,48 @@
+{"id": "t01", "text": "I was charged $49 twice this month for the same subscription. Can you refund the duplicate?", "team": "Billing"}
+{"id": "t02", "text": "My credit card expired and the payment failed. How do I update the card on file?", "team": "Billing"}
+{"id": "t03", "text": "I cancelled last week but just got another invoice. Why am I still being billed?", "team": "Billing"}
+{"id": "t04", "text": "Can I get a receipt for the annual plan I paid for in March? I need it for expenses.", "team": "Billing"}
+{"id": "t05", "text": "I'd like to upgrade to the Business plan, please.", "team": "Billing"}
+{"id": "t06", "text": "Please add three more seats to our existing subscription.", "team": "Billing"}
+{"id": "t07", "text": "We want to switch from monthly to annual billing to save money.", "team": "Billing"}
+{"id": "t08", "text": "There's a $30 charge from you I wasn't expecting this month — what is it for?", "team": "Billing"}
+{"id": "t09", "text": "I forgot my password and the reset email never arrives. I'm locked out.", "team": "Account Access"}
+{"id": "t10", "text": "My account shows 'disabled' when I try to sign in. I didn't do anything.", "team": "Account Access"}
+{"id": "t11", "text": "We switched to Okta SSO and now half the team can't log in.", "team": "Account Access"}
+{"id": "t12", "text": "Two-factor keeps rejecting my code even though it's correct.", "team": "Account Access"}
+{"id": "t13", "text": "I changed my email and now I can't log in with either the old or new address.", "team": "Account Access"}
+{"id": "t14", "text": "I'm locked out after too many failed login attempts. How do I reset it?", "team": "Account Access"}
+{"id": "t15", "text": "The password reset page says my account doesn't exist, but it definitely does.", "team": "Account Access"}
+{"id": "t16", "text": "How do I turn on two-factor authentication for my login?", "team": "Account Access"}
+{"id": "t17", "text": "The CSV export button does nothing — no download, no error, it just spins.", "team": "Technical Support"}
+{"id": "t18", "text": "Your REST API returns a 500 on /v2/orders even though my payload matches the docs.", "team": "Technical Support"}
+{"id": "t19", "text": "The mobile app crashes every time I open the dashboard since the last update.", "team": "Technical Support"}
+{"id": "t20", "text": "Webhooks stopped firing yesterday around 3pm; nothing changed on my end.", "team": "Technical Support"}
+{"id": "t21", "text": "Charts render blank in Safari but work fine in Chrome.", "team": "Technical Support"}
+{"id": "t22", "text": "I can't log in — the login page throws a 500 error every time.", "team": "Technical Support"}
+{"id": "t23", "text": "Signing in crashes the whole app, it closes the moment I tap login.", "team": "Technical Support"}
+{"id": "t24", "text": "The login button is broken — clicking it does absolutely nothing.", "team": "Technical Support"}
+{"id": "t25", "text": "What's the price difference between the Team and Business plans?", "team": "Sales"}
+{"id": "t26", "text": "We're a 200-person company evaluating your product — can we get a demo?", "team": "Sales"}
+{"id": "t27", "text": "Do you offer annual discounts for nonprofits?", "team": "Sales"}
+{"id": "t28", "text": "Can you send me a quote for the Enterprise tier with SSO and audit logs?", "team": "Sales"}
+{"id": "t29", "text": "Is there a free trial for the Pro plan before I commit?", "team": "Sales"}
+{"id": "t30", "text": "We're considering switching from a competitor — who can we talk to?", "team": "Sales"}
+{"id": "t31", "text": "What features are included in the Business tier versus Team?", "team": "Sales"}
+{"id": "t32", "text": "I'm starting a brand-new company and want to buy 10 licenses to get going.", "team": "Sales"}
+{"id": "t33", "text": "Someone created a fake profile using my name and company logo.", "team": "Trust & Safety"}
+{"id": "t34", "text": "I'm getting spam DMs from an account that keeps making new handles.", "team": "Trust & Safety"}
+{"id": "t35", "text": "A user in our shared workspace is posting harassing messages.", "team": "Trust & Safety"}
+{"id": "t36", "text": "Reporting an account that is impersonating your support team to phish users.", "team": "Trust & Safety"}
+{"id": "t37", "text": "There are charges on my card I never made — I think this is fraud.", "team": "Trust & Safety"}
+{"id": "t38", "text": "My account was hacked and is posting things I didn't write.", "team": "Trust & Safety"}
+{"id": "t39", "text": "Someone logged into my account from another country and changed my settings.", "team": "Trust & Safety"}
+{"id": "t40", "text": "This seller took my payment and then disappeared — it looks like a scam.", "team": "Trust & Safety"}
+{"id": "t41", "text": "Under GDPR I'm requesting a full export of all personal data you hold on me.", "team": "Data Privacy"}
+{"id": "t42", "text": "Please permanently delete all of my personal data from your systems.", "team": "Data Privacy"}
+{"id": "t43", "text": "How long do you retain user activity logs after an account is closed?", "team": "Data Privacy"}
+{"id": "t44", "text": "Which third parties do you share my personal information with?", "team": "Data Privacy"}
+{"id": "t45", "text": "Please close and delete my account entirely.", "team": "Data Privacy"}
+{"id": "t46", "text": "I don't want an account anymore — remove it and everything associated with it.", "team": "Data Privacy"}
+{"id": "t47", "text": "Delete my account, I'm done with the service.", "team": "Data Privacy"}
+{"id": "t48", "text": "Can I get a machine-readable copy of everything in my profile?", "team": "Data Privacy"}

@@ -14,7 +14,7 @@
         <p class="muted"><a href="./index.html">← Start here</a> · Module 2B · chat-app</p>
         <h1>Module 2B · Project — chat-app</h1>
         <p class="muted">
-          <code>chat-app/</code> 폴더(React + Flask + Claude)를 읽고 고치기 위한
+          <code>Projects/Module_02_chat-app/</code> 폴더(React + Flask + Claude)를 읽고 고치기 위한
           기초 개념들. 1편과 같은 방식: ① 한 줄 요약 → ② 비유 → ③ 이 앱에서는 →
           ④ (펼치면) 더 깊이 → ⑤ <strong>미니 퀴즈</strong>.
         </p>
@@ -104,7 +104,7 @@ flowchart LR
           "제 이름이 뭐죠?"라고 물으면, 두 번째 질문만 받은 상담사는 알 길이 없어요.
           기억하게 하려면 <em>이전 대화 메모를 통째로 같이 건네줘야</em> 합니다.
         </div>
-        <p>지금 <code>backend/app.py</code>는 <strong>현재 메시지 한 개만</strong> 보냅니다:</p>
+        <p>지금 <code>Projects/Module_02_chat-split/backend/app.py</code>는 <strong>현재 메시지 한 개만</strong> 보냅니다:</p>
         <pre><code>resp = client.messages.create(
     model="claude-sonnet-4-6",
     messages=[{"role": "user", "content": user_message}],  # ← 딱 한 줄, 과거 없음
@@ -281,7 +281,7 @@ except anthropic.APIStatusError as e: # 500/529 등 서버 쪽 문제
           <p class="explain">
             예외 처리가 없으니 어떤 API 실패든 똑같이 "500 폭발"로 끝나요.
             타입별 <code>except</code>로 잡아 적절한 상태코드/메시지를 돌려주는 게
-            고칠 자리(<code>backend/app.py</code>)입니다.
+            고칠 자리(<code>Projects/Module_02_chat-split/backend/app.py</code>)입니다.
           </p>
         </div>
       </section>
@@ -375,7 +375,7 @@ except anthropic.APIStatusError as e: # 500/529 등 서버 쪽 문제
         </div>
 
         <div class="concept">
-          <h3>Q4. <code>backend/app.py</code>에서 Claude가 5xx · 레이트리밋 · 잘못된 키일 때 무슨 일이?</h3>
+          <h3>Q4. <code>Projects/Module_02_chat-split/backend/app.py</code>에서 Claude가 5xx · 레이트리밋 · 잘못된 키일 때 무슨 일이?</h3>
           <details class="more">
             <summary>정답 보기</summary>
             <p>

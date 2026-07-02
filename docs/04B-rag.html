@@ -82,12 +82,12 @@
         </p>
         <div class="callout">
           📚 Concepts live in <a href="./04A-context.html">Module 4 · Context / RAG</a>; the rubric &amp; corpus are in
-          <a href="./04A-context.html#project">4A.9 Project</a> &amp; <code>rag-contest/CONTEST.md</code>.
+          <a href="./04A-context.html#project">4A.9 Project</a> &amp; <code>Projects/Module_04_rag/CONTEST.md</code>.
         </div>
         <div class="callout cs">
           🔎 <strong>This is the reference walkthrough of the finished solution.</strong> It zooms in five times —
           60&nbsp;seconds → 5 → 10 → 20 minutes → every decision — so you can read it at whatever depth you need. The
-          matching code is in <code>rag-contest/rag-starter/</code> and <code>rag-contest/harness/</code>.
+          matching code is in <code>Projects/Module_04_rag/rag-starter/</code> and <code>Projects/Module_04_rag/harness/</code>.
         </div>
         <div class="depthstrip" id="depthstrip" aria-label="reading depth">
           <a class="depthchip" href="#sixty">🧒 60s</a>
@@ -845,7 +845,7 @@ flowchart LR
           chunk everywhere. Citation parsing then drops any <code>[n]</code> out of range or invented by the model.</p>
 
         <h3>⑤ Two frontends, one retrieval</h3>
-        <p><code>backend/app.py</code> (Flask + React) and <code>streamlit_app.py</code> both call the identical
+        <p><code>Projects/Module_04_rag/rag-starter/backend/app.py</code> (Flask + React) and <code>streamlit_app.py</code> both call the identical
           <code>retrieve()</code> with the identical <code>CHAMPION_*</code> config — only the UI differs. Streamlit copies the
           system prompt inline <i>temporarily</i> to avoid importing <code>app.py</code>'s module-level side effects (index
           load, Anthropic client, Flask app).</p>
@@ -873,7 +873,7 @@ flowchart LR
           prev: <a href="./03B-extractor.html">3B · extractor</a> ·
           next: <a href="./05B-finetune.html">5B · fine-tuning →</a>
         </p>
-        <p>llm-app-lab · Module 4B · Project · code: <code>rag-contest/rag-starter/</code> · spec: <code>rag-contest/CONTEST.md</code> · slides: <a href="./rag-slides.html">deck</a></p>
+        <p>llm-app-lab · Module 4B · Project · code: <code>Projects/Module_04_rag/rag-starter/</code> · spec: <code>Projects/Module_04_rag/CONTEST.md</code> · slides: <a href="./rag-slides.html">deck</a></p>
       </footer>
     </div>
 

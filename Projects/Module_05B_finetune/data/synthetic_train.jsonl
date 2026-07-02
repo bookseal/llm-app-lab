@@ -1,0 +1,240 @@
+{"text": "I cancelled my subscription three weeks ago and you still charged me this month. I want a full refund immediately.", "team": "Billing"}
+{"text": "Hey, just wanted to upgrade our account from the Starter plan to the Business plan. We've been growing and need the extra features. Can you help with that?", "team": "Billing"}
+{"text": "Please add 5 more seats to our current Pro subscription. We have new hires starting Monday.", "team": "Billing"}
+{"text": "My credit card was charged twice on the same day for the same invoice. Please look into this and refund the duplicate.", "team": "Billing"}
+{"text": "I need a copy of my invoice from last month for our accounting department. Could you send it to finance@ourcompany.com?", "team": "Billing"}
+{"text": "Hi, I accidentally bought the annual plan when I meant to do monthly. Is there any way to get a refund and switch?", "team": "Billing"}
+{"text": "We'd like to downgrade from Business to Professional. Please adjust our next billing cycle accordingly.", "team": "Billing"}
+{"text": "I'm seeing a charge on my bank statement that I don't recognize from your company. The amount is $149. Can you tell me what this is for?", "team": "Billing"}
+{"text": "Our invoice is wrong. You're billing us for 20 seats but we only have 12 users. Please fix this and issue a credit.", "team": "Billing"}
+{"text": "Can you switch our payment method from the Visa ending in 4242 to the Mastercard I have on file?", "team": "Billing"}
+{"text": "We just hired 2 more people \u2014 can you bump our plan up by 2 seats? Thanks.", "team": "Billing"}
+{"text": "I've been a customer for two years and I was charged a 'new customer fee' this month. That makes no sense. Refund it please.", "team": "Billing"}
+{"text": "My company requires PDF invoices with our VAT number included. How do I get those generated correctly going forward?", "team": "Billing"}
+{"text": "Hello, I need to cancel my subscription effective at the end of this billing period. Please confirm this won't result in any additional charges.", "team": "Billing"}
+{"text": "I got charged $299 but my plan is only supposed to be $199/month. What happened? This is unacceptable.", "team": "Billing"}
+{"text": "Can you send me all invoices from the past 12 months? Our auditors need them.", "team": "Billing"}
+{"text": "We want to move from the Team plan to the Enterprise plan. Who do I talk to about that?", "team": "Billing"}
+{"text": "I updated my billing address last week but the latest invoice still shows the old address. Can you re-issue it?", "team": "Billing"}
+{"text": "My payment failed and now my account shows a past due balance. I've updated my card \u2014 can you retry the charge?", "team": "Billing"}
+{"text": "Can you apply our promo code SAVE20 to our next invoice? I forgot to enter it when I signed up.", "team": "Billing"}
+{"text": "I was charged for an annual subscription but I never agreed to renew. I'd like a full refund.", "team": "Billing"}
+{"text": "Please remove one seat from our subscription. One of our employees left the company.", "team": "Billing"}
+{"text": "Is it possible to get a prorated refund? I'm cancelling halfway through the month.", "team": "Billing"}
+{"text": "Our payment keeps getting declined but there's definitely money in the account. Can someone look at what's going wrong with the billing?", "team": "Billing"}
+{"text": "I need to update the credit card on file. The one you have expired last month.", "team": "Billing"}
+{"text": "We need to add 10 seats to our Enterprise plan right away. Please process this ASAP.", "team": "Billing"}
+{"text": "I never received my invoice for March. Can you resend it?", "team": "Billing"}
+{"text": "I want to switch from monthly billing to annual billing to save money. How do I do that?", "team": "Billing"}
+{"text": "Hi there, we're currently on the Basic plan and we'd like to upgrade to Professional. Can you take care of that for us?", "team": "Billing"}
+{"text": "I disputed a charge a month ago and still haven't heard back. The ticket number was #88432. What's the status?", "team": "Billing"}
+{"text": "Your system charged my personal card instead of the company card. I need a refund to the personal card and a new charge to the correct one.", "team": "Billing"}
+{"text": "I was given a 3-month free trial but was charged at the end of month 2. Please refund that charge.", "team": "Billing"}
+{"text": "Can I get an invoice that shows itemized per-seat pricing? Our finance team needs the breakdown.", "team": "Billing"}
+{"text": "I need to update the billing contact email on our account. Invoices should go to billing@acmecorp.com instead.", "team": "Billing"}
+{"text": "We just acquired another company and need to merge their subscription with ours and add their 8 users to our plan.", "team": "Billing"}
+{"text": "I cancelled months ago and I'm STILL being charged every month. This is fraud. Fix this now or I'm disputing with my bank.", "team": "Billing"}
+{"text": "Could you let me know when our current subscription renews and what the amount will be?", "team": "Billing"}
+{"text": "I accidentally purchased two licenses instead of one. Can I get a refund for the extra one?", "team": "Billing"}
+{"text": "We'd like to pay via wire transfer or ACH instead of credit card going forward. Is that possible on our plan?", "team": "Billing"}
+{"text": "My invoice shows tax charges but we're a tax-exempt nonprofit. I have our exemption certificate ready \u2014 who do I send it to so we stop getting taxed?", "team": "Billing"}
+{"text": "I can't log in to my account. I've tried resetting my password three times and the reset email never shows up in my inbox. I've checked spam too. Please help.", "team": "Account Access"}
+{"text": "Hi, my account got locked after I mistyped my password a few times. Can you unlock it? My email is jharris@example.com.", "team": "Account Access"}
+{"text": "The two-factor authentication code I'm getting via SMS is being rejected every single time. I'm 100% sure I'm entering it correctly before it expires. This is really frustrating.", "team": "Account Access"}
+{"text": "We need to configure SAML-based SSO for our organization so our employees can sign in using their Okta credentials. Who do I talk to about getting that set up?", "team": "Account Access"}
+{"text": "I clicked the password reset link in the email and it just says 'This link has expired.' I literally clicked it within 30 seconds of receiving it. What's going on?", "team": "Account Access"}
+{"text": "Can't sign in. It keeps saying 'Invalid email or password' even though I'm copying and pasting my password directly from my password manager. Nothing has changed on my end.", "team": "Account Access"}
+{"text": "My authenticator app got wiped when I got a new phone and now I'm locked out of my account because I can't complete 2FA. I don't have any backup codes. Please help me regain access.", "team": "Account Access"}
+{"text": "Our entire team is suddenly unable to log in through our Google SSO integration. It was working fine yesterday. We're completely blocked from using the platform.", "team": "Account Access"}
+{"text": "I forgot my password. How do I reset it?", "team": "Account Access"}
+{"text": "I've been locked out of my account for the past two hours. I've submitted four password reset requests and haven't received a single email. Is something wrong with your email system?", "team": "Account Access"}
+{"text": "One of our employees, Sarah Chen, has left the company and we need to revoke her SSO access immediately so she can no longer sign in to our account.", "team": "Account Access"}
+{"text": "Hello, I set up two-factor authentication a while ago and now I can't find the app I used. I also don't have my backup codes. Is there any way you can disable 2FA on my account so I can get back in? I can verify my identity however you need.", "team": "Account Access"}
+{"text": "The 'Forgot Password' link on your login page doesn't seem to do anything when I click it. I'm using Chrome on Windows 11. Am I missing something?", "team": "Account Access"}
+{"text": "We're trying to set up SSO with Azure AD for our company account. I've followed your documentation but the configuration keeps failing with a 'metadata mismatch' error. Can someone walk me through it?", "team": "Account Access"}
+{"text": "My account appears to be locked. I only tried my password twice \u2014 I definitely didn't exceed any limit. Can you check what happened and unlock it please?", "team": "Account Access"}
+{"text": "I just created a new account and I'm trying to sign in for the very first time but it's telling me my credentials are invalid. I never even got to set a password \u2014 did the welcome email have a temporary one I missed?", "team": "Account Access"}
+{"text": "Every time I try to log in with SSO, I'm redirected back to the login page with no error message. It's like the SSO session just silently fails. We use Microsoft as our identity provider.", "team": "Account Access"}
+{"text": "Hi there, I'd like to enable two-factor authentication on my account for extra security. I went into settings but I can't find where to turn it on. Can you point me in the right direction?", "team": "Account Access"}
+{"text": "URGENT: I cannot log into my account and I have a client presentation in 20 minutes. The password reset email is not arriving. Please respond immediately.", "team": "Account Access"}
+{"text": "My colleague says she can log in just fine but I keep getting an 'Account suspended' message. I haven't done anything wrong. What does this mean and how do I fix it?", "team": "Account Access"}
+{"text": "I manage the account for our company and I need to reset the password for one of my team members who has left. His username is t.morgan@example.com. Can you assist?", "team": "Account Access"}
+{"text": "I recently changed my work email address and now I can't sign in because the system doesn't recognize my new email. My old email no longer exists. How do I update my login email?", "team": "Account Access"}
+{"text": "The backup codes I saved for 2FA don't seem to be working. I'm trying them exactly as written and getting 'Invalid code' every time. Are backup codes single-use? Did I already use them without realizing?", "team": "Account Access"}
+{"text": "We're rolling out SSO across our organization and need to know if you support both SP-initiated and IdP-initiated login flows. Also, what's the process to get it activated on our enterprise plan?", "team": "Account Access"}
+{"text": "I keep getting logged out automatically after just a few minutes of inactivity. I have to sign in constantly throughout the day. Is there a setting to extend the session timeout or keep me logged in?", "team": "Account Access"}
+{"text": "My password reset link is sending me to a page that just shows a blank white screen. I've tried in Firefox and Edge and the same thing happens. I can't get into my account at all.", "team": "Account Access"}
+{"text": "I think someone may have changed my password because it's no longer working and I didn't change it. I need to get back into my account right away.", "team": "Account Access"}
+{"text": "Hi, this is a report on behalf of our user David Park (d.park@example.com). He's locked out of his account and can't receive the reset email because his work email account was just deactivated. He needs an alternative way to verify his identity.", "team": "Account Access"}
+{"text": "I turned on two-step verification yesterday and today I'm being asked for a code but my phone is broken and I can't access the authenticator app. I'm completely stuck.", "team": "Account Access"}
+{"text": "We just migrated from Ping Identity to Okta as our IdP. What steps do we need to take to update the SSO configuration on your side so our team can continue signing in?", "team": "Account Access"}
+{"text": "The sign-in page keeps giving me a CAPTCHA that I fill in correctly, but then it just refreshes and shows another CAPTCHA. I've done this about 10 times and I still can't get past the login screen.", "team": "Account Access"}
+{"text": "My account has been locked due to too many failed attempts and the system is telling me to wait 30 minutes. It's been well over an hour now and I'm still locked out. Can you manually unlock it?", "team": "Account Access"}
+{"text": "I'm a new employee and IT set up my account but I never received the invitation or setup email. I can't find any way to log in without it. Can you resend it or help me set up my credentials?", "team": "Account Access"}
+{"text": "Quick question \u2014 if I enable SSO for my organization, will individual users still be able to log in with a username and password as a fallback, or will SSO be the only option?", "team": "Account Access"}
+{"text": "I accidentally registered two accounts with different email addresses and now I can only log in to one of them. I need to access the other one but I've forgotten which email I used and the password for it.", "team": "Account Access"}
+{"text": "I'm getting 'Your session has expired, please log in again' every single time I try to do anything. I log in, get redirected, and then immediately get kicked out again. This started happening today with no changes on my end.", "team": "Account Access"}
+{"text": "Can you please disable the two-factor authentication requirement on my account? I travel internationally a lot and I frequently lose access to my phone number, which makes logging in impossible.", "team": "Account Access"}
+{"text": "My entire organization can't sign in via SSO since this morning. We get an error that says 'SSO configuration not found for this domain.' Our domain is example-corp.com. Nothing has changed on our IdP side.", "team": "Account Access"}
+{"text": "I reset my password successfully, received the confirmation, set a new one, but now when I try to log in with the new password it still says it's wrong. I've done this reset cycle three times now. Please help.", "team": "Account Access"}
+{"text": "I need to log into the account that belongs to a former employee so I can retrieve some data. I'm the account owner/admin. How do I reset credentials for a user on my team who is no longer with us?", "team": "Account Access"}
+{"text": "Every time I try to save my profile settings I get a 500 Internal Server Error. It's been happening all morning and nothing I do fixes it.", "team": "Technical Support"}
+{"text": "The dashboard graphs are completely blank. No data loads at all. I've tried Chrome and Firefox and it's the same on both.", "team": "Technical Support"}
+{"text": "Your app keeps crashing the moment I open the Reports section. I just get a white screen and then nothing.", "team": "Technical Support"}
+{"text": "Hi, I wanted to let you know that the export to CSV button doesn't seem to do anything when I click it. No file downloads, no error message \u2014 it just sits there.", "team": "Technical Support"}
+{"text": "Getting a broken error page every time I attempt to access the login screen. Looks like the site might be down? Please advise.", "team": "Technical Support"}
+{"text": "The notification bell in the top right corner shows I have 12 unread alerts but when I click it the dropdown is completely empty.", "team": "Technical Support"}
+{"text": "I tried to upload a profile picture and got an error saying 'File type not supported' even though it's a standard JPEG. This is really frustrating.", "team": "Technical Support"}
+{"text": "Our entire team is reporting that the real-time collaboration feature stopped working around 2 PM today. Changes made by one user aren't showing up for others.", "team": "Technical Support"}
+{"text": "The search bar returns zero results no matter what I type. Even searching for something I know exists in the system comes back empty.", "team": "Technical Support"}
+{"text": "Hi support team, the dark mode toggle in settings doesn't save. Every time I log back in, it reverts to light mode.", "team": "Technical Support"}
+{"text": "Error message: 'Uncaught TypeError: Cannot read properties of undefined (reading map)' \u2014 this appears in the console and the page fails to render any content. Using Chrome 124 on Windows 11.", "team": "Technical Support"}
+{"text": "The mobile app on iOS crashes immediately after the splash screen. I updated to the latest version and it still happens. Didn't have this issue before the last update.", "team": "Technical Support"}
+{"text": "I can't add a new team member. The 'Invite User' button opens a modal but the Submit button inside it is grayed out and unclickable.", "team": "Technical Support"}
+{"text": "None of my scheduled reports are being sent. They used to arrive every Monday morning but the last three weeks have been completely silent.", "team": "Technical Support"}
+{"text": "When I try to delete a project, the confirmation dialog appears, I click 'Yes, delete it', the spinner runs for about 30 seconds, and then it just says 'Something went wrong'. The project is still there.", "team": "Technical Support"}
+{"text": "The integrations page won't load. It just spins forever. I've cleared cache and cookies, restarted my browser, and tried a different computer \u2014 same result.", "team": "Technical Support"}
+{"text": "Bulk-selecting items and then clicking 'Archive' does nothing. No confirmation, no error, items remain exactly where they are.", "team": "Technical Support"}
+{"text": "Every time I apply a filter on the Transactions page I get kicked back to page 1, even if I was on page 7. Super annoying when reviewing large datasets.", "team": "Technical Support"}
+{"text": "The video thumbnail previews in the media library are all broken \u2014 just showing a gray placeholder box. The actual videos play fine when opened.", "team": "Technical Support"}
+{"text": "I'm getting a 403 Forbidden error when trying to access the Analytics tab. Other tabs in the app work fine. My account should have full access.", "team": "Technical Support"}
+{"text": "Just wanted to flag a small bug: the character counter on the bio field counts spaces but the tooltip says it doesn't. Minor thing but could confuse users.", "team": "Technical Support"}
+{"text": "The date picker widget is completely broken on Safari. Clicking any date just closes the calendar without selecting anything.", "team": "Technical Support"}
+{"text": "Our webhook endpoint stopped receiving events about 6 hours ago. I've verified the endpoint is up and responding \u2014 the issue seems to be on your end.", "team": "Technical Support"}
+{"text": "When I print a report using the in-app print function, all the charts are missing from the printed output. The tables show up fine.", "team": "Technical Support"}
+{"text": "The autocomplete suggestions in the search field stopped appearing. It worked fine last week \u2014 did something change in a recent update?", "team": "Technical Support"}
+{"text": "I keep getting a 'Session expired, please log in again' message after only about 5 minutes of inactivity. The session timeout should be 30 minutes per our settings.", "team": "Technical Support"}
+{"text": "The drag-and-drop reordering on the Kanban board is broken. I can pick up a card but dropping it doesn't move it \u2014 it snaps back to its original position.", "team": "Technical Support"}
+{"text": "Hi \u2014 the app is showing me data from last month instead of the current period. The date range selector shows the correct dates but the data doesn't match.", "team": "Technical Support"}
+{"text": "I'm seeing duplicate entries for every record I create. Each time I save a new item, it appears twice in the list.", "team": "Technical Support"}
+{"text": "The API is returning a 422 Unprocessable Entity error on a POST to /api/v2/contacts even though the payload matches your documentation exactly. Happy to share request/response logs.", "team": "Technical Support"}
+{"text": "Clicking 'Generate Report' just refreshes the page and takes me back to the top. No report is generated. This started happening after your maintenance window last night.", "team": "Technical Support"}
+{"text": "The font rendering in the rich text editor looks completely broken \u2014 characters are overlapping each other and it's impossible to read what I'm typing.", "team": "Technical Support"}
+{"text": "My custom dashboard widgets disappeared after I updated my browser. The layout is back to default and all my customizations are gone.", "team": "Technical Support"}
+{"text": "The two-step verification code input screen freezes after I enter the code. The spinner just keeps going and nothing happens. I'm stuck and can't get into the app.", "team": "Technical Support"}
+{"text": "Images pasted into the notes field appear correctly while editing but disappear after saving. Only the text portion is retained.", "team": "Technical Support"}
+{"text": "I've noticed the 'Last Active' timestamp shown on user profiles is wrong \u2014 it's showing dates in the future for some users.", "team": "Technical Support"}
+{"text": "The app is extremely slow to load since yesterday. Pages that used to load in under a second are now taking 15\u201320 seconds. Nothing has changed on my end.", "team": "Technical Support"}
+{"text": "When I try to connect my Google Calendar integration, I go through the OAuth flow, grant permissions, and then get redirected back to the app with the error 'Integration failed: unknown error'.", "team": "Technical Support"}
+{"text": "The email preview feature shows a completely different template than the one I designed. It looks like it might be pulling a default template instead of my custom one.", "team": "Technical Support"}
+{"text": "The 'Download Invoice' button on the billing history page throws a JavaScript error and nothing downloads. I can see the error in the browser console: 'ReferenceError: jsPDF is not defined'.", "team": "Technical Support"}
+{"text": "Hi, I'd like to schedule a demo of your Business plan. We're a mid-sized marketing agency and want to see if it fits our workflow before committing.", "team": "Sales"}
+{"text": "What's the per-seat cost for the Enterprise tier? We have roughly 200 employees who would need access.", "team": "Sales"}
+{"text": "I'm looking to buy 10 licenses for my team right away. Can you point me to where I can do that, or do I need to talk to someone?", "team": "Sales"}
+{"text": "Can you send me a formal quote for 50 seats on the Professional plan? Our procurement team needs it before we can move forward.", "team": "Sales"}
+{"text": "Do you guys offer a free trial for the Business plan? I want to test it out before purchasing.", "team": "Sales"}
+{"text": "We're a nonprofit. Do you have any discounted pricing or special plans for nonprofit organizations?", "team": "Sales"}
+{"text": "I've been on the free tier for a while and I'm finally ready to upgrade. What's the best plan for a solo consultant who occasionally collaborates with contractors?", "team": "Sales"}
+{"text": "Our company is growing fast and we need to move from our current 5-seat plan to at least 25 seats immediately. How do I get a quote for that?", "team": "Sales"}
+{"text": "I need to purchase licenses for a new department we're onboarding next month \u2014 about 15 people. What's the process?", "team": "Sales"}
+{"text": "Can someone walk me through the difference between the Business and Enterprise plans? I can't figure out which one we actually need.", "team": "Sales"}
+{"text": "Hey, I saw your ad online and I'm curious about pricing. How much does the starter plan cost per month?", "team": "Sales"}
+{"text": "We're a university IT department. Do you offer academic pricing or bulk discounts for educational institutions?", "team": "Sales"}
+{"text": "I'd like to set up a demo call this week if possible. We're evaluating three vendors and yours is on our shortlist.", "team": "Sales"}
+{"text": "Can you send over a quote for 100 enterprise licenses? We need it in writing for our CFO to approve the budget.", "team": "Sales"}
+{"text": "What's the minimum number of seats we need to buy on the Enterprise plan? We're a small team of 8 but want enterprise-level features.", "team": "Sales"}
+{"text": "I'm the IT director at a logistics firm. We want to pilot your software with 20 users for 30 days before making a final decision. Is that possible?", "team": "Sales"}
+{"text": "Does your Enterprise plan include SSO and advanced admin controls? Trying to figure out if it's worth the jump from Business.", "team": "Sales"}
+{"text": "I want to buy your product today. I've already decided. Just tell me how many tiers you have and what the top one costs.", "team": "Sales"}
+{"text": "We're renewing our contract soon and I'd like to explore whether upgrading to the next tier makes sense for us financially. Can a sales rep reach out?", "team": "Sales"}
+{"text": "Hi team, one of our clients is asking us to resell your product as part of a bundle. Do you have a reseller or partner program?", "team": "Sales"}
+{"text": "I'm evaluating your Business plan for a team of 12. Can you send me a breakdown of exactly what's included compared to the free plan?", "team": "Sales"}
+{"text": "I submitted a quote request two days ago and haven't heard back. I need this resolved before end of quarter or we'll have to go with a competitor.", "team": "Sales"}
+{"text": "Is there an annual discount if we pay upfront instead of monthly? Looking at the Business plan for about 30 users.", "team": "Sales"}
+{"text": "Can we get a custom enterprise quote? Our organization has specific requirements around contract length and user volume.", "team": "Sales"}
+{"text": "I'm a startup founder \u2014 do you have any startup pricing programs or partnerships with accelerators that offer discounts?", "team": "Sales"}
+{"text": "How long does the free trial last, and do I need a credit card to sign up? Just want to test before I buy.", "team": "Sales"}
+{"text": "We need to add 5 more seats to our existing Business plan. Who do I contact to adjust our current plan before renewal?", "team": "Sales"}
+{"text": "I'd like to schedule a product demo for my executive team next Thursday afternoon. We need about 45 minutes. Is that doable?", "team": "Sales"}
+{"text": "Can your sales team put together a comparison of all your plans side by side? I want something I can present to my manager.", "team": "Sales"}
+{"text": "I'm frustrated \u2014 I've been trying to get a straight answer on Enterprise pricing for a week. Nobody has responded to my emails. This is not a good first impression.", "team": "Sales"}
+{"text": "Does the Business plan support multiple workspaces, or do we need Enterprise for that? It's a dealbreaker for us.", "team": "Sales"}
+{"text": "We're looking to run a 60-day proof of concept with 10 users. Do you offer extended trials for enterprise prospects?", "team": "Sales"}
+{"text": "What payment methods do you accept for annual plan purchases? Our company can only pay via purchase order.", "team": "Sales"}
+{"text": "I'm part of a government agency. Do you have special pricing or a procurement process tailored for public sector buyers?", "team": "Sales"}
+{"text": "My manager asked me to get three quotes from vendors by Friday. Can someone send me official pricing documentation ASAP?", "team": "Sales"}
+{"text": "We're a fast-growing SaaS company. Can we speak with someone on your sales team about volume pricing for 500+ seats?", "team": "Sales"}
+{"text": "I just signed up for the trial but I'm already pretty sure we want to buy. Can I speak with someone now to talk about what plan makes sense before the trial ends?", "team": "Sales"}
+{"text": "Is there a difference in support SLA between the Business and Enterprise plans? That's a key factor in our purchasing decision.", "team": "Sales"}
+{"text": "Hi, we'd love a live demo of the product focused on the reporting and analytics features. We have about 6 stakeholders who'd join the call.", "team": "Sales"}
+{"text": "I'm comparing your Enterprise plan with a competitor's offering. Can a sales rep reach out to discuss what makes your plan worth the price difference?", "team": "Sales"}
+{"text": "Someone has created a fake profile using my full name and profile photo. They're messaging my contacts pretending to be me. Please take this down immediately.", "team": "Trust & Safety"}
+{"text": "I keep getting DMs from an account called @deals_unlimited_99 that are clearly phishing attempts. Every message has a sketchy link asking me to 'verify my account.' Reporting this now.", "team": "Trust & Safety"}
+{"text": "Hi, I noticed two purchases on my account that I absolutely did not make. I'm worried my account has been accessed by someone else. Can you investigate?", "team": "Trust & Safety"}
+{"text": "my account is posting things by itself. i havent logged in for two days and there are posts on my profile i never made. someone hacked me", "team": "Trust & Safety"}
+{"text": "There is a user going by the username @TechSupport_Help_Official who is sending messages to new users telling them to click a link to 'secure their account.' This is 100% a phishing scam. Please investigate and remove this account.", "team": "Trust & Safety"}
+{"text": "I'd like to report an account that is impersonating a well-known public figure in my industry. They are using his exact name, photo, and bio to solicit money from followers. The account handle is @markjohnson_official2. This needs to be addressed urgently.", "team": "Trust & Safety"}
+{"text": "Someone is harassing me on this platform. They've sent me over 30 messages in the past 24 hours calling me names and threatening me. I've blocked them but they made a new account and started again. Username: @user_x_99x.", "team": "Trust & Safety"}
+{"text": "I think my account was compromised. There are sessions active from countries I've never visited \u2014 I saw logins from Vietnam and Brazil. I changed my password but I'm still concerned. Please review my account activity.", "team": "Trust & Safety"}
+{"text": "URGENT: Someone is using my company's logo and name to create a fake business profile and is scamming our customers. We are receiving complaints from clients who were duped into paying this fake account. Please act immediately.", "team": "Trust & Safety"}
+{"text": "A user named @spambot_free_gifts has been spamming every post I make with the same promotional comment about a 'free gift card.' It's been going on for weeks. Please remove this bot.", "team": "Trust & Safety"}
+{"text": "Hi there, I wanted to report that I've been receiving coordinated harassment from a group of accounts. They all seem to be working together to flood my comments with abusive messages. It started after I posted an opinion piece last week. I can provide usernames if needed.", "team": "Trust & Safety"}
+{"text": "Not sure if this is the right place but I noticed unauthorized activity on my account \u2014 someone sent messages to all my contacts with a weird link. I didn't send those. My account has clearly been compromised.", "team": "Trust & Safety"}
+{"text": "Someone made a fake version of my account with a slightly different username (@john.smith_ instead of @john.smith) and is using it to scam my followers by asking for money. Please help.", "team": "Trust & Safety"}
+{"text": "this is harassment. @darkuser44 keeps making new accounts to follow and message me every time i block them. i am scared. please do something", "team": "Trust & Safety"}
+{"text": "I'm reporting a phishing campaign. Multiple accounts are sending direct messages with links to a fake login page that looks exactly like your platform's sign-in screen. The link is hxxp://secure-login-verify[.]com. Please take action.", "team": "Trust & Safety"}
+{"text": "My ex is impersonating me online using an account with my real name and personal photos that were taken without my consent. They are posting defamatory content and pretending to be me. This is extremely distressing.", "team": "Trust & Safety"}
+{"text": "A bot network is spamming my community group with the same message over and over: 'Earn $500 daily, click here.' At least 15\u201320 different accounts are doing it simultaneously. I've reported each one individually but they keep coming back.", "team": "Trust & Safety"}
+{"text": "I believe my account was hacked. I received an email saying my email address was changed, but I did not request that. I immediately tried to log back in and couldn't. Someone has taken over my account.", "team": "Trust & Safety"}
+{"text": "Hello, I'd like to report what appears to be a coordinated fraud scheme. Several accounts are impersonating your platform's official support team and asking users to submit their credentials to 'prevent suspension.' This is clearly a scam.", "team": "Trust & Safety"}
+{"text": "User @hate_speech_acct_3 has been sending me deeply threatening messages. They said they know where I live. I am genuinely frightened and would like this escalated as a priority.", "team": "Trust & Safety"}
+{"text": "There is an account pretending to be my small business. They have copied our profile picture, bio, and even our product listings. They are collecting payments from customers and not delivering anything. The fake account is @bestbakery_official.", "team": "Trust & Safety"}
+{"text": "I've been getting spam emails from an address that appears to use your platform's domain. I'm worried someone is spoofing your platform to collect credentials. Wanted to flag this to your trust team.", "team": "Trust & Safety"}
+{"text": "My account was hacked and the attacker changed my profile info and sent spam to all my followers. I've since regained access but I'm worried about what was sent while they had control.", "team": "Trust & Safety"}
+{"text": "Someone keeps creating new troll accounts to leave abusive comments on everything I post. I've reported and blocked at least 10 accounts in the last month \u2014 all clearly the same person. This is targeted harassment.", "team": "Trust & Safety"}
+{"text": "Hi, I just received a message from someone claiming to be a platform administrator telling me I need to pay a fee to avoid having my account deleted. This is definitely a scam. Reporting it here.", "team": "Trust & Safety"}
+{"text": "I run a nonprofit and someone has set up a fake donation page impersonating our organization. Donors are being defrauded. This is urgent \u2014 please shut down the account @helpinghandsfund_real immediately.", "team": "Trust & Safety"}
+{"text": "An account with a username almost identical to mine is DMing my followers and asking for money, claiming it's me going through a personal emergency. This is fraud and it's damaging my reputation. Please investigate.", "team": "Trust & Safety"}
+{"text": "there are like 50 spam comments on my latest post all from different accounts but posting the same link. clearly bots. can you please do a sweep?", "team": "Trust & Safety"}
+{"text": "I found a profile that is using my child's photos without permission and pretending to be a family account. This is deeply disturbing and I want it removed immediately.", "team": "Trust & Safety"}
+{"text": "Reporting a scam account: @crypto_gains_fast_2024 has been messaging users promising guaranteed crypto returns. Several people I know have lost money after following their instructions. This is fraud.", "team": "Trust & Safety"}
+{"text": "I received what looks like a fake security alert from within the platform itself \u2014 a message saying my account would be locked unless I clicked a link and re-entered my info. The link goes off-platform. This is an internal phishing attempt.", "team": "Trust & Safety"}
+{"text": "Hi, I want to report that someone is impersonating a famous journalist on this platform, posting fabricated quotes attributed to real news events. It's spreading misinformation and the account has a large following. Handle is @real_press_updates.", "team": "Trust & Safety"}
+{"text": "I'm a victim of account takeover. Someone got into my account, posted offensive content, and then locked me out by changing the email and phone number. I need help recovering my account and understanding what happened.", "team": "Trust & Safety"}
+{"text": "Multiple accounts have been leaving antisemitic comments on my posts. When I reported one, it came back under a new name and did the same thing. This feels like a coordinated hate campaign.", "team": "Trust & Safety"}
+{"text": "I never authorized any third-party app to post on my behalf but my account has been sharing content automatically. I think a compromised OAuth token or a malicious app is responsible. Please review my account's connected apps and activity.", "team": "Trust & Safety"}
+{"text": "Somebody set up a fake customer service account for a brand I follow and is responding to users' complaints \u2014 collecting their order info and personal details under the guise of helping them. It's a data harvesting scam.", "team": "Trust & Safety"}
+{"text": "I want to report ongoing harassment. A specific user has been stalking my activity, screenshotting my posts, and sharing them out of context in an attempt to get people to target me. This has been going on for months.", "team": "Trust & Safety"}
+{"text": "A group of accounts is brigading every thread I participate in, downvoting and leaving abusive replies within minutes of me posting. It's clearly organized. I have screenshots showing they're coordinating in another group.", "team": "Trust & Safety"}
+{"text": "Hello, my brand account was compromised overnight. The hacker posted inappropriate content and sent spam to our entire follower base. We've regained control but need your team to review the damage and help us notify affected users if possible.", "team": "Trust & Safety"}
+{"text": "Someone is using my name, profile picture, and even copying my writing style to create a fake account that is interacting with my audience. Several followers have messaged me confused about 'my' strange behavior. Please remove this impersonation account.", "team": "Trust & Safety"}
+{"text": "I'd like to request a full export of all personal data you hold about me under GDPR Article 15. Please send it to the email address on my account.", "team": "Data Privacy"}
+{"text": "DELETE MY DATA NOW. I've been asking for months and nothing has happened. This is a formal GDPR erasure request and I expect a response within 30 days.", "team": "Data Privacy"}
+{"text": "Hi, I recently cancelled my subscription and I'm wondering how long you keep my personal information after an account is closed. Can you point me to your retention policy?", "team": "Data Privacy"}
+{"text": "Please permanently delete my account and all associated personal data. I no longer use the service and don't want my information stored anywhere on your systems.", "team": "Data Privacy"}
+{"text": "I want to know exactly what categories of personal data you collect about me. Things like name, email, usage logs, IP addresses \u2014 please give me the full picture.", "team": "Data Privacy"}
+{"text": "Can you send me a copy of all the data you have stored about me? I believe this is my right under CCPA and I'd like to exercise it.", "team": "Data Privacy"}
+{"text": "My name is Sarah Thompson and I'm submitting this on behalf of my elderly father who uses your platform. He would like all of his personal data deleted immediately. How do we proceed?", "team": "Data Privacy"}
+{"text": "I was reading your privacy policy and it mentions you share data with 'trusted third parties.' I need a list of every company you've shared my personal data with.", "team": "Data Privacy"}
+{"text": "I closed my account two years ago. Why am I still receiving marketing emails? Please confirm you have deleted all of my personal data as required.", "team": "Data Privacy"}
+{"text": "Formal data subject access request: please provide a complete copy of all personal data you process relating to my account, including any inferred or derived data.", "team": "Data Privacy"}
+{"text": "How long do you retain user data after account deletion? I want a specific timeframe, not a vague answer. Considering deleting my account but need this info first.", "team": "Data Privacy"}
+{"text": "Please remove all my personal information from your platform entirely. I do not consent to you holding this data any longer.", "team": "Data Privacy"}
+{"text": "I'd like to download everything you have about me \u2014 messages, profile info, activity logs, the works. What's the process for doing a full data export?", "team": "Data Privacy"}
+{"text": "This is a GDPR right-to-erasure request. Please delete all data associated with my email address: jane.doe@example.com, and confirm once complete.", "team": "Data Privacy"}
+{"text": "Do you sell my personal data to advertisers or data brokers? I can't find a clear answer in your privacy policy and I need to know before I continue using the service.", "team": "Data Privacy"}
+{"text": "I submitted a data deletion request three weeks ago and have heard nothing. Can someone please update me on the status? This is urgent.", "team": "Data Privacy"}
+{"text": "Quick question \u2014 if I delete my account today, are my photos and messages actually gone, or do you keep backups? How long do those backups last?", "team": "Data Privacy"}
+{"text": "I'm a journalist writing about data privacy practices. I'd like to submit a Subject Access Request for my own account to see what data you actually store. Please advise on the process.", "team": "Data Privacy"}
+{"text": "Under the UK GDPR I am requesting that you erase all personal data you hold about me without undue delay. My account email is listed below.", "team": "Data Privacy"}
+{"text": "I never agreed to have my location data collected. Please tell me whether you store location information from my device and, if so, delete it immediately.", "team": "Data Privacy"}
+{"text": "My ex-partner created an account using my email address without my knowledge. I need all data tied to that email deleted as it was collected without my consent.", "team": "Data Privacy"}
+{"text": "Can you provide a breakdown of my personal data in a machine-readable format (e.g., JSON or CSV)? I want to port it to another service.", "team": "Data Privacy"}
+{"text": "I've heard you recently had a data breach. I want to know if my personal information was involved and what data of mine you currently hold.", "team": "Data Privacy"}
+{"text": "Please close my account and make sure every single piece of my personal data \u2014 including logs, analytics, and backups \u2014 is permanently erased.", "team": "Data Privacy"}
+{"text": "What is your data retention schedule? Specifically, how long after a user becomes inactive do you delete their data?", "team": "Data Privacy"}
+{"text": "I am exercising my right to restriction of processing under GDPR Article 18. Please stop processing my personal data while I dispute its accuracy.", "team": "Data Privacy"}
+{"text": "Hi, do you share any user data with government agencies or law enforcement? I'd like to understand under what circumstances my data could be disclosed.", "team": "Data Privacy"}
+{"text": "I want to opt out of all data sharing with third parties immediately. Is there a way to do this in settings, or do I need to submit a formal request?", "team": "Data Privacy"}
+{"text": "Please confirm: once I delete my account, how long until my data is removed from all your servers, including disaster-recovery backups?", "team": "Data Privacy"}
+{"text": "I am writing to request the immediate deletion of my personal data under California Consumer Privacy Act (CCPA) Section 1798.105. Please acknowledge receipt of this request.", "team": "Data Privacy"}
+{"text": "I think you're holding inaccurate data about me. How do I find out what you have so I can request a correction?", "team": "Data Privacy"}
+{"text": "I'd like to know whether my browsing activity within your app is tracked and stored. If yes, I'd like that data deleted.", "team": "Data Privacy"}
+{"text": "Can someone explain your data retention policy in plain English? I just want to understand how long you keep information about me after I stop using the service.", "team": "Data Privacy"}
+{"text": "I'm requesting all emails, support transcripts, and account activity logs you have stored under my name. This is a formal Subject Access Request.", "team": "Data Privacy"}
+{"text": "I want to delete my account fully. I'm not just talking about deactivation \u2014 I mean permanent deletion with all my personal data wiped.", "team": "Data Privacy"}
+{"text": "Your privacy policy says you retain data for 'business purposes.' I find this vague and concerning. Please tell me specifically what data you keep and for how long.", "team": "Data Privacy"}
+{"text": "I received an email addressed to me from your company but I never signed up. Someone must have used my details. Please delete any personal data linked to my email and explain how this happened.", "team": "Data Privacy"}
+{"text": "I'm moving to a competitor and want to take my data with me. Can you export everything \u2014 profile, history, preferences \u2014 in a portable format?", "team": "Data Privacy"}
+{"text": "As a parent, I'm concerned that my 15-year-old child's data may have been collected. Can you tell me what data you hold on minors and how to request its deletion?", "team": "Data Privacy"}
+{"text": "I made a data erasure request 45 days ago and still have not received confirmation. This is beyond the legal response window. Please escalate this immediately and provide written confirmation of deletion.", "team": "Data Privacy"}
