@@ -81,7 +81,7 @@
       { t: "5A.6 · Computer use & Safety", id: "safety" },
       { t: "5A.7 · Project: data-analyst agent", id: "project" },
     ] },
-    { href: "05B-finetune.html", num: "5B", label: "Special Topic: fine-tuning", sections: [
+    { href: "05B-finetune.html", num: "5B", label: "Special Topics: fine-tuning · VLA", sections: [
       { t: "5B.1 · What it builds", id: "what" },
       { t: "5B.2 · 왜 어려운가 — 숨은 하우스룰", id: "hard" },
       { t: "5B.3 · 신경망이 분류하는 법", id: "primer" },
@@ -89,6 +89,9 @@
       { t: "5B.5 · Frozen embedder + trained head", id: "hood" },
       { t: "5B.6 · Build & run locally", id: "local" },
       { t: "5B.7 · The key idea", id: "key" },
+      { t: "5B.8 · VLA — LLM을 물리 세계로", id: "vla" },
+      { t: "5B.9 · See it move", id: "vla-see" },
+      { t: "5B.10 · Anatomy of a VLA", id: "vla-hood" },
     ] },
     { href: "05C-agent.html", num: "5C", label: "Project: data agent", sections: [
       { t: "5C.1 · What it builds", id: "what" },
