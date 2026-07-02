@@ -52,6 +52,14 @@ The stuff I actually built and broke and fixed. Each one isolates *one* LLM conc
 | **[Module_05B_finetune](Projects/Module_05B_finetune/)** | Route support tickets to 6 teams, three ways | Zero-shot → few-shot → **distilled classifier** (F1 compared) |
 | **[Module_05C_data-agent](Projects/Module_05C_data-agent/)** | Ask a SQLite DB in English; it writes read-only SQL | The ~20-line **agent loop** + read-only-by-construction safety |
 
+### 💬 Module_02_chat-app — the smallest thing that talks to Claude
+
+React + Flask, one endpoint, one `client.messages.create` call. It's deliberately
+bare: the exercise is to run it, read it, and name what a production version still
+needs (memory, streaming, error handling). Here it is answering live over `/api/chat`:
+
+![Module_02 chat-app — a live Claude reply rendered over /api/chat](docs/assets/module-02-chat.png)
+
 ### ⭐ Module_03_extractor/webapp — the one I extended into a real web app
 
 Paste an instructor job post (copied from email or KakaoTalk). Claude extracts five
@@ -74,12 +82,27 @@ That contrast — *the output format decides whether you force a tool* — is th
 lesson, and I built an app to feel it instead of just reading it.
 &nbsp; → run it: [Projects/Module_03_extractor/webapp/README.md](Projects/Module_03_extractor/webapp/README.md)
 
+### 🔎 Module_04_rag — cited answers over an FAA corpus (single-shot vs agentic)
+
+Ask one question about 14 CFR (FAA regs) and it answers *twice, side by side*:
+**single-shot** retrieves once and answers from those chunks — so gaps in the corpus
+show up as honest "Not specified" cells. **agentic** lets the model keep searching until
+it has every part, then fills the same table with §-cited sources. The lesson isn't
+chunking or embeddings — it's **one retrieval vs. a retrieval loop, and the recall you
+buy with more tokens**. Showing both columns is the whole point: you *see* the trade-off.
+
+![Module_04 RAG — single-shot leaves Class B/C blank; the agentic loop runs 3 more searches and fills every cell with §-cited sources, at a visible token/cost trade-off](docs/assets/module-04-rag.png)
+
+&nbsp; → run it: [Projects/Module_04_rag/rag-starter/README.md](Projects/Module_04_rag/rag-starter/README.md)
+
 ### 🧭 Module_04_embedding-similarity — building intuition for vectors
 
 A tiny REPL: type two phrases, get their cosine similarity on a −1…1 scale. It runs a
 **local multilingual model** (`paraphrase-multilingual-MiniLM-L12-v2`), so `"cat"` and
 `"고양이"` score *high* across languages — no API key, no cost. Great for feeling why
 `"I love this"` vs `"I hate this"` is **not** near −1 (same topic, opposite sentiment).
+
+![Module_04 embedding-similarity — real cosine scores: cat↔고양이 0.989 (cross-lingual), love↔hate 0.530 (same topic), stock-market↔photosynthesis −0.115 (unrelated)](docs/assets/module-04-embedding.png)
 
 ### 🎯 Module_05B_finetune — "fine-tuning" that actually runs
 
