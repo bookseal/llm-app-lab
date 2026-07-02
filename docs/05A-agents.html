@@ -6,9 +6,50 @@
     <title>llm-app-lab — Module 5 · Architecture &amp; Agents</title>
     <link rel="stylesheet" href="./style.css?v=3" />
     <script src="./nav.js?v=7" defer></script>
+    <style>
+      /* Local-only (this page): a simple staggered "reveal" for any diagram
+         wrapped in .animated. style.css is shared across pages, so nothing here
+         touches it. We animate ONLY opacity — mermaid uses transform to place
+         nodes, so animating transform would scramble the layout. */
+      @keyframes mreveal { from { opacity: 0; } to { opacity: 1; } }
+      .animated { position: relative; }
+      .animated svg .reveal { animation: mreveal .45s ease both; }
+      .animated .replay {
+        position: absolute; top: .4rem; right: .4rem; z-index: 2;
+        font: inherit; font-size: .78rem; cursor: pointer;
+        background: var(--panel, #f0f0f0); color: var(--text, #222);
+        border: 1px solid var(--border, #ccc); border-radius: 6px; padding: .15rem .55rem;
+      }
+      .animated .replay:hover { border-color: var(--accent, #06c); }
+    </style>
     <script type="module">
       import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
-      mermaid.initialize({ startOnLoad: true, theme: "neutral" });
+      // Render explicitly (not startOnLoad) so we can animate right after render.
+      mermaid.initialize({ startOnLoad: false, theme: "neutral" });
+      await mermaid.run();
+
+      // Reveal a diagram's parts one-by-one by staggering an opacity fade.
+      function revealDiagram(svg) {
+        const parts = [...svg.querySelectorAll(
+          ".node, .cluster, .edgePaths .edgePath, .flowchart-link, .edgeLabel, " +
+          ".actor, .messageText, .messageLine0, .messageLine1, .note, .loopLine, .labelText")];
+        parts.forEach((el, i) => {
+          el.classList.remove("reveal");
+          void el.getBoundingClientRect();        // force reflow so re-adding restarts it
+          el.style.animationDelay = (i * 85) + "ms";
+          el.classList.add("reveal");
+        });
+      }
+      document.querySelectorAll(".animated").forEach((box) => {
+        const svg = box.querySelector("svg");
+        if (!svg) return;
+        revealDiagram(svg);
+        const btn = document.createElement("button");
+        btn.className = "replay";
+        btn.textContent = "▶ 다시 재생";
+        btn.addEventListener("click", () => revealDiagram(svg));
+        box.appendChild(btn);
+      });
     </script>
   </head>
   <body>
@@ -370,9 +411,92 @@ flowchart LR
     U(["natural-language question"]) --> Ag["agent loop"]
     Ag -->|list_tables| DB[("read-only SQLite")]
     Ag -->|describe_table| DB
-    Ag -->|run_select| DB
+    Ag -->|run_query| DB
     DB -.rows.-> Ag
     Ag --> Ans(["answer in plain language"])
+        </div>
+
+        <p class="entitle" style="margin-top:1.6rem">코드 읽기 ① — 함수 이름 지도 (전체 모양부터)</p>
+        <p class="muted">스타터(<code>agent-app.zip</code>)의 런타임은 파일 둘 — <code>agent.py</code>(루프+CLI) ·
+          <code>tools.py</code>(도구 3개 + 라우터). 함수는 7개지만 <strong>모든 길은 <code>answer_turn()</code> 하나로</strong>
+          모여요. 아래 지도가 재생되며 하나씩 나타납니다(우측 위 <em>▶ 다시 재생</em>).</p>
+        <div class="animated">
+        <div class="mermaid">
+flowchart TD
+    MAIN["__main__"] -->|arg| A1["answer_turn(messages)"]
+    MAIN -->|no arg| REPL["repl()"]
+    REPL --> A1
+    A1 --> CREATE["messages.create()<br/>SYSTEM + messages + TOOLS"]
+    CREATE --> CHECK{"tool_use block?"}
+    CHECK -->|no| RET["return final text"]
+    CHECK -->|yes| DISP["dispatch(name, input)"]
+    DISP --> APP["append tool_result"]
+    APP --> CREATE
+    DISP --> LT["list_tables()"]
+    DISP --> DT["describe_table(table)"]
+    DISP --> RQ["run_query(sql)"]
+    LT --> CONN["_connect() · mode=ro"]
+    DT --> CONN
+    RQ --> CONN
+        </div>
+        </div>
+
+        <p class="entitle">엔진 = <code>answer_turn()</code> — 네 동작의 반복</p>
+        <pre><code>def answer_turn(messages: list) -&gt; str:
+    for _ in range(MAX_STEPS):                    # 스텝 예산 = 폭주 방지
+        resp = client.messages.create(model=MODEL, system=SYSTEM,
+                                      messages=messages, tools=TOOLS)
+        messages.append({"role": "assistant", "content": resp.content})
+        tool_calls = [b for b in resp.content if b.type == "tool_use"]
+        if not tool_calls:                        # 도구 안 부름 → 끝(end_turn)
+            return "".join(b.text for b in resp.content if b.type=="text").strip()
+        results = [{"type": "tool_result", "tool_use_id": c.id,
+                    "content": dispatch(c.name, c.input)} for c in tool_calls]
+        messages.append({"role": "user", "content": results})   # 결과 되먹임</code></pre>
+        <p class="muted">묻기 → (도구 없으면 종료) → <code>dispatch</code>로 실행 → 결과 append → 반복.
+          출구는 딱 둘: <strong>도구를 안 부를 때</strong>(정상 <code>end_turn</code>) /
+          <strong><code>MAX_STEPS</code> 소진</strong>(안전 정지).</p>
+
+        <p class="entitle">코드 읽기 ② — 실제 질문이 루프를 도는 모습</p>
+        <p class="muted">질문 <em>"지난 분기 매출 top 3 제품?"</em> — 데이터 최신일(2026-05-31) 기준 "지난 분기" = 2026 Q1.
+          루프가 <strong>5바퀴</strong> 돕니다(예산 12 중).</p>
+        <div class="animated">
+        <div class="mermaid">
+sequenceDiagram
+    participant L as answer_turn() loop
+    participant API as messages.create()
+    participant DB as data.db (mode=ro)
+    Note over L: 1 · orient
+    L->>API: create(messages, TOOLS)
+    API-->>L: tool_use list_tables
+    L->>DB: dispatch to list_tables()
+    DB-->>L: customers, order_items, orders, products
+    Note over L: 2 · schema
+    L->>API: create()
+    API-->>L: tool_use x3 describe_table
+    L->>DB: dispatch to describe_table()
+    DB-->>L: columns + sample rows
+    Note over L: 3 · find "now"
+    L->>API: create()
+    API-->>L: tool_use run_query MAX(order_date)
+    L->>DB: dispatch to run_query()
+    DB-->>L: 2026-05-31
+    Note over L: 4 · the real query
+    L->>API: create()
+    API-->>L: tool_use run_query top-3 revenue Q1
+    L->>DB: dispatch to run_query()
+    DB-->>L: Robot Vacuum / Cookware Set / Scented Candle
+    Note over L: 5 · answer
+    L->>API: create()
+    API-->>L: end_turn (text, no tool_use)
+    Note over L: return final answer
+        </div>
+        </div>
+        <div class="callout cs">
+          🔎 <strong>루프의 <em>모양</em>은 코드가, 루프 안의 <em>행동</em>은 프롬프트가 정합니다.</strong>
+          1·2바퀴가 늘 스키마 탐색인 건 코드가 아니라 SYSTEM 프롬프트가 "먼저 list_tables → describe_table 하라"고
+          시켜서예요. 그리고 <code>messages</code>는 매 바퀴 <em>tool_use + tool_result</em> 두 블록씩 자라며 —
+          이게 곧 <a href="#memory">멀티턴 기억(5A.4)</a>입니다.
         </div>
         <div class="callout cs">
           🚀 <strong>Beyond — Managed Agents (beta, 슬라이드 23):</strong> 소유 모델 역전 — Anthropic이
