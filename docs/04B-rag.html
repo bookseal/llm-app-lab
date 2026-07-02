@@ -34,6 +34,39 @@
       .ptag { display: inline-block; background: var(--code-bg); color: var(--accent);
         border-radius: 4px; padding: .05rem .4rem; font-size: .82rem; font-family: var(--mono); }
       h4 { font-size: 1rem; margin: 1.1rem 0 .3rem; }
+      /* ── Reading-depth strip (A1): jump between the five zoom levels ── */
+      .depthstrip { display: flex; flex-wrap: wrap; gap: .4rem; margin: 1rem 0 .2rem; }
+      .depthchip { display: inline-flex; align-items: center; gap: .3rem; text-decoration: none;
+        background: var(--panel); border: 1px solid var(--border); border-radius: 999px;
+        padding: .3rem .8rem; font-size: .85rem; color: var(--muted);
+        transition: border-color .15s, color .15s, background .15s; }
+      .depthchip:hover { border-color: var(--accent); color: var(--accent); }
+      .depthchip.on { border-color: var(--accent); color: var(--accent);
+        background: rgba(88, 166, 255, .12); font-weight: 600; }
+      /* Depth badge on each reading-level heading (A3): "depth 2 / 5". */
+      h2 .depthbadge { float: right; font-size: .72rem; font-weight: 600; color: var(--muted);
+        background: var(--code-bg); border: 1px solid var(--border); border-radius: 999px;
+        padding: .1rem .6rem; letter-spacing: .04em; }
+      /* Subtle divider between reading-depth sections (A3). */
+      .zoomcue { text-align: center; color: var(--muted); font-size: .78rem; letter-spacing: .12em;
+        text-transform: uppercase; margin: 2.2rem 0 .2rem; }
+      .zoomcue::before, .zoomcue::after { content: "·····"; margin: 0 .6rem; color: var(--border); letter-spacing: .2em; }
+      /* Reasoning-shape mini-labels inside decision cards (A2). */
+      .dlabel { display: inline-block; font-size: .66rem; font-weight: 700; letter-spacing: .09em;
+        text-transform: uppercase; color: var(--accent2); margin: .75rem 0 .1rem; }
+      .dlabel.tension { color: #e3b341; }
+      .dlabel.decision { color: var(--accent); }
+      /* Highlight chip for a measured figure (A2) — makes numbers pop out of prose. */
+      .metric { font-family: var(--mono); font-size: .85em; white-space: nowrap;
+        background: var(--code-bg); border: 1px solid var(--border); border-radius: 5px;
+        padding: .02rem .35rem; color: var(--accent); }
+      /* Shared decision-table style (A4) — factored out of inline styles. */
+      .dtable { width: 100%; border-collapse: collapse; margin: .7rem 0; font-size: .9rem; }
+      .dtable th, .dtable td { padding: .35rem .6rem; border-bottom: 1px solid var(--border); text-align: left; }
+      .dtable th { color: var(--muted); font-weight: 600; }
+      .dtable td.num { font-variant-numeric: tabular-nums; }
+      .dtable tr.ship td { background: rgba(63, 185, 80, .10); }
+      .dtable .win { color: var(--accent2); font-weight: 700; }
     </style>
     <script type="module">
       import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
@@ -67,8 +100,15 @@
         </div>
         <div class="callout cs">
           🔎 <strong>This is the reference walkthrough of the finished solution.</strong> It zooms in five times —
-          60&nbsp;seconds → 5 → 10 → 20 minutes → every detail — so you can read it at whatever depth you need. The
+          60&nbsp;seconds → 5 → 10 → 20 minutes → every decision — so you can read it at whatever depth you need. The
           matching code is in <code>rag-contest/rag-starter/</code> and <code>rag-contest/harness/</code>.
+        </div>
+        <div class="depthstrip" id="depthstrip" aria-label="reading depth">
+          <a class="depthchip" href="#sixty">🧒 60s</a>
+          <a class="depthchip" href="#five">🔎 5m</a>
+          <a class="depthchip" href="#ten">🛠️ 10m</a>
+          <a class="depthchip" href="#twenty">🚀 20m</a>
+          <a class="depthchip" href="#whole">🧭 Decisions</a>
         </div>
       </header>
 
@@ -86,7 +126,7 @@
       </nav>
 
       <section id="sixty">
-        <h2>4B.1 · The 60-second version 🧒</h2>
+        <h2><span class="depthbadge">depth 1 / 5</span>4B.1 · The 60-second version 🧒</h2>
         <p>Think of it like a <b>librarian</b>. First you get the library ready <b>once</b>. Then, every time someone asks a
           question, the librarian grabs just the right notes and answers — and tells you which note it came from.</p>
 
@@ -113,8 +153,9 @@ flowchart LR
           question. Below we zoom in: the real steps, then every last detail.</p>
       </section>
 
+      <div class="zoomcue">🔍 zoom in</div>
       <section id="five">
-        <h2>4B.2 · The 5-minute version 🔎</h2>
+        <h2><span class="depthbadge">depth 2 / 5</span>4B.2 · The 5-minute version 🔎</h2>
         <p>Same two lanes, now with the real machinery. The trick that makes it work: <b>embeddings</b> turn every chunk (and
           your question) into a <b>vector</b> — a list of numbers where <i>similar meaning → nearby vectors</i>. So "find the
           relevant notes" becomes "find the closest vectors", and the answer is written using <b>only</b> those retrieved
@@ -151,8 +192,9 @@ flowchart TB
           and adds the engineering that makes them trustworthy.</p>
       </section>
 
+      <div class="zoomcue">🔍 zoom in</div>
       <section id="ten">
-        <h2>4B.3 · The 10-minute version 🛠️</h2>
+        <h2><span class="depthbadge">depth 3 / 5</span>4B.3 · The 10-minute version 🛠️</h2>
         <p>Let's build it the honest way. First a <b>naive pipeline</b> that already works — it retrieves and answers. Then we
           watch it break in <b>three quiet ways</b>, fix each, and redraw the same pipeline with the fixes in place.</p>
 
@@ -374,8 +416,9 @@ flowchart TB
         </div>
       </section>
 
+      <div class="zoomcue">🔍 zoom in</div>
       <section id="twenty">
-        <h2>4B.4 · The 20-minute version 🚀 <span class="muted" style="font-weight:400;font-size:1rem">— from correct to production</span></h2>
+        <h2><span class="depthbadge">depth 4 / 5</span>4B.4 · The 20-minute version 🚀 <span class="muted" style="font-weight:400;font-size:1rem">— from correct to production</span></h2>
         <p>The 10-minute pipeline is <i>correct</i>. But the moment real users chat with the live app
           (<code>streamlit_app.py</code>), three new problems appear that a clean pipeline never shows — and there's one
           genuinely hard design call. Same problem-first, before → after treatment.</p>
@@ -572,93 +615,221 @@ flowchart TB
         </div>
       </section>
 
+      <div class="zoomcue">🔍 zoom in · deepest level</div>
       <section id="whole">
-        <h2>4B.5 · The whole picture <span class="muted" style="font-weight:400;font-size:1rem">— every detail</span></h2>
-        <p>Read it top-to-bottom. The left column runs <b>once</b> (<span class="ptag">python indexer.py</span>); the right column
-          runs <b>on every question</b>. They never talk directly — they meet only through the two files in the middle
-          (<code>index.pkl</code> + <code>index.meta.json</code>), which is what keeps build-time and query-time from silently diverging.
-          Still not drawn until here: the fail-loud <b>dimension check</b>, the <b>BM25 / hybrid</b> options, and the
-          <code>CHAMPION_*</code> config that pins one deployed setup.</p>
+        <h2><span class="depthbadge">depth 5 / 5</span>4B.5 · The whole picture <span class="muted" style="font-weight:400;font-size:1rem">— every decision</span></h2>
+        <p>The four zoom levels above showed <i>how</i> the pipeline runs. This last level is the <b>decision log</b>:
+          the calls that shaped the shipped system. Every one was settled the same way — <b>measure, don't guess, and
+          weigh quality&nbsp;↔&nbsp;cost</b> — and every number below is a real measurement on <i>this</i> corpus, not a
+          benchmark headline. Each card follows one shape: <span class="dlabel">situation</span>
+          <span class="dlabel tension">the tension</span> <span class="dlabel">measured</span>
+          <span class="dlabel decision">decision</span>.</p>
 
-        <div class="diagram">
-          <pre class="mermaid">
-flowchart TB
-  %% ── OFFLINE: build the index ──────────────────────────────
-  subgraph BUILD["🏗️ &nbsp;OFFLINE — Indexing &nbsp;(python indexer.py)"]
-    direction TB
-    D["📄 documents/<br/>14 CFR markdown"]
-    R{"pick_chunker /<br/>_chunk"}
-    SEC["chunk_by_section<br/>one chunk per §-section<br/>(carries section + part)"]
-    CHAR["chunk_text<br/>~1000 chars, 100 overlap<br/>paragraph boundaries"]
-    EMB["embed()<br/>champion model = bge<br/>doc-side prefix + normalize"]
-    REC["records[]<br/>chunk_id · source · section<br/>part · text · embedding"]
-    SAVE["save_index()"]
-    D --> R
-    R -->|"§-tagged (FAA)"| SEC
-    R -->|plain text| CHAR
-    SEC --> EMB
-    CHAR --> EMB
-    EMB --> REC --> SAVE
-  end
-
-  %% ── DISK: the meeting point ───────────────────────────────
-  subgraph DISK["💾 &nbsp;ON DISK — single source of truth"]
-    direction TB
-    PKL[("index.pkl<br/>vectors + text + meta")]
-    META[("index.meta.json<br/>embed_model = bge (A1)")]
-  end
-  SAVE --> PKL
-  SAVE --> META
-
-  %% ── ONLINE: answer a question ─────────────────────────────
-  subgraph SERVE["🛩️ &nbsp;ONLINE — Query &nbsp;(app.py / streamlit_app.py)"]
-    direction TB
-    BOOT["startup<br/>load_index() + load_index_embed_model()<br/>build_bm25 if hybrid/bm25"]
-    PROBE{"dimension probe<br/>query-dim == index-dim?"}
-    FAIL["💥 SystemExit<br/>rebuild the index"]
-    Q["🧑 user question"]
-    RET["retrieve()<br/>method=vector · k=5<br/>embed query · cosine · top-K"]
-    FMT["format_context()<br/>numbered block  [1] … [5]"]
-    UC["user_content<br/>CONTEXT + QUESTION"]
-    LLM["client.messages.create<br/>claude-sonnet-4-6<br/>+ SYSTEM_PROMPT (grounding + balanced)"]
-    ANS["answer text with [n] markers"]
-    CITE["_build_citations / _cited<br/>parse [n] · drop out-of-range · dedupe"]
-    OUT["📎 reply + Sources<br/>§xxx (Part nn) cards"]
-    BOOT --> PROBE
-    PROBE -->|mismatch| FAIL
-    PROBE -->|ok| Q
-    Q --> RET --> FMT --> UC --> LLM --> ANS --> CITE --> OUT
-  end
-
-  %% ── cross-phase links ─────────────────────────────────────
-  PKL -.->|loaded once| BOOT
-  META -.->|"which model built it?<br/>query with the SAME one"| RET
-  CFG["⚙️ CHAMPION_* config<br/>chunker=section · embed=bge<br/>method=vector · k=5"]
-  CFG -.-> EMB
-  CFG -.-> RET
-
-  classDef build fill:#11271a,stroke:#3fb95055,color:#e6edf3;
-  classDef serve fill:#0d1f33,stroke:#1f6feb55,color:#e6edf3;
-  classDef disk fill:#2a2410,stroke:#d2932255,color:#e6edf3;
-  classDef decision fill:#241a2e,stroke:#a371f755,color:#e6edf3;
-  classDef danger fill:#2d1215,stroke:#f8514955,color:#e6edf3;
-  classDef cfg fill:#161b22,stroke:#8b949e77,color:#e6edf3,stroke-dasharray:4 3;
-  class D,SEC,CHAR,EMB,REC,SAVE build;
-  class BOOT,Q,RET,FMT,UC,LLM,ANS,CITE,OUT serve;
-  class PKL,META disk;
-  class R,PROBE decision;
-  class FAIL danger;
-  class CFG cfg;
-          </pre>
+        <div class="callout cs">
+          🧭 <strong>One sentence for the whole project:</strong> <i>measure, don't guess — and always weigh quality
+          against cost.</i><br>
+          <span class="metric">2,184</span> indexed law chunks &nbsp;·&nbsp; <span class="metric">bge · 1024d</span>
+          embeddings &nbsp;·&nbsp; <span class="metric">K = 5</span> chunks per question &nbsp;·&nbsp;
+          <span class="metric">~2.3k</span> tokens per answer. The end-to-end flow diagram lives in
+          <a href="#twenty">4B.4</a>; here we ask <i>why each knob sits where it does</i>.
         </div>
 
-        <div class="legend">
-          <span><span class="swatch" style="background:#11271a;border-color:#3fb950"></span>Offline / build</span>
-          <span><span class="swatch" style="background:#0d1f33;border-color:#1f6feb"></span>Online / query</span>
-          <span><span class="swatch" style="background:#2a2410;border-color:#d29322"></span>On disk</span>
-          <span><span class="swatch" style="background:#241a2e;border-color:#a371f7"></span>Decision</span>
-          <span><span class="swatch" style="background:#2d1215;border-color:#f85149"></span>Fail-loud guard</span>
-          <span><span class="swatch" style="background:#161b22;border-color:#8b949e"></span>Champion config (dashed)</span>
+        <div class="concept">
+          <h4>⓪ 🧪 Before any tuning — build the ruler (and a war story about killing a run)</h4>
+          <span class="dlabel">situation</span>
+          <p>You can't pick a "best" config until you can <i>measure</i> configs, so nothing was tuned until an
+            <b>evaluation harness</b> existed: a verified <b>holdout</b> question set (each with its expected
+            <code>§</code>-sections), a <b>retrieval scorer</b> computing <span class="metric">recall</span>
+            <span class="metric">coverage</span> <span class="metric">MRR</span> (kept independent of the chunking
+            axis), and a <b>final split</b> held back to guard against overfitting.</p>
+          <span class="dlabel tension">the tension</span>
+          <p>The four knobs — <b>chunking × embedding × method × K</b> — were swept overnight:
+            <span class="metric">2 chunkers × 4 embeddings × 3 methods × 3 K = 792 runs</span>, logged
+            <b>append-only</b> (one line per config×question) with content-keyed resume. Then the
+            <i>character-chunk</i> half <b>froze at 495 / 792</b> — the process had ballooned to
+            <span class="metric">16 GB</span> and was thrashing swap.</p>
+          <span class="dlabel decision">decision</span>
+          <p><b>Kill it.</b> Safe to do, because the <i>section</i> run — the real winner — was already complete and
+            append-only had preserved all 495 lines. <span class="muted">Lesson: build the ruler first, and design
+            experiments to be <b>resumable and safe to interrupt</b> — a free bonus config isn't worth cooking the
+            machine all night.</span></p>
+        </div>
+
+        <div class="concept">
+          <h4>① 🤖 Which embedding model? → <span class="ptag">bge</span> (measured, not famous)</h4>
+          <span class="dlabel">situation</span>
+          <p>An offline grid search compared four embedding models on this corpus —
+            <code>bge · gte · minilm · e5</code>. Top rows of the leaderboard (over 11 questions):</p>
+          <table class="dtable">
+            <tr><th>chunking</th><th>embed</th><th>method</th><th>K</th><th>coverage</th><th>MRR</th><th>input-tok proxy</th></tr>
+            <tr><td>section</td><td class="win">bge</td><td>hybrid</td><td class="num">8</td><td class="num">0.864</td><td class="num">0.636</td><td class="num">17,284</td></tr>
+            <tr><td>section</td><td>gte</td><td>hybrid</td><td class="num">8</td><td class="num">0.864</td><td class="num">0.602</td><td class="num">17,284</td></tr>
+            <tr><td>section</td><td>minilm</td><td>hybrid</td><td class="num">8</td><td class="num">0.864</td><td class="num">0.530</td><td class="num">17,284</td></tr>
+            <tr class="ship"><td>section</td><td class="win">bge</td><td>vector</td><td class="num">5</td><td class="num">0.818</td><td class="num">0.718</td><td class="num">10,802</td></tr>
+            <tr><td>section</td><td>e5</td><td>vector</td><td class="num">5</td><td class="num">0.727</td><td class="num">0.480</td><td class="num">10,802</td></tr>
+          </table>
+          <p class="muted" style="font-size:.82rem;margin:-.3rem 0 .2rem">Highlighted row = shipped config. "input-tok proxy" is a per-config total across the 11 questions.</p>
+          <span class="dlabel tension">the tension</span>
+          <p>Three models <b>tied</b> on coverage at <span class="metric">0.864</span> — so coverage alone can't name a winner.</p>
+          <span class="dlabel">measured</span>
+          <p>The tie broke on two finer signals: <b>rank quality</b> — bge's <span class="metric">MRR 0.636</span> beat
+            gte's 0.602 and minilm's 0.530 — and <b>small-K efficiency</b> — bge hits
+            <span class="metric">0.818 at K=5</span> while minilm needs K=8 for the same score. A better embedding
+            literally buys back tokens.</p>
+          <span class="dlabel decision">decision</span>
+          <p class="why"><b>Ship bge</b> at <code>vector · K5</code>. The "strong" model <code>e5</code> came
+            <b>last</b> — losing even to gte smelled like a usage bug (missing <code>query:</code>/<code>passage:</code>
+            prefixes), so it was benched, not trusted. Benchmark fame doesn't reproduce on your data; only measurement
+            does. And because vectors from different models aren't comparable, the winner gets <b>engraved into the
+            index</b> (see ⑥).</p>
+        </div>
+
+        <div class="concept">
+          <h4>② ✍️ How to stop hallucination? → grounded prompt <span class="muted">+ code enforcement</span></h4>
+          <span class="dlabel">situation</span>
+          <p>Hand a question straight to <code>claude-sonnet-4-6</code> and it answers from training memory — fluent,
+            uncited, sometimes wrong.</p>
+          <span class="dlabel decision">decision</span>
+          <p>A <code>SYSTEM_PROMPT</code> with three hard rules:</p>
+          <ul>
+            <li>Answer <b>only</b> from the retrieved CONTEXT.</li>
+            <li>Attach a <code>[n]</code> citation to every claim.</li>
+            <li>If the context doesn't support it, <b>say "I don't know"</b> — never invent.</li>
+          </ul>
+          <span class="dlabel">measured</span>
+          <p>The <i>prompt itself</i> was a measured choice, not a vibe — three candidates were generated and scored by
+            an Opus rubric judge:</p>
+          <table class="dtable">
+            <tr><th>prompt</th><th>overall</th><th>complete</th><th>grounded</th><th>cite_ok</th><th>tok_out</th></tr>
+            <tr class="ship"><td class="win">B_balanced</td><td class="num">4.93</td><td class="num">5.00</td><td class="num">5.00</td><td class="num">1.00</td><td class="num">391</td></tr>
+            <tr><td>A_current</td><td class="num">4.60</td><td class="num">4.40</td><td class="num">5.00</td><td class="num">1.00</td><td class="num">313</td></tr>
+            <tr><td>C_warm</td><td class="num">4.20</td><td class="num">3.80</td><td class="num">5.00</td><td class="num">1.00</td><td class="num">577*</td></tr>
+          </table>
+          <p class="why"><b>Prompt guides, code enforces:</b> shipped
+            <code>SYSTEM_PROMPT = GROUNDING_RULES + BALANCED_STYLE</code> (<span class="metric">overall 4.93</span>).
+            After generation the app also parses the <code>[n]</code> markers, <b>drops out-of-range ones, and
+            dedupes</b> — so even a stray citation can't slip in. <span class="muted">*C_warm was truncated at
+            max_tokens.</span></p>
+        </div>
+
+        <div class="concept">
+          <h4>③ 💸 How many chunks per question? → <span class="ptag">K = 5</span> (the cost lever)</h4>
+          <span class="dlabel">situation</span>
+          <p>K sets how many retrieved chunks go into the prompt — and it's the one knob that really moves the bill.</p>
+          <span class="dlabel">measured</span>
+          <p>On real API calls the output is a flat <span class="metric">~100 tokens</span>, and
+            <span class="metric">91–96% of cost is input</span> (K × passage size). Input tokens by K:
+            <span class="metric">K3 = 1,762</span> · <span class="metric">K5 = 2,656</span> ·
+            <span class="metric">K8 = 5,136</span>.</p>
+          <div class="diagram"><pre class="mermaid">
+flowchart LR
+  K8["K = 8<br/>coverage 0.864"] --> C8["5,136<br/>input tokens"]
+  K5["K = 5<br/>coverage 0.818"] --> C5["2,656<br/>input tokens"]
+  C8 -->|"−0.046 coverage = tiny"| V["✅ ship K = 5<br/>≈ half the tokens"]
+  C5 --> V
+  classDef s fill:#0d1f33,stroke:#1f6feb88,color:#e6edf3;
+  classDef b fill:#11271a,stroke:#3fb95088,color:#e6edf3;
+  class K8,K5,C8,C5 s;
+  class V b;
+          </pre></div>
+          <span class="dlabel decision">decision</span>
+          <p class="why">Coverage barely dips (<span class="metric">0.864 → 0.818</span>) from K8→K5 but tokens roughly
+            halve — a great trade for the rubric's <b>15-point Cost Management</b> score, which literally asks for "as
+            few tokens as possible".</p>
+        </div>
+
+        <div class="concept">
+          <h4>④ 🧭 Single-shot or agentic? → ship <b>single-shot</b>, cap the agent</h4>
+          <span class="dlabel">situation</span>
+          <p>The experiment: give the model a <code>search_cfr</code> tool and let it search as many times as it wants.
+            On "make a table of all airspace classes" the agent <b>searched 13 times</b>, noticed Part 71 only says
+            <i>where</i> airspace is (not the operating rules in Part 91), and searched Part 91 <b>on its own</b> — real
+            self-correction, complete table.</p>
+          <span class="dlabel tension">the tension</span>
+          <p>Every turn <b>re-sends the whole history</b>, so cost grows like <b>1 + 2 + … + N ≈ N²</b>:</p>
+          <table class="dtable">
+            <tr><th>Question</th><th>Static RAG</th><th>Agentic</th></tr>
+            <tr><td>Specific (contest style)</td><td class="num win">2,281</td><td class="num">4,282 · 1 search</td></tr>
+            <tr><td>Broad ("all classes")</td><td class="num">2,949 · <span class="muted">has gaps</span></td><td class="num" style="color:#f85149"><b>81,320</b> · 13 searches = <span class="metric" style="color:#f85149">27×</span></td></tr>
+          </table>
+          <span class="dlabel decision">decision</span>
+          <p class="why">The rubric scores <i>results only</i> and rewards low cost, and 4 of 5 practice questions live
+            in one Part — which static answers perfectly and cheaply. So single-shot ships. The agent isn't thrown
+            away: it's capped at <span class="ptag">MAX_SEARCHES = 3</span> (keeping even a broad question near
+            <span class="metric">~15k</span>) and kept on the bench as a ready fallback.</p>
+        </div>
+
+        <div class="concept">
+          <h4>⑤ 🎯 Two traps where the naive fix is worse — cut on <i>relevance, not position</i></h4>
+          <span class="dlabel tension">the trap</span>
+          <p>Both live-app problems have an obvious fix that quietly makes things worse; the craft is spotting that:</p>
+          <ul>
+            <li><b>Giant §-sections blow the token budget.</b> Naive fix — keep the first few thousand chars — throws
+              away late clauses like <code>(a)(1)(iv)</code>. Real fix: <span class="ptag">select_context</span>
+              re-ranks ~500-char windows by similarity to the <b>question</b> and keeps the best up to
+              <span class="metric">~1,250 tokens</span>.</li>
+            <li><b>Bare follow-ups ("what about at night?") lose their topic.</b> Naive fix — always prepend the previous
+              question — pollutes standalone queries (a "Class B/C" prefix once dragged a fuel question into airspace
+              §§). Real fix: <b>query contextualization</b> prepends <i>only</i> for short follow-ups (≤5 words / cue
+              words).</li>
+          </ul>
+          <p class="why">Full before/after diagrams for both are in <a href="#twenty">4B.4</a>; the point to carry away
+            is the pattern — <b>cut and contextualize on meaning, never on position or reflex.</b></p>
+        </div>
+
+        <div class="concept">
+          <h4>⑥ ⚙️ What keeps build-time and query-time in sync? → one source of truth</h4>
+          <ul>
+            <li><span class="ptag">CHAMPION_*</span> — four lines (<code>chunker=section · embed=bge · method=vector ·
+              K=5</code>) that <b>both</b> <code>indexer.py</code> and the app read, so the index and the query can never
+              silently disagree.</li>
+            <li><b>Self-describing index:</b> <code>index.meta.json</code> records the build model; a startup dimension
+              probe <b>fails loud</b> (<code>SystemExit</code>) on a mismatch instead of returning confident garbage.</li>
+            <li><b>Two frontends, one retrieval:</b> the Flask/React backend and the Streamlit app share
+              <code>retrieve()</code> and <code>format_context()</code>, so <code>[n]</code> points to the same chunk
+              everywhere.</li>
+          </ul>
+          <p class="why">The reasoning behind each of these is expanded in <a href="#why">4B.6 · Why it's built this
+            way</a>.</p>
+        </div>
+
+        <div class="concept">
+          <h4>⑦ 🎓 The honesty check — score the champion <i>once</i> on held-back data</h4>
+          <span class="dlabel">measured</span>
+          <p>Before shipping, the champion config (<code>bge / vector / K5 + B_balanced</code>) was run <b>exactly
+            once</b> on the <b>final split</b> it had never seen: <span class="metric">3.5 / 4</span> — 2 correct, 1
+            correct refusal, and 1 grounded-partial where retrieval missed a <code>§</code> but the model
+            <b>did not hallucinate</b>.</p>
+          <span class="dlabel decision">decision</span>
+          <p class="why"><b>Did not retune on the final split.</b> Hold out a set you touch exactly once, so the reported
+            score isn't inflated by tuning to it — that's the difference between a real number and a flattering one.</p>
+        </div>
+
+        <h3>Quick self-check ✅</h3>
+        <div class="quiz" data-answer="1">
+          <p class="q">Three embedding models tied at 0.864 coverage. Why was <code>bge</code> chosen?</p>
+          <button class="opt">It has the most parameters, so it must be the strongest.</button>
+          <button class="opt">On a tie, rank quality (MRR) and small-K efficiency decide — and bge won both.</button>
+          <button class="opt">It was the only one that fit in memory during the overnight run.</button>
+          <p class="explain">When coverage ties, the tie-breakers are rank quality (bge's MRR 0.636) and how few chunks
+            it needs (0.818 at K=5 vs minilm's K=8). Fewer chunks = fewer tokens = lower cost.</p>
+        </div>
+        <div class="quiz" data-answer="2">
+          <p class="q">Why does the agentic loop's cost grow roughly like N² with the number of searches?</p>
+          <button class="opt">Each search re-embeds the whole 2,184-chunk index.</button>
+          <button class="opt">The output tokens double on every tool call.</button>
+          <button class="opt">Every turn re-sends the entire history, so N searches cost 1 + 2 + … + N.</button>
+          <p class="explain">The model has no memory between turns, so all earlier search results are resent each time —
+            1 + 2 + … + N ≈ N². 13 searches ballooned to 81,320 tokens (27× the static cost).</p>
+        </div>
+        <div class="quiz" data-answer="1">
+          <p class="q">Given the measured numbers, why is dropping K from 8 to 5 a good trade?</p>
+          <button class="opt">It cuts output tokens, which are the bulk of the cost.</button>
+          <button class="opt">Input tokens ~halve (5,136 → 2,656) while coverage drops only 0.864 → 0.818.</button>
+          <button class="opt">Retrieval gets more accurate with fewer chunks, so quality improves.</button>
+          <p class="explain">Output is a flat ~100 tokens and 91–96% of cost is <b>input</b> (K × passages), so K is the
+            real cost lever: K8 = 5,136 vs K5 = 2,656 input tokens — roughly half — for only a 0.046 coverage dip
+            (0.864 → 0.818). Cost nearly halves; quality barely moves.</p>
         </div>
       </section>
 
@@ -733,6 +904,18 @@ flowchart TB
           });
         });
       });
+
+      // Reading-depth strip: highlight the chip whose section is currently in view.
+      const chips = [...document.querySelectorAll("#depthstrip .depthchip")];
+      const byId = new Map(chips.map((c) => [c.getAttribute("href").slice(1), c]));
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((e) => {
+          if (!e.isIntersecting) return;
+          chips.forEach((c) => c.classList.remove("on"));
+          byId.get(e.target.id)?.classList.add("on");
+        });
+      }, { rootMargin: "-45% 0px -45% 0px" });
+      byId.forEach((_, id) => { const s = document.getElementById(id); if (s) io.observe(s); });
     </script>
   </body>
 </html>
