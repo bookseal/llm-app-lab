@@ -8,36 +8,64 @@
     <script src="./nav.js?v=7" defer></script>
     <script src="./run.js?v=1" defer></script>
     <style>
-      /* Local-only (this page): reveal each mermaid diagram as it scrolls into
-         view, with a small ▶ replay button. style.css is shared and untouched.
-         Diagrams are visible by default (fail-safe); reveal animates opacity
-         only — mermaid uses transform for node layout. */
+      /* Local-only (this page): diagrams as dark cards + a richer reveal.
+         style.css is shared and stays untouched. Node color comes from each
+         diagram's classDef; the key node is tagged `core` and glows. Animation:
+         nodes fade in, then edges draw themselves. */
+      .mermaid { position: relative; background: var(--panel); border: 1px solid var(--border);
+        border-radius: 10px; padding: 1.1rem; margin: 1.2rem 0; overflow-x: auto; }
+      .mermaid svg { max-width: 100%; }
       @keyframes mreveal { from { opacity: 0; } to { opacity: 1; } }
-      .mermaid { position: relative; }
-      .mermaid svg .reveal { animation: mreveal .45s ease both; }
-      .mreplay {
-        position: absolute; top: .4rem; right: .4rem; z-index: 2; line-height: 1;
-        font: inherit; font-size: .8rem; cursor: pointer; opacity: .5;
-        background: var(--panel, #f0f0f0); color: var(--text, #333);
-        border: 1px solid var(--border, #ccc); border-radius: 6px; padding: .2rem .5rem;
+      .mermaid svg .reveal { animation: mreveal .5s ease both; }
+      @keyframes corepulse {
+        0%, 100% { filter: drop-shadow(0 0 2px rgba(63, 185, 80, .45)); }
+        50%      { filter: drop-shadow(0 0 9px rgba(63, 185, 80, .9)); }
       }
-      .mreplay:hover { opacity: 1; border-color: var(--accent, #06c); }
+      .mermaid svg .core { animation: corepulse 2.6s ease-in-out infinite; }
+      .mreplay {
+        position: absolute; top: .5rem; right: .5rem; z-index: 2; line-height: 1;
+        font: inherit; font-size: .8rem; cursor: pointer; opacity: .5;
+        background: var(--code-bg); color: var(--text);
+        border: 1px solid var(--border); border-radius: 6px; padding: .2rem .5rem;
+      }
+      .mreplay:hover { opacity: 1; border-color: var(--accent); }
     </style>
     <script type="module">
       import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
-      mermaid.initialize({ startOnLoad: false, theme: "neutral" });
+      mermaid.initialize({
+        startOnLoad: false, theme: "dark",
+        themeVariables: {
+          background: "#161b22", primaryColor: "#161b22", primaryTextColor: "#e6edf3",
+          primaryBorderColor: "#30363d", lineColor: "#8b949e",
+          fontFamily: "-apple-system, system-ui, sans-serif", fontSize: "15px",
+        },
+        flowchart: { curve: "basis", nodeSpacing: 45, rankSpacing: 55 },
+      });
       await mermaid.run();
 
       function reveal(svg) {
         if (!svg) return;
-        const parts = [...svg.querySelectorAll(
-          ".node, .cluster, .edgePaths .edgePath, .flowchart-link, .edgeLabel, " +
-          ".actor, .messageText, .messageLine0, .messageLine1, .note, .loopLine, .labelText")];
-        parts.forEach((el, i) => {
-          el.classList.remove("reveal");
-          void el.getBoundingClientRect();
-          el.style.animationDelay = (i * 70) + "ms";
-          el.classList.add("reveal");
+        const nodes = [...svg.querySelectorAll(
+          ".node, .cluster, .actor, .labelText, .messageText, .note, .loopText")];
+        nodes.forEach((el, i) => {
+          el.classList.remove("reveal"); void el.getBoundingClientRect();
+          el.style.animationDelay = (i * 65) + "ms"; el.classList.add("reveal");
+        });
+        const edges = [...svg.querySelectorAll(
+          ".edgePaths path, path.flowchart-link, .flowchart-link, path.messageLine0, path.messageLine1")];
+        const base = nodes.length * 65;
+        edges.forEach((p, i) => {
+          let len = 0; try { len = p.getTotalLength(); } catch (e) {}
+          if (!len) return;
+          p.style.transition = "none";
+          p.style.strokeDasharray = len; p.style.strokeDashoffset = len;
+          void p.getBoundingClientRect();
+          const d = base + i * 70;
+          p.style.transition = "stroke-dashoffset .45s ease " + d + "ms";
+          p.style.strokeDashoffset = "0";
+          setTimeout(() => {
+            p.style.transition = ""; p.style.strokeDasharray = ""; p.style.strokeDashoffset = "";
+          }, d + 700);
         });
       }
       const io = new IntersectionObserver((entries) => {
@@ -46,14 +74,12 @@
           reveal(e.target.querySelector("svg"));
           io.unobserve(e.target);
         });
-      }, { threshold: 0.2 });
+      }, { threshold: 0.15 });
       document.querySelectorAll(".mermaid").forEach((box) => {
         if (!box.querySelector("svg")) return;
         io.observe(box);
         const btn = document.createElement("button");
-        btn.className = "mreplay";
-        btn.textContent = "▶";
-        btn.title = "애니메이션 다시 재생";
+        btn.className = "mreplay"; btn.textContent = "▶"; btn.title = "애니메이션 다시 재생";
         btn.addEventListener("click", () => reveal(box.querySelector("svg")));
         box.appendChild(btn);
       });
@@ -112,6 +138,14 @@ flowchart LR
     Ag -->|run_query| DB
     DB -.rows.-> Ag
     Ag --> Ans(["plain-language answer"])
+    classDef core fill:#11271a,stroke:#3fb950,color:#e6edf3,stroke-width:2px;
+    classDef io fill:#0d1f33,stroke:#58a6ff,color:#e6edf3;
+    classDef data fill:#2a2410,stroke:#d29322,color:#e6edf3;
+    classDef done fill:#11271a,stroke:#3fb950,color:#e6edf3;
+    class Ag core;
+    class U io;
+    class DB data;
+    class Ans done;
         </div>
         <p class="muted">
           모델이 매 턴 "다음에 어떤 도구를 부를지"만 정하고, 결과를 보고 다음 도구를 부르길

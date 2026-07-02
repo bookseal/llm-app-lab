@@ -7,56 +7,81 @@
     <link rel="stylesheet" href="./style.css?v=3" />
     <script src="./nav.js?v=7" defer></script>
     <style>
-      /* Local-only (this page): reveal EVERY mermaid diagram as it scrolls into
-         view, each with a small ▶ replay button. style.css is shared and stays
-         untouched. Diagrams are visible by default (fail-safe if JS breaks) —
-         the reveal only animates opacity, never transform (mermaid uses
-         transform to place nodes, so animating it would scramble the layout). */
+      /* Local-only (this page): diagrams as dark cards + a richer reveal.
+         style.css is shared and stays untouched. Node color/character comes from
+         each diagram's own classDef (engine/io/decision/data/danger); the key
+         node is tagged `core` and glows. Animation: nodes fade in, then edges
+         draw themselves. Node opacity only — mermaid uses transform for layout. */
+      .mermaid { position: relative; background: var(--panel); border: 1px solid var(--border);
+        border-radius: 10px; padding: 1.1rem; margin: 1.2rem 0; overflow-x: auto; }
+      .mermaid svg { max-width: 100%; }
       @keyframes mreveal { from { opacity: 0; } to { opacity: 1; } }
-      .mermaid { position: relative; }
-      .mermaid svg .reveal { animation: mreveal .45s ease both; }
-      .mreplay {
-        position: absolute; top: .4rem; right: .4rem; z-index: 2; line-height: 1;
-        font: inherit; font-size: .8rem; cursor: pointer; opacity: .5;
-        background: var(--panel, #f0f0f0); color: var(--text, #333);
-        border: 1px solid var(--border, #ccc); border-radius: 6px; padding: .2rem .5rem;
+      .mermaid svg .reveal { animation: mreveal .5s ease both; }
+      /* the most important node glows to pull the eye */
+      @keyframes corepulse {
+        0%, 100% { filter: drop-shadow(0 0 2px rgba(63, 185, 80, .45)); }
+        50%      { filter: drop-shadow(0 0 9px rgba(63, 185, 80, .9)); }
       }
-      .mreplay:hover { opacity: 1; border-color: var(--accent, #06c); }
+      .mermaid svg .core { animation: corepulse 2.6s ease-in-out infinite; }
+      .mreplay {
+        position: absolute; top: .5rem; right: .5rem; z-index: 2; line-height: 1;
+        font: inherit; font-size: .8rem; cursor: pointer; opacity: .5;
+        background: var(--code-bg); color: var(--text);
+        border: 1px solid var(--border); border-radius: 6px; padding: .2rem .5rem;
+      }
+      .mreplay:hover { opacity: 1; border-color: var(--accent); }
     </style>
     <script type="module">
       import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
-      // Render explicitly (not startOnLoad) so we can wire animation after render.
-      mermaid.initialize({ startOnLoad: false, theme: "neutral" });
+      mermaid.initialize({
+        startOnLoad: false, theme: "dark",
+        themeVariables: {
+          background: "#161b22", primaryColor: "#161b22", primaryTextColor: "#e6edf3",
+          primaryBorderColor: "#30363d", lineColor: "#8b949e",
+          fontFamily: "-apple-system, system-ui, sans-serif", fontSize: "15px",
+        },
+        flowchart: { curve: "basis", nodeSpacing: 45, rankSpacing: 55 },
+      });
       await mermaid.run();
 
-      // Reveal a diagram's parts one-by-one via a staggered opacity fade.
+      // Reveal: nodes fade in staggered, then edges draw themselves (stroke-dashoffset).
       function reveal(svg) {
         if (!svg) return;
-        const parts = [...svg.querySelectorAll(
-          ".node, .cluster, .edgePaths .edgePath, .flowchart-link, .edgeLabel, " +
-          ".actor, .messageText, .messageLine0, .messageLine1, .note, .loopLine, .labelText")];
-        parts.forEach((el, i) => {
-          el.classList.remove("reveal");
-          void el.getBoundingClientRect();        // reflow so re-adding restarts it
-          el.style.animationDelay = (i * 70) + "ms";
-          el.classList.add("reveal");
+        const nodes = [...svg.querySelectorAll(
+          ".node, .cluster, .actor, .labelText, .messageText, .note, .loopText")];
+        nodes.forEach((el, i) => {
+          el.classList.remove("reveal"); void el.getBoundingClientRect();
+          el.style.animationDelay = (i * 65) + "ms"; el.classList.add("reveal");
+        });
+        const edges = [...svg.querySelectorAll(
+          ".edgePaths path, path.flowchart-link, .flowchart-link, path.messageLine0, path.messageLine1")];
+        const base = nodes.length * 65;
+        edges.forEach((p, i) => {
+          let len = 0; try { len = p.getTotalLength(); } catch (e) {}
+          if (!len) return;
+          p.style.transition = "none";
+          p.style.strokeDasharray = len; p.style.strokeDashoffset = len;
+          void p.getBoundingClientRect();
+          const d = base + i * 70;
+          p.style.transition = "stroke-dashoffset .45s ease " + d + "ms";
+          p.style.strokeDashoffset = "0";
+          setTimeout(() => {                       // restore so dotted edges look normal
+            p.style.transition = ""; p.style.strokeDasharray = ""; p.style.strokeDashoffset = "";
+          }, d + 700);
         });
       }
-      // Play each diagram the first time it scrolls into view; ▶ re-plays it.
       const io = new IntersectionObserver((entries) => {
         entries.forEach((e) => {
           if (!e.isIntersecting) return;
           reveal(e.target.querySelector("svg"));
           io.unobserve(e.target);
         });
-      }, { threshold: 0.2 });
+      }, { threshold: 0.15 });
       document.querySelectorAll(".mermaid").forEach((box) => {
         if (!box.querySelector("svg")) return;
         io.observe(box);
         const btn = document.createElement("button");
-        btn.className = "mreplay";
-        btn.textContent = "▶";
-        btn.title = "애니메이션 다시 재생";
+        btn.className = "mreplay"; btn.textContent = "▶"; btn.title = "애니메이션 다시 재생";
         btn.addEventListener("click", () => reveal(box.querySelector("svg")));
         box.appendChild(btn);
       });
@@ -115,6 +140,14 @@ flowchart TB
       SAFE["safety: gates + limits"]
     end
     WRAP --> CORE["the agent loop<br/>~20 lines"]
+    classDef core fill:#11271a,stroke:#3fb950,color:#e6edf3,stroke-width:2px;
+    classDef io fill:#0d1f33,stroke:#58a6ff,color:#e6edf3;
+    classDef data fill:#2a2410,stroke:#d29322,color:#e6edf3;
+    classDef danger fill:#2d1215,stroke:#f85149,color:#e6edf3;
+    class SUB,MEM,CU io;
+    class ROUTE,CACHE,ASYNC data;
+    class SAFE danger;
+    class CORE core;
         </div>
         <div class="concept">
           <span class="tag">핵심 어휘 — 5묶음으로</span>
@@ -155,6 +188,14 @@ flowchart LR
     C --> D["append result to messages"]
     D --> A
     B -->|end_turn| E["done"]
+    classDef core fill:#11271a,stroke:#3fb950,color:#e6edf3,stroke-width:2px;
+    classDef decision fill:#241a2e,stroke:#a371f7,color:#e6edf3;
+    classDef io fill:#0d1f33,stroke:#58a6ff,color:#e6edf3;
+    classDef done fill:#11271a,stroke:#3fb950,color:#e6edf3;
+    class A core;
+    class B decision;
+    class C,D io;
+    class E done;
         </div>
         <pre><code>messages = [{"role": "user", "content": question}]
 while True:
@@ -204,6 +245,14 @@ flowchart TB
     LOOP --> TOOLS["~25 built-in tools<br/>read, edit, bash, search"]
     LOOP --> MCP["MCP registry<br/>external tools on demand"]
     LOOP --> MEM["multi-scope memory<br/>conversation to world"]
+    classDef core fill:#11271a,stroke:#3fb950,color:#e6edf3,stroke-width:2px;
+    classDef io fill:#0d1f33,stroke:#58a6ff,color:#e6edf3;
+    classDef decision fill:#241a2e,stroke:#a371f7,color:#e6edf3;
+    classDef data fill:#2a2410,stroke:#d29322,color:#e6edf3;
+    class LOOP core;
+    class UI,TOOLS,MCP io;
+    class PERM decision;
+    class MEM data;
         </div>
         <p class="muted">
           핵심 통찰: Claude Code가 특별한 건 모델이 달라서가 아니라, <strong>엔진 둘레의 하니스가 두껍기
@@ -238,6 +287,10 @@ flowchart TB
     C1 -.summary only.-> P
     C2 -.summary only.-> P
     C3 -.summary only.-> P
+    classDef core fill:#11271a,stroke:#3fb950,color:#e6edf3,stroke-width:2px;
+    classDef io fill:#0d1f33,stroke:#58a6ff,color:#e6edf3;
+    class P core;
+    class C1,C2,C3 io;
         </div>
         <div class="callout cs">
           🪟 <strong>왜 "요약만" 돌려받나 — 컨텍스트 보호:</strong> 자식이 파일 50개를 읽어도 부모 창에는
@@ -278,6 +331,10 @@ flowchart LR
     B --> C["user<br/>persistent prefs"]
     C --> D["project<br/>repo conventions (CLAUDE.md)"]
     D --> E["world<br/>vector store / knowledge base"]
+    classDef io fill:#0d1f33,stroke:#58a6ff,color:#e6edf3;
+    classDef data fill:#2a2410,stroke:#d29322,color:#e6edf3;
+    class A,B,C io;
+    class D,E data;
         </div>
         <div class="callout">
           🔁 <strong>2편과 4편이 여기서 만난다:</strong> 2편에서 "API는 stateless"라 했죠 — 이 스코프들이 바로
@@ -316,6 +373,14 @@ flowchart LR
     Q(["incoming request"]) --> H["cheap model (Haiku)<br/>classify difficulty"]
     H -->|simple| S["answer with Haiku<br/>fast, cheap"]
     H -->|hard| B["escalate to a bigger model<br/>(Sonnet / Opus)"]
+    classDef core fill:#11271a,stroke:#3fb950,color:#e6edf3,stroke-width:2px;
+    classDef io fill:#0d1f33,stroke:#58a6ff,color:#e6edf3;
+    classDef done fill:#11271a,stroke:#3fb950,color:#e6edf3;
+    classDef data fill:#2a2410,stroke:#d29322,color:#e6edf3;
+    class H core;
+    class Q io;
+    class S done;
+    class B data;
         </div>
         <div class="callout cs">
           💸 <strong>Prompt caching, 한 번 더:</strong> 매 요청에 똑같이 들어가는 <em>긴 system 프롬프트·도구
@@ -331,6 +396,14 @@ flowchart LR
     P -->|no| Wk
     P -->|yes| Sv["persist state, release the worker"]
     Sv -.webhook / scheduled wake-up.-> Wk
+    classDef core fill:#11271a,stroke:#3fb950,color:#e6edf3,stroke-width:2px;
+    classDef io fill:#0d1f33,stroke:#58a6ff,color:#e6edf3;
+    classDef decision fill:#241a2e,stroke:#a371f7,color:#e6edf3;
+    classDef data fill:#2a2410,stroke:#d29322,color:#e6edf3;
+    class Wk core;
+    class T io;
+    class P decision;
+    class Sv data;
         </div>
         <div class="quiz" data-answer="1">
           <p class="q">멀티모델 라우팅에서 값싼 Haiku를 "분류기"로 먼저 두는 이유는?</p>
@@ -358,13 +431,54 @@ flowchart LR
       <section id="safety">
         <h2>5A.6 · Computer use &amp; Safety <a class="slide" href="https://ksetp.netlify.app/agents" target="_blank" rel="noopener">Slide 13–14</a></h2>
         <p class="tldr">화면이 곧 API. 스크린샷 + 마우스/키보드로 API 없는 자동화. 단, 권한·한도가 필수.</p>
-        <p class="entitle">Computer use — the screen is the API</p>
+        <p class="entitle">① 스키마 — 모델은 <em>행동을 정할 뿐</em>, 실행은 안 한다</p>
+        <p class="muted">computer use는 <strong>서버 정의 내장 도구</strong>(계약을 Anthropic이 소유)라, 우리가 스키마를
+          쓰지 않아요. <strong>beta 헤더</strong>와 <strong>버전 타입</strong>만 선언하면 모델이 모든 action을 이미 압니다.</p>
+        <pre><code>client.beta.messages.create(
+    betas=["computer-use-2025-01-24"],       # ← beta 헤더
+    tools=[{
+        "type": "computer_20250124",         # ← 버전 타입 (스키마는 서버가 소유)
+        "name": "computer",
+        "display_width_px": 1280, "display_height_px": 800,
+        "display_number": 1,
+    }],
+    messages=[...],
+)</code></pre>
+        <p class="muted"><strong>Actions</strong>(모델이 고름): <code>screenshot · left_click · right_click ·
+          double_click · mouse_move · left_click_drag · type · key · hold_key · scroll · wait · cursor_position</code>.
+          모델의 응답은 좌표가 담긴 <code>tool_use</code>예요:</p>
+        <pre><code>{ "type": "tool_use", "name": "computer",
+  "input": { "action": "left_click", "coordinate": [612, 348] } }</code></pre>
+
+        <p class="entitle">② 실행 루프 — 세 주체: 환경 · 하니스 · API</p>
         <div class="mermaid">
 flowchart LR
-    SS["take a screenshot"] --> M["model reads pixels<br/>decides next action"]
-    M --> AC["click / type / scroll"]
-    AC --> SS
-    M -.goal reached.-> Done(["done"])
+    subgraph ENV["Environment — you own it"]
+      VM["container / VM<br/>Linux desktop"]
+    end
+    subgraph APP["Your harness — the loop"]
+      CAP["capture screenshot<br/>(PNG)"]
+      EXE["execute action<br/>via xdotool"]
+    end
+    subgraph API["Anthropic API"]
+      CL["Claude decides the<br/>next action from pixels"]
+    end
+    VM --> CAP --> CL --> EXE --> VM
+    classDef data fill:#2a2410,stroke:#d29322,color:#e6edf3;
+    classDef io fill:#0d1f33,stroke:#58a6ff,color:#e6edf3;
+    classDef core fill:#11271a,stroke:#3fb950,color:#e6edf3,stroke-width:2px;
+    class VM data;
+    class CAP,EXE io;
+    class CL core;
+        </div>
+        <p class="muted"><strong>Claude는 당신 기계를 절대 만지지 않아요</strong> — <em>결정만</em> 합니다.
+          스크린샷을 보내면 action이 담긴 <code>tool_use</code>를 돌려주고, 그걸 <em>당신의 하니스</em>가
+          <code>xdotool</code>로 실행 → 다시 스크린샷 → Claude가 도구를 그만 부를 때까지 반복. 5A.1의 그 루프와
+          똑같되 "도구"가 마우스·키보드일 뿐이에요.</p>
+        <div class="callout cs">
+          ⚖️ <strong>대가를 알고 쓰기:</strong> 매 턴 스크린샷이라 <em>느리고 vision 토큰을 많이</em> 먹고, UI가
+          조금만 바뀌어도 <em>깨지기 쉽습니다</em>(brittle). 원칙: <strong>API나 accessibility tree가 있으면 그걸 먼저</strong>,
+          computer use는 "다른 길이 없을 때"의 최후 수단.
         </div>
         <div class="callout cs">
           🛡️ <strong>Safety = 권한 게이트 + 하드 리밋.</strong> 읽기는 항상 허용, 파괴적 작업은 확인,
@@ -382,6 +496,14 @@ flowchart TB
     Sand --> L
     L -->|within budget| Next["continue loop"]
     L -->|exceeded| Stop["halt the run"]
+    classDef decision fill:#241a2e,stroke:#a371f7,color:#e6edf3;
+    classDef io fill:#0d1f33,stroke:#58a6ff,color:#e6edf3;
+    classDef done fill:#11271a,stroke:#3fb950,color:#e6edf3;
+    classDef danger fill:#2d1215,stroke:#f85149,color:#e6edf3;
+    class A,Ask,Sand io;
+    class G,L decision;
+    class OK,Next done;
+    class Stop danger;
         </div>
         <div class="quiz" data-answer="2">
           <p class="q">에이전트가 무한 루프로 비용 폭탄이 되는 걸 막는 1차 방어선은?</p>
@@ -425,6 +547,14 @@ flowchart LR
     Ag -->|run_query| DB
     DB -.rows.-> Ag
     Ag --> Ans(["answer in plain language"])
+    classDef core fill:#11271a,stroke:#3fb950,color:#e6edf3,stroke-width:2px;
+    classDef io fill:#0d1f33,stroke:#58a6ff,color:#e6edf3;
+    classDef data fill:#2a2410,stroke:#d29322,color:#e6edf3;
+    classDef done fill:#11271a,stroke:#3fb950,color:#e6edf3;
+    class Ag core;
+    class U io;
+    class DB data;
+    class Ans done;
         </div>
 
         <p class="entitle" style="margin-top:1.6rem">코드 읽기 ① — 함수 이름 지도 (전체 모양부터)</p>
@@ -449,6 +579,16 @@ flowchart TD
     LT --> CONN["_connect() · mode=ro"]
     DT --> CONN
     RQ --> CONN
+    classDef core fill:#11271a,stroke:#3fb950,color:#e6edf3,stroke-width:2px;
+    classDef io fill:#0d1f33,stroke:#58a6ff,color:#e6edf3;
+    classDef decision fill:#241a2e,stroke:#a371f7,color:#e6edf3;
+    classDef data fill:#2a2410,stroke:#d29322,color:#e6edf3;
+    classDef done fill:#11271a,stroke:#3fb950,color:#e6edf3;
+    class A1 core;
+    class CHECK decision;
+    class CONN data;
+    class RET done;
+    class MAIN,REPL,CREATE,DISP,APP,LT,DT,RQ io;
         </div>
         </div>
 
@@ -553,6 +693,18 @@ flowchart TB
     CA["prompt caching<br/>static prefix, ~90% cheaper"] -.-> CORE
     ASY["long-running<br/>background · callbacks · batch"] -.-> CORE
     SAFE["safety<br/>permission gates + hard limits"] -.-> CORE
+    classDef core fill:#11271a,stroke:#3fb950,color:#e6edf3,stroke-width:2px;
+    classDef io fill:#0d1f33,stroke:#58a6ff,color:#e6edf3;
+    classDef decision fill:#241a2e,stroke:#a371f7,color:#e6edf3;
+    classDef done fill:#11271a,stroke:#3fb950,color:#e6edf3;
+    classDef data fill:#2a2410,stroke:#d29322,color:#e6edf3;
+    classDef danger fill:#2d1215,stroke:#f85149,color:#e6edf3;
+    class API core;
+    class MSG,RUN,APP,SUB,MEM io;
+    class SR decision;
+    class DONE done;
+    class RT,CA,ASY data;
+    class SAFE danger;
         </div>
         <div class="concept">
           <span class="tag">배운 것 8가지</span>
