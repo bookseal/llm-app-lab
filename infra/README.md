@@ -39,9 +39,8 @@ docker build -t llm-app-lab/app-agent:v1 apps/agent/
 docker save llm-app-lab/launcher:v1  | sudo k3s ctr images import -
 docker save llm-app-lab/app-agent:v1 | sudo k3s ctr images import -
 
-# 2) secret + manifests
-kubectl create ns llm-app-lab --dry-run=client -o yaml | kubectl apply -f -
-kubectl -n llm-app-lab create secret generic anthropic \
+# 2) secret + manifests (cluster convention: default namespace, shared tls-secret)
+kubectl create secret generic anthropic \
   --from-literal=ANTHROPIC_API_KEY=sk-ant-…
 kubectl apply -f k8s.yaml
 
@@ -67,7 +66,7 @@ the page, and the reaper shuts the pod down after 20 idle minutes.
 ## Security posture
 
 - The launcher's ServiceAccount can **only get/scale deployments in the
-  `llm-app-lab` namespace** (Role in `k8s.yaml`) — it cannot create pods, read
+  `default` namespace (name-scoped to `app-agent` via resourceNames)** (Role in `k8s.yaml`) — it cannot create pods, read
   secrets, or touch other namespaces.
 - `/launch` accepts only allowlisted app names hard-coded in `app.py`.
 - The agent container runs unprivileged; its tools are read-only by

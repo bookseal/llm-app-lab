@@ -9,42 +9,39 @@
 #     cluster's existing convention (kubectl get ingress -A shows it).
 #   · images pushed somewhere the cluster can pull (or `docker save | k3s ctr
 #     images import` on the node — see infra/README.md).
-#   · the Anthropic key:  kubectl -n llm-app-lab create secret generic anthropic \
+#   · the Anthropic key:  kubectl create secret generic anthropic \
 #         --from-literal=ANTHROPIC_API_KEY=sk-ant-…
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: llm-app-lab
----
 # ── launcher: may ONLY read + scale deployments inside this namespace ──
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: launcher
-  namespace: llm-app-lab
+  namespace: default
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: launcher-scaler
-  namespace: llm-app-lab
+  namespace: default
 rules:
   - apiGroups: ["apps"]
     resources: ["deployments"]
-    verbs: ["get", "list"]
+    resourceNames: ["app-agent"]
+    verbs: ["get"]
   - apiGroups: ["apps"]
     resources: ["deployments/scale"]
+    resourceNames: ["app-agent"]
     verbs: ["get", "update", "patch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: launcher-scaler
-  namespace: llm-app-lab
+  namespace: default
 subjects:
   - kind: ServiceAccount
     name: launcher
-    namespace: llm-app-lab
+    namespace: default
 roleRef:
   kind: Role
   name: launcher-scaler
@@ -54,7 +51,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: launcher
-  namespace: llm-app-lab
+  namespace: default
 spec:
   replicas: 1
   selector: { matchLabels: { app: launcher } }
@@ -65,7 +62,8 @@ spec:
       serviceAccountName: launcher
       containers:
         - name: launcher
-          image: llm-app-lab/launcher:v1   # ← adjust to your registry/tag
+          image: llm-app-lab/launcher:v1
+          imagePullPolicy: IfNotPresent   # node-local image (k3s ctr import)
           ports: [{ containerPort: 8080 }]
           readinessProbe:
             httpGet: { path: /healthz, port: 8080 }
@@ -77,7 +75,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: launcher
-  namespace: llm-app-lab
+  namespace: default
 spec:
   selector: { app: launcher }
   ports: [{ port: 80, targetPort: 8080 }]
@@ -86,7 +84,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: launcher
-  namespace: llm-app-lab
+  namespace: default
 spec:
   rules:
     - host: launch.bit-habit.com
@@ -97,14 +95,14 @@ spec:
             backend: { service: { name: launcher, port: { number: 80 } } }
   tls:
     - hosts: [launch.bit-habit.com]
-      secretName: bit-habit-wildcard-tls   # ← match the cluster's existing secret
+      secretName: tls-secret   # the cluster-wide *.bit-habit.com wildcard
 ---
 # ── the 5D agent app: scale-to-zero, woken by the launcher ──
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: app-agent
-  namespace: llm-app-lab
+  namespace: default
 spec:
   replicas: 0                # off by default — /launch turns it on
   selector: { matchLabels: { app: app-agent } }
@@ -114,7 +112,8 @@ spec:
     spec:
       containers:
         - name: agent
-          image: llm-app-lab/app-agent:v1   # ← adjust to your registry/tag
+          image: llm-app-lab/app-agent:v1
+          imagePullPolicy: IfNotPresent   # node-local image (k3s ctr import)
           ports: [{ containerPort: 7681 }]
           envFrom:
             - secretRef: { name: anthropic }
@@ -129,7 +128,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: app-agent
-  namespace: llm-app-lab
+  namespace: default
 spec:
   selector: { app: app-agent }
   ports: [{ port: 80, targetPort: 7681 }]
@@ -138,7 +137,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: app-agent
-  namespace: llm-app-lab
+  namespace: default
 spec:
   rules:
     - host: agent.bit-habit.com
@@ -149,4 +148,4 @@ spec:
             backend: { service: { name: app-agent, port: { number: 80 } } }
   tls:
     - hosts: [agent.bit-habit.com]
-      secretName: bit-habit-wildcard-tls   # ← match the cluster's existing secret
+      secretName: tls-secret   # the cluster-wide *.bit-habit.com wildcard

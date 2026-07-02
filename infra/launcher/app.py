@@ -30,7 +30,7 @@ app = Flask(__name__)
 APPS = {
     "agent": {
         "deployment": "app-agent",
-        "namespace": "llm-app-lab",
+        "namespace": "default",
         "url": "https://agent.bit-habit.com",
     },
 }
