@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>llm-app-lab — How "Run it live" works</title>
+    <link rel="stylesheet" href="./style.css?v=8" />
+    <script src="./nav.js?v=11" defer></script>
+    <script type="module" src="./mermaid-fx.js?v=1"></script>
+    <script type="module" src="./flow-anim.js?v=2"></script>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="hero">
+        <p class="muted"><a href="./index.html">← Start here</a> · Infra note</p>
+        <h1>▶ Run it live — 정적 페이지가 서버 앱을 띄우는 원리</h1>
+        <p class="tldr">
+          HTML 문서는 그저 글자인데, 버튼 하나로 <strong>진짜 앱이 페이지 안에서 실행</strong>됩니다.
+          비밀은 페이지가 아니라 <strong>런처(launcher)</strong> — 요청이 오면 컨테이너를 깨우고,
+          준비되면 URL을 돌려주고, 놀고 있으면 꺼버리는 작은 API예요.
+        </p>
+        <div class="callout">
+          🧩 구성 요소 3개: <code>docs/run.js</code>(버튼) · <code>infra/launcher/</code>(스포너 API) ·
+          k3s의 <strong>scale-to-zero</strong> Deployment. 배포 절차는 <code>infra/README.md</code>.
+        </div>
+      </header>
+
+      <nav class="toc">
+        <strong>목차</strong>
+        <ul>
+          <li><a href="#why">1 · 왜 신개념처럼 보이나</a></li>
+          <li><a href="#flow">2 · The flow — 공을 따라가 보세요</a></li>
+          <li><a href="#pieces">3 · 세 조각의 역할</a></li>
+          <li><a href="#terminal">4 · 터미널 앱을 페이지에 심는 법 (ttyd)</a></li>
+          <li><a href="#key">5 · The key idea</a></li>
+        </ul>
+      </nav>
+
+      <section id="why">
+        <h2>1 · 왜 신개념처럼 보이나</h2>
+        <p class="tldr">"HTML 안에서 실행"은 착시예요 — 실행은 서버에서, 페이지는 <strong>깨우고·기다리고·담아 보여줄</strong> 뿐. 그런데 그 세 동작이면 정적 문서가 살아있는 데모가 됩니다.</p>
+        <p>
+          보통 문서 사이트와 데모 서버는 별개죠. 여기선 <strong>문서의 버튼이 곧 데모의 전원 스위치</strong>입니다.
+          항상 켜두면 돈과 메모리가 새고, 항상 꺼두면 데모가 죽어있는데 — <em>필요할 때만 깨우는</em> 게 정답이에요.
+          서버리스(scale-to-zero)의 아이디어를 교실 크기로 줄인 겁니다.
+        </p>
+      </section>
+
+      <section id="flow">
+        <h2>2 · The flow — 공을 따라가 보세요</h2>
+        <p class="tldr">초록 공이 <strong>가장 흔한 길</strong>(클릭→기동→폴링→준비)을 돕니다. 앱이 이미 깨어 있으면 <strong>노란 공</strong>이 지름길(즉시 ready)로 빠져요.</p>
+        <div class="mermaid" data-flow="pulse-path" data-cycle="CLICK,LAUNCH,WARM,SCALE,POLL,READY,EMBED" data-alt="WARM,READY">
+flowchart LR
+    CLICK(["click: Run it live"]) --> LAUNCH["POST /launch {app}"]
+    LAUNCH --> WARM{"already running?"}
+    WARM -->|no| SCALE["kubectl scale --replicas=1"]
+    SCALE --> POLL["poll GET /status/{app}<br/>every 2.5s"]
+    POLL --> READY["{state: ready, url}"]
+    WARM -->|yes| READY
+    READY --> EMBED(["iframe shows the app<br/>right in this page"])
+    EMBED -. "idle 20 min → replicas=0" .-> CLICK
+    class LAUNCH core;
+        </div>
+        <p class="muted">
+          점선이 마지막 조각이에요: 아무도 안 쓰면 리퍼(reaper)가 <code>replicas=0</code>으로 되돌립니다 —
+          "쓸 때만 존재하는 앱". 다음 클릭이 다시 깨우니 데모는 영원히 안 죽어요.
+        </p>
+      </section>
+
+      <section id="pieces">
+        <h2>3 · 세 조각의 역할</h2>
+        <div class="concept">
+          <span class="tag">who does what</span>
+          <ul>
+            <li><strong><code>docs/run.js</code> (브라우저)</strong> — 버튼을 그리고, <code>/launch</code>를 쏘고, <code>/status</code>를 폴링하고, ready가 오면 <strong>iframe으로 그 URL을 페이지 안에 담아</strong> 보여줘요. 런처가 없으면 "run it locally"로 안내하는 안전한 기본값.</li>
+            <li><strong>런처 API (<code>infra/launcher/app.py</code>, ~120줄 Flask)</strong> — 허용된 앱 이름만 받아 <code>kubectl scale</code>을 대신 눌러주는 손. 권한은 RBAC으로 <em>이 네임스페이스의 deployment scale</em>만.</li>
+            <li><strong>k3s Deployment (<code>replicas: 0</code>)</strong> — 앱의 본체. 0이면 존재하지 않고(비용 0), 1이면 몇 초 만에 살아나요. Ingress가 <code>agent.bit-habit.com</code>으로 연결.</li>
+          </ul>
+        </div>
+        <div class="callout cs">
+          🔒 <strong>안전 설계:</strong> 런처는 시크릿도 못 읽고 파드도 못 만들어요 — 오직 <em>정해진 deployment의 replicas 숫자</em>만
+          만질 수 있습니다(5D의 "위험한 도구를 애초에 안 주기"와 같은 원리를 인프라에 적용한 것).
+        </div>
+      </section>
+
+      <section id="terminal">
+        <h2>4 · 터미널 앱을 페이지에 심는 법 (ttyd)</h2>
+        <p class="tldr">5D의 agent는 웹앱이 아니라 <strong>터미널 REPL</strong>이에요. 래퍼를 새로 짜는 대신 <strong>ttyd</strong>로 <em>진짜 터미널</em>을 웹소켓으로 서빙합니다 — 학생이 로컬에서 보는 그 세션 그대로.</p>
+        <div class="mermaid">
+flowchart LR
+    BROWSER["iframe in the docs page"] -->|websocket| TTYD["ttyd -W<br/>terminal-over-web, one binary"]
+    TTYD --> REPL["python agent.py<br/>the real classroom artifact"]
+    REPL --> DB[("data.db<br/>read-only SQLite")]
+    class TTYD core;
+        </div>
+        <p class="muted">
+          컨테이너도 <strong>학생이 받는 그 zip</strong>에서 빌드해요(<code>infra/apps/agent/Dockerfile</code>) —
+          라이브 데모와 수업 자료가 절대 어긋날 수 없는 구조입니다.
+        </p>
+      </section>
+
+      <section id="key">
+        <h2>5 · The key idea</h2>
+        <p class="tldr">정적 페이지 + 작은 스포너 API + scale-to-zero = <strong>문서가 곧 실행 환경</strong>. 페이지는 실행하지 않아요 — <em>깨우고, 기다리고, 담아서 보여줄</em> 뿐입니다.</p>
+        <div class="quiz" data-answer="1">
+          <p class="q">"HTML 안에서 앱이 실행된다"에서 실제로 <strong>코드가 도는 곳</strong>은?</p>
+          <button class="opt">브라우저 안 (HTML이 파이썬을 실행)</button>
+          <button class="opt">서버의 컨테이너 — 페이지는 런처로 깨우고, 준비된 URL을 iframe에 담아 보여줄 뿐</button>
+          <button class="opt">GitHub Actions</button>
+          <p class="explain">
+            페이지가 하는 일은 ① <code>/launch</code> 호출 ② <code>/status</code> 폴링 ③ iframe 표시, 셋뿐이에요.
+            실행은 k3s가 깨운 컨테이너에서 일어나고, ttyd가 그 터미널을 웹소켓으로 페이지까지 흘려보냅니다.
+            "실행처럼 보이는 것"과 "실행되는 곳"을 가르는 게 이 패턴 이해의 전부예요.
+          </p>
+        </div>
+      </section>
+
+      <footer>
+        <p>
+          <a href="./index.html">← Start here</a> ·
+          쓰이는 곳: <a href="./03B-extractor.html">3B</a> · <a href="./05D-agent.html">5D</a> ·
+          배포: <code>infra/README.md</code>
+        </p>
+        <p>llm-app-lab · infra note · launcher</p>
+      </footer>
+    </div>
+    <script>
+      document.querySelectorAll(".quiz").forEach((quiz) => {
+        const answer = Number(quiz.dataset.answer);
+        quiz.querySelectorAll(".opt").forEach((opt, i) => {
+          opt.addEventListener("click", () => {
+            if (quiz.classList.contains("solved")) return;
+            if (i === answer) { opt.classList.add("correct"); quiz.classList.add("solved"); }
+            else { opt.classList.add("wrong"); opt.disabled = true; }
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

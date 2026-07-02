@@ -206,6 +206,12 @@ nav.toc li { margin: .15rem 0; }
 .fx-mismatch .fx-bar.pad { background: #30363d; border-style: dashed; }
 .fx-verdict { margin-top: .6rem; font-size: .88rem; color: #e3b341; min-height: 1.3rem; }
 
+/* The live app, embedded right in the page once the launcher says ready. */
+.runframe {
+  display: block; width: 100%; height: 480px; margin-top: .8rem;
+  border: 1px solid var(--border); border-radius: 10px; background: #000;
+}
+
 /* collapsed: hide the outline, keep just the handle; main content reflows wide */
 body.rail-collapsed .rail {
   width: auto;

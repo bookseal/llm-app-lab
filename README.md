@@ -162,6 +162,16 @@ The API key comes from one shared `.env` (`ANTHROPIC_API_KEY`). Projects with a 
 frontend (`Module_02_chat-app`, `Module_04_rag`) run the backend and `npm run dev`
 frontend in two terminals — see their READMEs.
 
+### ▶ Run it live — apps that start from inside a static page
+
+The project pages on the docs site carry a **Run it live** button: the static
+page asks a tiny **launcher API** to wake a scale-to-zero k3s deployment, polls
+until it's ready, then **embeds the running app in an iframe right on the page**
+(a terminal app is served as a real terminal via ttyd). Idle apps scale back to
+zero automatically. How-it-works write-up:
+[docs/launcher.html](https://llm-app-lab.bit-habit.com/launcher.html) · service +
+manifests: [`infra/`](infra/).
+
 ---
 
 ## 📒 About the learning site

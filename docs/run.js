@@ -49,9 +49,19 @@
       btn.textContent = "▶ Try again";
     };
     const ready = (url) => {
-      state.innerHTML = '✅ Ready — <a href="' + url + '" target="_blank" rel="noopener">open the app ↗</a> (it shuts down when idle).';
+      state.innerHTML = '✅ Ready — <a href="' + url + '" target="_blank" rel="noopener">open in a new tab ↗</a> (it shuts down when idle).';
       btn.disabled = false;
       btn.textContent = "▶ Run again";
+      // the app runs RIGHT HERE in the page — same *.bit-habit.com site, so
+      // embedding is allowed; new-tab link stays for full-screen use.
+      let frame = box.querySelector(".runframe");
+      if (!frame) {
+        frame = document.createElement("iframe");
+        frame.className = "runframe";
+        frame.allow = "clipboard-write";
+        box.appendChild(frame);
+      }
+      frame.src = url;
     };
     const poll = (id) => {
       if (polls++ > POLL_MAX) return fail("took too long to start");

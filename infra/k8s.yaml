@@ -1,0 +1,152 @@
+# "Run it live" infrastructure for llm-app-lab on the bit-habit k3s cluster.
+#
+#   launch.bit-habit.com  → launcher API (scales apps 0↔1 on demand)
+#   agent.bit-habit.com   → the 5D data-analyst agent (ttyd terminal), replicas 0
+#
+# Prereqs on the cluster (verify before applying — names may differ):
+#   · traefik ingress (k3s default) and the *.bit-habit.com wildcard TLS
+#     (cert-manager). Adjust `tls.secretName` / annotations to match the
+#     cluster's existing convention (kubectl get ingress -A shows it).
+#   · images pushed somewhere the cluster can pull (or `docker save | k3s ctr
+#     images import` on the node — see infra/README.md).
+#   · the Anthropic key:  kubectl -n llm-app-lab create secret generic anthropic \
+#         --from-literal=ANTHROPIC_API_KEY=sk-ant-…
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: llm-app-lab
+---
+# ── launcher: may ONLY read + scale deployments inside this namespace ──
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: launcher
+  namespace: llm-app-lab
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: launcher-scaler
+  namespace: llm-app-lab
+rules:
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list"]
+  - apiGroups: ["apps"]
+    resources: ["deployments/scale"]
+    verbs: ["get", "update", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: launcher-scaler
+  namespace: llm-app-lab
+subjects:
+  - kind: ServiceAccount
+    name: launcher
+    namespace: llm-app-lab
+roleRef:
+  kind: Role
+  name: launcher-scaler
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: launcher
+  namespace: llm-app-lab
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: launcher } }
+  template:
+    metadata:
+      labels: { app: launcher }
+    spec:
+      serviceAccountName: launcher
+      containers:
+        - name: launcher
+          image: llm-app-lab/launcher:v1   # ← adjust to your registry/tag
+          ports: [{ containerPort: 8080 }]
+          readinessProbe:
+            httpGet: { path: /healthz, port: 8080 }
+          resources:
+            requests: { cpu: 10m, memory: 32Mi }
+            limits: { cpu: 100m, memory: 128Mi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: launcher
+  namespace: llm-app-lab
+spec:
+  selector: { app: launcher }
+  ports: [{ port: 80, targetPort: 8080 }]
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: launcher
+  namespace: llm-app-lab
+spec:
+  rules:
+    - host: launch.bit-habit.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend: { service: { name: launcher, port: { number: 80 } } }
+  tls:
+    - hosts: [launch.bit-habit.com]
+      secretName: bit-habit-wildcard-tls   # ← match the cluster's existing secret
+---
+# ── the 5D agent app: scale-to-zero, woken by the launcher ──
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-agent
+  namespace: llm-app-lab
+spec:
+  replicas: 0                # off by default — /launch turns it on
+  selector: { matchLabels: { app: app-agent } }
+  template:
+    metadata:
+      labels: { app: app-agent }
+    spec:
+      containers:
+        - name: agent
+          image: llm-app-lab/app-agent:v1   # ← adjust to your registry/tag
+          ports: [{ containerPort: 7681 }]
+          envFrom:
+            - secretRef: { name: anthropic }
+          readinessProbe:
+            tcpSocket: { port: 7681 }
+            initialDelaySeconds: 2
+          resources:
+            requests: { cpu: 50m, memory: 128Mi }
+            limits: { cpu: 500m, memory: 512Mi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-agent
+  namespace: llm-app-lab
+spec:
+  selector: { app: app-agent }
+  ports: [{ port: 80, targetPort: 7681 }]
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-agent
+  namespace: llm-app-lab
+spec:
+  rules:
+    - host: agent.bit-habit.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend: { service: { name: app-agent, port: { number: 80 } } }
+  tls:
+    - hosts: [agent.bit-habit.com]
+      secretName: bit-habit-wildcard-tls   # ← match the cluster's existing secret
