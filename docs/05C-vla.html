@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>llm-app-lab — Module 5C · Project: VLA on your laptop (robot.zip)</title>
+    <link rel="stylesheet" href="./style.css?v=4" />
+    <script src="./nav.js?v=8" defer></script>
+    <script src="./run.js?v=1" defer></script>
+    <script type="module" src="./mermaid-fx.js?v=1"></script>
+    <style>
+      /* Page-local: responsive video wrappers (9:16 short + 16:9 clip). */
+      .vid { position: relative; width: 300px; max-width: 100%; aspect-ratio: 9 / 16;
+        border-radius: 10px; overflow: hidden; border: 1px solid var(--border); background: #000; }
+      .vid iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+      .vid-wide { position: relative; width: 100%; max-width: 540px; aspect-ratio: 16 / 9;
+        border-radius: 10px; overflow: hidden; border: 1px solid var(--border); background: #000; }
+      .vid-wide iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+      /* File-map / spec table that reads well on the dark theme. */
+      table.spec { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: .93rem; }
+      table.spec th, table.spec td { text-align: left; padding: .55rem .7rem;
+        border-bottom: 1px solid var(--border); vertical-align: top; }
+      table.spec th { color: var(--muted); font-weight: 600; font-size: .82rem;
+        text-transform: uppercase; letter-spacing: .04em; }
+      table.spec code { white-space: nowrap; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="hero">
+        <p class="muted"><a href="./index.html">← Start here</a> · Module 5C · Project</p>
+        <h1>Module 5C · Project — VLA on your laptop</h1>
+        <p class="tldr">
+          진짜 <strong>~450M 파라미터 VLA(SmolVLA)</strong>가 MuJoCo 시뮬 속 로봇 팔을 <strong>CPU만으로</strong> 구동합니다.
+          <code>obs → action → step</code> 지각-행동 루프를 한 스텝씩 눈으로 확인하는 게 이 프로젝트의 전부예요.
+        </p>
+        <div class="callout">
+          🤖 이 페이지는 <strong>스타터 <code>robot.zip</code></strong>(파일 4개)을 한 줄씩 뜯어보는 <em>코드 워크스루</em>예요.
+          VLA가 처음이면 <a href="./05B-finetune.html">Module 5B · Special Topic</a>에서 개요를 먼저 훑어도 좋습니다.
+        </div>
+        <div class="callout cs">
+          🚧 <strong>CPU-only · 느립니다(스텝당 ~1–3초).</strong> 첫 실행에 SmolVLA 가중치 ~1.8&nbsp;GB를 받고,
+          MuJoCo 에셋도 내려받아요. 그리고 <strong>능숙한 동작은 기대하지 마세요</strong> — 왜 그런지가 이 프로젝트의
+          가장 중요한 교훈입니다(<a href="#embodiment">5C.8</a>).
+        </div>
+      </header>
+
+      <nav class="toc">
+        <strong>목차</strong>
+        <ul>
+          <li><a href="#what">5C.1 · What you'll build</a></li>
+          <li><a href="#scaffold">5C.2 · Scaffold — 파일 4개</a></li>
+          <li><a href="#stack">5C.3 · The stack &amp; why</a></li>
+          <li><a href="#loop">5C.4 · The loop — 핵심 아이디어</a></li>
+          <li><a href="#check">5C.5 · 먼저 실행: check_setup.py</a></li>
+          <li><a href="#buildobs">5C.6 · build_observation — obs 조립</a></li>
+          <li><a href="#rollout">5C.7 · The rollout loop</a></li>
+          <li><a href="#embodiment">5C.8 · Embodiment &amp; 정직한 한계</a></li>
+          <li><a href="#local">5C.9 · Build &amp; run locally</a></li>
+          <li><a href="#key">5C.10 · The key idea</a></li>
+        </ul>
+      </nav>
+
+      <section id="what">
+        <h2>5C.1 · What you'll build</h2>
+        <p class="tldr">SmolVLA가 gym-aloha(MuJoCo)의 양팔 로봇을 구동 → 결과로 <strong>rollout.mp4</strong>(팔이 움직이는 영상) + <strong>스텝별 로그</strong>(지시와 VLA가 낸 action 벡터)를 남깁니다. 루프를 <em>눈에 보이게</em> 만드는 게 목적이에요.</p>
+        <div style="display:flex; gap:1.4rem; flex-wrap:wrap; align-items:flex-start; margin-top:1rem;">
+          <div style="display:flex; flex-direction:column; gap:.5rem; align-items:center;">
+            <div class="vid">
+              <iframe src="https://www.youtube.com/embed/S-eZpFfMrjY" title="VLA robot arm short"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+            </div>
+            <p class="muted" style="max-width:300px; text-align:center;">저가형 팔이 말로 준 지시를 따라 움직이는 모습(실제 하드웨어).</p>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:.5rem; align-items:center; flex:1; min-width:280px;">
+            <div class="vid-wide">
+              <iframe src="https://www.youtube.com/embed/8dZUOo5xWFw" title="Generalist robot policy"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+            </div>
+            <p class="muted" style="text-align:center;">범용 정책(generalist policy)이 여러 태스크·물체로 일반화하는 모습.</p>
+          </div>
+        </div>
+        <div class="callout">
+          🧭 우리가 돌릴 건 이 영상만큼 능숙하진 않아요. <strong>메커니즘(루프)</strong>을 CPU에서 직접 굴려보는 게 목표고,
+          왜 동작이 어설픈지는 <a href="#embodiment">5C.8 embodiment</a>에서 정확히 짚습니다.
+        </div>
+      </section>
+
+      <section id="scaffold">
+        <h2>5C.2 · Scaffold — 파일 4개가 전부</h2>
+        <p class="tldr"><code>robot.zip</code>을 풀면 딱 4개예요. 무겁게 느껴져도 <strong>실제 프로젝트 코드는 작습니다</strong> — 무거운 건 다운로드되는 모델·시뮬 에셋이지 우리 코드가 아니에요.</p>
+        <div class="mermaid">
+flowchart TB
+    Zip["robot.zip"] --> R["README.md<br/>개념 + 셋업 + 트러블슈팅"]
+    Zip --> Req["requirements.txt<br/>lerobot[smolvla] · gym-aloha · imageio"]
+    Zip --> Chk["check_setup.py<br/>먼저 실행 — 스펙 출력"]
+    Zip --> Demo["run_demo.py<br/>the loop (~40 lines of substance)"]
+    class Demo core;
+        </div>
+        <table class="spec">
+          <thead><tr><th>파일</th><th>역할</th></tr></thead>
+          <tbody>
+            <tr><td><code>check_setup.py</code></td><td>설치·버전을 검증하고 <b>정확한 obs/action 스펙</b>을 출력. 롤아웃 도중 크래시 대신 여기서 드리프트를 먼저 드러냄.</td></tr>
+            <tr><td><code>run_demo.py</code></td><td>VLA 닫힌 루프 본체. observation 조립 → 예측 → 시뮬 step → 반복 → <code>rollout.mp4</code>.</td></tr>
+            <tr><td><code>requirements.txt</code></td><td><code>lerobot[smolvla]</code>(torch·transformers·정책 코드) + <code>gym-aloha</code>(MuJoCo) + <code>imageio</code>(영상).</td></tr>
+            <tr><td><code>README.md</code></td><td>VLA란 무엇인가 · 스택 선택 이유 · embodiment 한계 · 트러블슈팅 표.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="stack">
+        <h2>5C.3 · The stack &amp; why — 왜 이 조합인가</h2>
+        <p class="tldr">다섯 저장소를 붙이는 대신 <strong>LeRobot</strong> 하나가 정책·데이터 규약·체크포인트를 묶어줘요. 모델은 <strong>SmolVLA(~450M)</strong>, 시뮬은 <strong>gym-aloha(MuJoCo)</strong>, 런타임은 <strong>PyTorch CPU</strong>.</p>
+        <div class="mermaid">
+flowchart LR
+    I["instruction + camera frame<br/>+ robot state"] --> LR["LeRobot<br/>정책·전처리·체크포인트 묶음"]
+    LR --> M["SmolVLA (~450M)<br/>vision-language backbone + action expert"]
+    M --> A(["action vector"])
+    A --> Sim["gym-aloha · MuJoCo<br/>양팔 ALOHA 시뮬"]
+    Sim -. "next frame" .-> I
+    class M core;
+        </div>
+        <table class="spec">
+          <thead><tr><th>레이어</th><th>선택</th><th>이유</th></tr></thead>
+          <tbody>
+            <tr><td>프레임워크</td><td><b>LeRobot</b> (Hugging Face)</td><td>VLA 정책 + obs/action 규약 + 사전학습 체크포인트를 한 곳에. 저장소 5개를 손으로 붙일 필요 없음.</td></tr>
+            <tr><td>VLA 모델</td><td><b>SmolVLA (~450M)</b> · <code>lerobot/smolvla_base</code></td><td>노트북 CPU에서 도는 가장 작은 <em>진짜</em> VLA. 액션당 ~1–3초. (OpenVLA-7B는 CPU에서 스텝당 수 분)</td></tr>
+            <tr><td>시뮬레이터</td><td><b>gym-aloha</b> (MuJoCo)</td><td>Apple Silicon CPU 네이티브, GPU 없이 렌더. 양팔 ALOHA 로봇 시뮬.</td></tr>
+            <tr><td>런타임</td><td>PyTorch · CPU</td><td>CUDA 불필요. 이 스택의 MPS(애플 GPU) 지원은 들쭉날쭉 → CPU가 신뢰 기본값.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="loop">
+        <h2>5C.4 · The loop — 핵심 아이디어</h2>
+        <p class="tldr">VLA의 본질을 한 루프로: <strong>카메라 이미지 + 지시</strong> → VLA → <strong>action 벡터</strong> → 시뮬이 로봇을 움직임 → 다음 프레임 → 반복. <code>run_demo.py</code>가 정확히 이 루프예요(실질 ~40줄).</p>
+        <div class="mermaid">
+flowchart LR
+    Obs["camera frame + robot state<br/>+ instruction"] --> VLA["SmolVLA"]
+    VLA --> Act(["action vector<br/>(14 numbers — not words)"])
+    Act --> Sim["MuJoCo steps the arms"]
+    Sim -. "next camera frame" .-> Obs
+    class VLA core;
+        </div>
+        <div class="callout analogy">
+          🔁 <a href="./05A-agents.html#loop">5A의 agent loop</a>와 구조가 똑같아요: 관찰이 들어가고 예측이 나옵니다 —
+          다만 예측이 <strong>단어가 아니라 모션</strong>이고, 다음 관찰이 그 모션에 대한 <strong>세계의 반응</strong>이라는 점만 달라요.
+        </div>
+        <div class="quiz" data-answer="2">
+          <p class="q">LLM 턴과 비교했을 때, 이 VLA 루프에서 <strong>가장 본질적으로 다른</strong> 점은?</p>
+          <button class="opt">모델이 훨씬 크다</button>
+          <button class="opt">입력에 이미지가 들어간다는 것만 다르다</button>
+          <button class="opt">출력이 텍스트가 아니라 <b>특정 로봇 몸체의 모터 명령</b>이고, 다음 입력이 그 행동에 대한 세계의 반응이다</button>
+          <p class="explain">
+            멀티모달 LLM도 이미지를 받지만, 출력은 여전히 <em>텍스트</em>예요. VLA는 출력이 <strong>연속 action 벡터</strong>(모터 명령)라서
+            "몸(embodiment)"이 결정적으로 중요해집니다 — 그리고 다음 관찰이 방금 한 행동의 결과라, 열린 텍스트 생성이 아니라
+            <strong>닫힌 지각-행동 루프</strong>가 됩니다.
+          </p>
+        </div>
+      </section>
+
+      <section id="check">
+        <h2>5C.5 · 먼저 실행: check_setup.py</h2>
+        <p class="tldr">로봇-러닝 생태계는 빨리 변해요(import 경로·env id·키가 드리프트). 그래서 <strong>롤아웃 전에</strong> 스펙을 출력해 어긋남을 먼저 드러냅니다.</p>
+        <pre><code># check_setup.py — 4단계로 "지금 내 환경의 진짜 스펙"을 찍어줌
+# 1) torch / lerobot import 되나
+# 2) gym-aloha 가 env 를 registry 에 등록했나  → 등록된 id 목록 출력
+# 3) env 만들어 스펙 출력: action_space.shape (정책이 내야 할 action dim!)
+#                          카메라 키, agent_pos dim
+# 4) SmolVLA 로드 → 체크포인트가 '기대하는' 스펙 출력:
+#      cfg.input_features   (카메라 키 · state dim)
+#      cfg.output_features  (action dim — 학습 당시 로봇 기준)</code></pre>
+        <p class="muted">
+          왜 중요하냐면 — 4단계가 찍는 <strong>체크포인트의 action dim</strong>과 3단계의 <strong>시뮬 action dim</strong>이
+          <em>다를 수 있어요</em>. 그 불일치가 곧 <a href="#embodiment">embodiment 교훈</a>의 씨앗입니다.
+        </p>
+        <div class="mermaid">
+flowchart LR
+    C["check_setup.py"] --> S1["1·2 · imports + env 등록"]
+    C --> S2["3 · sim 스펙<br/>action_space, cameras, agent_pos"]
+    C --> S3["4 · SmolVLA 스펙<br/>input_features / output_features"]
+    S2 --> Cmp{"두 action dim<br/>이 맞나?"}
+    S3 --> Cmp
+    Cmp -. "다르면" .-> Note["다른 로봇 몸체용 체크포인트<br/>→ 5C.8 참고"]
+    class Cmp core;
+        </div>
+      </section>
+
+      <section id="buildobs">
+        <h2>5C.6 · build_observation — obs 조립</h2>
+        <p class="tldr">매 스텝, 시뮬이 준 raw 데이터를 <strong>체크포인트가 기대하는 모양</strong>으로 맞춰요. 핵심: 모양을 하드코딩하지 않고 <code>policy.config.input_features</code>에서 <em>읽어와서</em> 맞춥니다.</p>
+        <pre><code>def build_observation(policy, obs, instruction):
+    feats = policy.config.input_features        # {key: PolicyFeature(type, shape)}
+    visual_keys = [k for k in feats if k.startswith("observation.images")]
+
+    batch = {}
+    for key in visual_keys:                     # 카메라마다
+        _, h, w = feats[key].shape              # 체크포인트가 원하는 (C,H,W)
+        img = to_tensor(frame) / 255.0
+        batch[key] = interpolate(img, size=(h, w))   # 그 HxW로 리사이즈
+
+    if "observation.state" in feats:
+        want = feats["observation.state"].shape[0]
+        s = np.asarray(obs["agent_pos"])
+        batch["observation.state"] = pad_or_truncate(s, want)  # state 길이 맞춤
+
+    batch["task"] = instruction                 # "vision-language-action"의 language
+    return batch                                # UNBATCHED · un-normalized (전처리기가 마무리)</code></pre>
+        <div class="mermaid">
+flowchart LR
+    Sim["sim obs<br/>pixels · agent_pos"] --> BO["build_observation"]
+    Cfg["policy.config<br/>input_features"] --> BO
+    Instr["instruction"] --> BO
+    BO --> V["images.* → HxW 리사이즈"]
+    BO --> St["observation.state → pad/truncate"]
+    BO --> Tk["task = instruction"]
+    V --> Batch(["raw batch dict"])
+    St --> Batch
+    Tk --> Batch
+    class Cfg core;
+        </div>
+        <div class="quiz" data-answer="0">
+          <p class="q">모양(HxW·state 길이)을 코드에 하드코딩하지 않고 <code>config.input_features</code>에서 읽는 이유는?</p>
+          <button class="opt">체크포인트가 <b>스스로 기대하는 스펙</b>을 담고 있어, 다른 모델/버전으로 바꿔도 코드가 자동으로 맞춰지니까</button>
+          <button class="opt">그게 더 빨라서</button>
+          <button class="opt">MuJoCo가 그렇게 강제해서</button>
+          <p class="explain">
+            체크포인트는 자기가 학습된 카메라 키·state dim·action dim을 <code>config</code>에 실어 옵니다. 거기서 읽어
+            맞추면, 모델이나 라이브러리 버전이 바뀌어도 <strong>스펙의 단일 출처(single source of truth)</strong>를 따라가
+            깨지지 않아요 — 드리프트에 강한 설계입니다.
+          </p>
+        </div>
+      </section>
+
+      <section id="rollout">
+        <h2>5C.7 · The rollout loop — 예측 한 스텝</h2>
+        <p class="tldr">조립한 raw obs를 <strong>전처리기</strong>(토크나이즈+정규화+배치+device)에 통과 → <code>select_action</code> → <strong>후처리기</strong>(역정규화) → 시뮬 <code>step</code>. 이게 매 틱 반복돼요.</p>
+        <pre><code>for t in range(steps):
+    raw    = build_observation(policy, obs, instruction)
+    batch  = preprocessor(raw)                  # tokenize + normalize + batch + device
+    with torch.inference_mode():
+        action = policy.select_action(batch)    # (1, action_dim), normalized
+    action = postprocessor(action)              # un-normalize, back to cpu
+
+    action = force_fit(action, env_dim)         # dim 안 맞으면 자르기/패딩 + clip (5C.8)
+    obs, reward, *_ = env.step(action)          # 시뮬이 팔을 움직이고 다음 obs 반환
+    frames.append(env.render())                 # rollout.mp4 프레임 적립</code></pre>
+        <div class="mermaid">
+sequenceDiagram
+    participant Sim as gym-aloha (MuJoCo)
+    participant Obs as build_observation
+    participant Pre as preprocessor
+    participant VLA as SmolVLA.select_action
+    participant Post as postprocessor
+    Sim->>Obs: frame + agent_pos
+    Obs->>Pre: raw batch + instruction
+    Pre->>VLA: tokenized · normalized · batched
+    VLA->>Post: action (normalized)
+    Post->>Sim: un-normalized action -> env.step
+    Sim-->>Obs: next frame (loop)
+        </div>
+        <div class="callout">
+          🧩 <strong>전처리기/후처리기</strong>는 체크포인트 옆에 저장돼 함께 로드돼요(<code>make_pre_post_processors</code>).
+          지시문을 <strong>토큰화</strong>하는 게 여기라, 이 단계를 빼먹으면 <code>select_action</code>이
+          <code>KeyError: observation.language.tokens</code>로 터집니다.
+        </div>
+        <div class="quiz" data-answer="1">
+          <p class="q"><code>preprocessor(raw)</code>가 하는 일이 <strong>아닌</strong> 것은?</p>
+          <button class="opt">지시문을 토큰화한다</button>
+          <button class="opt"><b>로봇 팔을 실제로 움직인다</b></button>
+          <button class="opt">입력을 정규화하고 배치 차원을 붙여 device로 보낸다</button>
+          <p class="explain">
+            전처리기는 <em>입력을 모델이 먹을 수 있게</em> 다듬는 단계예요(토크나이즈·정규화·배치·device). 팔을 움직이는 건
+            <code>env.step(action)</code> — 후처리기로 역정규화된 action을 시뮬에 넣을 때죠. 전처리 → 예측 → 후처리 → step
+            순서가 이 루프의 뼈대입니다.
+          </p>
+        </div>
+      </section>
+
+      <section id="embodiment">
+        <h2>5C.8 · Embodiment &amp; 정직한 한계</h2>
+        <p class="tldr">루프는 끝까지 돌지만 <strong>동작은 의미가 없어요</strong>. base 체크포인트는 <strong>SO-101</strong>(단일 저가 팔)용인데 시뮬은 <strong>양팔 ALOHA</strong>라, 카메라·state·action의 <em>모양과 의미</em>가 다릅니다. 그 간극이 바로 embodiment 수업이에요.</p>
+        <div class="mermaid">
+flowchart LR
+    Ck["lerobot/smolvla_base<br/>학습 몸체 = SO-101"] --> Aout["action dim = A"]
+    Env["gym-aloha sim<br/>몸체 = 양팔 ALOHA"] --> Bout["action dim = B (14)"]
+    Aout --> FF{"A == B?"}
+    Bout --> FF
+    FF -. "아니오" .-> Fit["force-fit<br/>truncate/pad + clip"]
+    Fit --> Move["팔은 움직임<br/>하지만 무의미"]
+    class FF core;
+        </div>
+        <p class="muted">
+          <code>run_demo.py</code>는 이걸 알고 <strong>일부러</strong> 처리해요: action dim이 안 맞으면 한 번 경고를 찍고
+          <em>잘라내기/제로패딩 + 시뮬 범위로 clip</em>해서 루프가 끝까지 돌게 합니다. <strong>메커니즘은 정확히 보여주되,
+          정책이 이 몸에 안 맞으니 동작은 무의미</strong> — 이 정직함이 포인트입니다.
+        </p>
+        <div class="concept">
+          <span class="tag">제대로 된 동작을 원하면 (노력 순)</span>
+          <ul>
+            <li><strong>① 시뮬에 맞는 체크포인트</strong> — LeRobot 허브에서 ALOHA-sim 정책. 단, 신뢰성 있게 구할 수 있는 sim 체크포인트는 종종 <em>ACT/Diffusion Policy</em>(image+state→action, <b>언어 없음</b>)라 "language" 부분은 못 보여줌.</li>
+            <li><strong>② SmolVLA를 ALOHA-sim 데이터로 fine-tune</strong> — 이 몸에 맞는 <em>진짜 VLA</em>를 얻는 정공법. CPU로도 밤새 돌리면 수십 에피소드는 가능. (☜ <a href="./05B-finetune.html">5B fine-tuning</a>과 바로 이어지는 아이디어)</li>
+            <li><strong>③ 더 큰, sim-매칭 VLA</strong> (예: LIBERO로 fine-tune된 OpenVLA) — 다만 7B라 CPU 라이브 루프엔 비현실적.</li>
+          </ul>
+        </div>
+        <div class="quiz" data-answer="2">
+          <p class="q">이 데모의 팔 동작이 <strong>어설픈 근본 이유</strong>는?</p>
+          <button class="opt">SmolVLA가 너무 작아서(450M)</button>
+          <button class="opt">CPU라서 — GPU면 잘 움직인다</button>
+          <button class="opt">체크포인트가 <b>다른 로봇 몸체(SO-101)</b>용이라, action의 모양·의미가 이 시뮬(ALOHA)과 안 맞음 (embodiment 불일치)</button>
+          <p class="explain">
+            모델 크기나 CPU 속도의 문제가 아니에요. action head는 <strong>특정 로봇 몸체</strong>에 맞춰 학습됩니다.
+            학습 몸체(SO-101)와 실행 몸체(ALOHA)가 다르면 force-fit으로 루프는 돌아도 <strong>모션은 의미가 없어요</strong>.
+            해결책은 <em>몸이 맞는 정책</em>(매칭 체크포인트 또는 fine-tune)입니다.
+          </p>
+        </div>
+      </section>
+
+      <section id="local">
+        <h2>5C.9 · Build &amp; run locally</h2>
+        <p class="tldr">Python 3.10 권장, CPU면 충분. 순서: 설치 → <code>check_setup.py</code>(스펙 확인) → <code>run_demo.py</code>(루프).</p>
+        <pre><code># 스타터: robot.zip (README + requirements + check_setup.py + run_demo.py)
+#   https://ksetp.netlify.app/assets/special-topics/robot.zip
+unzip robot.zip && cd robot
+python3.10 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt      # lerobot[smolvla] · gym-aloha · imageio[ffmpeg]
+
+python check_setup.py                # 먼저! 스펙 출력 (첫 실행 ~1.8GB 다운로드)
+python run_demo.py                   # transfer-cube, 200 steps → rollout.mp4
+python run_demo.py --task insertion --steps 300
+python run_demo.py --instruction "pick up the cube and pass it to the other hand"</code></pre>
+        <div class="callout cs">
+          ⏱️ <strong>성능(Mac CPU):</strong> 모델 로드+다운로드는 첫 회 수 분, 추론은 스텝당 ~1–3초 → 200스텝이면 수 분.
+          빠르게 보려면 <code>--steps</code>를 줄이세요. 라이브 창은 macOS에서 까다로워, 프레임을 <code>rollout.mp4</code>로 렌더합니다.
+        </div>
+        <div class="callout">
+          🛠️ import 경로·env id가 드리프트하면 README의 <strong>Troubleshooting</strong> 표를 보세요. 코드는 SmolVLA import 경로를
+          <em>두 가지</em> 시도하고, obs 키는 <code>config.input_features</code>에서 자동으로 읽어 맞춥니다 —
+          "루프는 오래 가는 아이디어, 주변 API 이름은 아니다"가 이 프로젝트의 태도예요.
+        </div>
+      </section>
+
+      <section id="key">
+        <h2>5C.10 · The key idea — 루프가 본질, API는 곁가지</h2>
+        <p class="tldr">VLA = <strong>멀티모달 LLM + action head</strong>를 <strong>닫힌 지각-행동 루프</strong>로 돌리는 것. 이 루프가 durable하고, 라이브러리 이름·키는 흐릅니다. 그리고 몸(embodiment)이 안 맞으면 정책은 안 통해요.</p>
+        <div class="quiz" data-answer="1">
+          <p class="q">세 모듈을 관통하는 <strong>공통 패턴</strong>을 가장 잘 요약한 것은?</p>
+          <button class="opt">항상 가장 큰 모델을 써라</button>
+          <button class="opt"><b>무거운 표현은 재사용, 출력층/루프만 목적에 맞게</b> — 5A(agent loop), 5B(frozen embedder + trained head), 5C(멀티모달 backbone + action head)</button>
+          <button class="opt">모든 문제는 fine-tuning으로 푼다</button>
+          <p class="explain">
+            5A는 모델을 그대로 두고 <em>루프(제어 구조)</em>로 도구를 부르고, 5B는 얼어붙은 embedder 위 작은 <em>head</em>만 학습하고,
+            5C는 멀티모달 backbone에 <em>action head</em>만 갈아끼웁니다. 셋 다 <strong>무거운 표현은 재사용하고 얇은 층만 목적에 맞춘다</strong>는
+            같은 리듬이에요 — 그게 이 커리큘럼의 관통 아이디어입니다.
+          </p>
+        </div>
+      </section>
+
+      <footer>
+        <p>
+          <a href="./index.html">← Start here</a> ·
+          개념: <a href="./05B-finetune.html">5B · Special Topic (VLA 개요)</a> ·
+          이전: <a href="./05B-finetune.html">5B · fine-tuning</a> ·
+          다음: <a href="./05D-agent.html">5D · data agent →</a>
+        </p>
+        <p>llm-app-lab · Module 5C · Project · starter: <code>robot.zip</code> · 원본 <a href="https://ksetp.netlify.app/special%20topics" target="_blank" rel="noopener">Special Topics 덱</a></p>
+      </footer>
+    </div>
+    <script>
+      document.querySelectorAll(".quiz").forEach((quiz) => {
+        const answer = Number(quiz.dataset.answer);
+        quiz.querySelectorAll(".opt").forEach((opt, i) => {
+          opt.addEventListener("click", () => {
+            if (quiz.classList.contains("solved")) return;
+            if (i === answer) { opt.classList.add("correct"); quiz.classList.add("solved"); }
+            else { opt.classList.add("wrong"); opt.disabled = true; }
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

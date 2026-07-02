@@ -81,7 +81,7 @@
       { t: "5A.6 · Computer use & Safety", id: "safety" },
       { t: "5A.7 · Project: data-analyst agent", id: "project" },
     ] },
-    { href: "05B-finetune.html", num: "5B", label: "Special Topics: fine-tuning · VLA", sections: [
+    { href: "05B-finetune.html", num: "5B", label: "Special Topic: fine-tuning", sections: [
       { t: "5B.1 · What it builds", id: "what" },
       { t: "5B.2 · 왜 어려운가 — 숨은 하우스룰", id: "hard" },
       { t: "5B.3 · 신경망이 분류하는 법", id: "primer" },
@@ -89,16 +89,25 @@
       { t: "5B.5 · Frozen embedder + trained head", id: "hood" },
       { t: "5B.6 · Build & run locally", id: "local" },
       { t: "5B.7 · The key idea", id: "key" },
-      { t: "5B.8 · VLA — LLM을 물리 세계로", id: "vla" },
-      { t: "5B.9 · See it move", id: "vla-see" },
-      { t: "5B.10 · Anatomy of a VLA", id: "vla-hood" },
     ] },
-    { href: "05C-agent.html", num: "5C", label: "Project: data agent", sections: [
-      { t: "5C.1 · What it builds", id: "what" },
-      { t: "5C.2 · How it works", id: "how" },
-      { t: "5C.3 · Run it live", id: "run" },
-      { t: "5C.4 · Build & run locally", id: "local" },
-      { t: "5C.5 · The key idea", id: "key" },
+    { href: "05C-vla.html", num: "5C", label: "Project: VLA (robot.zip)", sections: [
+      { t: "5C.1 · What you'll build", id: "what" },
+      { t: "5C.2 · Scaffold — 파일 4개", id: "scaffold" },
+      { t: "5C.3 · The stack & why", id: "stack" },
+      { t: "5C.4 · The loop — 핵심 아이디어", id: "loop" },
+      { t: "5C.5 · 먼저 실행: check_setup.py", id: "check" },
+      { t: "5C.6 · build_observation", id: "buildobs" },
+      { t: "5C.7 · The rollout loop", id: "rollout" },
+      { t: "5C.8 · Embodiment & 정직한 한계", id: "embodiment" },
+      { t: "5C.9 · Build & run locally", id: "local" },
+      { t: "5C.10 · The key idea", id: "key" },
+    ] },
+    { href: "05D-agent.html", num: "5D", label: "Project: data agent", sections: [
+      { t: "5D.1 · What it builds", id: "what" },
+      { t: "5D.2 · How it works", id: "how" },
+      { t: "5D.3 · Run it live", id: "run" },
+      { t: "5D.4 · Build & run locally", id: "local" },
+      { t: "5D.5 · The key idea", id: "key" },
     ] },
     { href: "06-production.html", num: "6", label: "Production", sections: [
       { t: "6.1 · Three questions before you ship", id: "three-questions" },

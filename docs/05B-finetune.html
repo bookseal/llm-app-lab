@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>llm-app-lab — Module 5B · Special Topics: Custom Training &amp; VLA</title>
+    <title>llm-app-lab — Module 5B · Special Topic: Custom Training (fine-tuning)</title>
     <link rel="stylesheet" href="./style.css?v=4" />
     <script src="./nav.js?v=8" defer></script>
     <script src="./run.js?v=1" defer></script>
@@ -22,32 +22,23 @@
         text-transform: uppercase; letter-spacing: .04em; }
       table.rules .miss { color: #f0883e; text-decoration: line-through; }
       table.rules .hit  { color: #3fb950; font-weight: 600; }
-      /* VLA: a 16:9 video, plus the Topic 01/02 dividers. */
-      .vid-wide { position: relative; width: 100%; max-width: 560px; aspect-ratio: 16 / 9;
-        border-radius: 10px; overflow: hidden; border: 1px solid var(--border); background: #000; }
-      .vid-wide iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
-      .topicdiv { display: flex; align-items: baseline; gap: .8rem; margin: 2.6rem 0 .6rem; }
-      .topicdiv .n { font-size: .72rem; font-weight: 700; letter-spacing: .14em;
-        text-transform: uppercase; color: var(--accent); white-space: nowrap; }
-      .topicdiv .t { font-size: 1.05rem; font-weight: 700; color: var(--text); }
-      .topicdiv .line { flex: 1; height: 1px; background: var(--border); }
     </style>
   </head>
   <body>
     <div class="wrap">
       <header class="hero">
-        <p class="muted"><a href="./index.html">← Start here</a> · Module 5B · Special Topics</p>
-        <h1>Module 5B · Special Topics</h1>
+        <p class="muted"><a href="./index.html">← Start here</a> · Module 5B · Special Topic</p>
+        <h1>Module 5B · Special Topic — Custom Training (fine-tuning)</h1>
         <p class="tldr">
-          핵심 커리큘럼 옆에 두는 <strong>보너스 트랙 2개</strong>.
-          <strong>① Custom Training (fine-tuning)</strong> — 작은 로컬 모델을 <em>내 태스크</em>에 특화.
-          <strong>② Vision-Language-Action (VLA)</strong> — LLM을 <em>물리 세계(로봇)</em>로. 각각 실행 예제가 딸려 있어요.
+          작고 싸고 <strong>로컬에서 도는 모델</strong>을 <em>내 태스크</em>에 특화시키는 것 —
+          이게 <strong>fine-tuning</strong>이에요. 예제는 <strong>고객지원 티켓 라우팅</strong>:
+          티켓 하나를 밀리초 만에, 추론 시 API 호출 0번으로 담당 팀에 배정합니다.
         </p>
         <div class="callout">
-          🧭 원본 <a href="https://ksetp.netlify.app/special%20topics" target="_blank" rel="noopener">Special Topics 덱</a>의
-          <strong>Topic 01·02</strong>를 옮긴 거예요. <a href="./05A-agents.html">Module 5A · Agents</a>와는
-          독립적으로 읽어도 되는 <em>보너스 트랙</em>이고, 각 토픽은 별도 실행 예제
-          (<code>finetune.zip</code> / <code>robot.zip</code>)를 곁들입니다.
+          🧭 이 토픽은 원본 <a href="https://ksetp.netlify.app/special%20topics" target="_blank" rel="noopener">Special Topics 덱</a>의
+          <strong>Topic 01 · Custom Training</strong>을 옮긴 거예요. 개념은 <a href="./05A-agents.html">Module 5A · Agents</a>와
+          독립적인 <em>보너스 트랙</em>입니다. Topic 02(VLA)는 코드까지 파는 별도 프로젝트로 커져서
+          <a href="./05C-vla.html">Module 5C · VLA 프로젝트</a>로 분리했어요.
         </div>
         <div class="callout cs">
           🚧 <strong>실행 예제는 <code>finetune.zip</code>에서 시작합니다.</strong> 저장소에 완성본이 없어요 —
@@ -58,7 +49,6 @@
       <nav class="toc">
         <strong>목차</strong>
         <ul>
-          <li><em>Topic 01 · Custom Training</em></li>
           <li><a href="#what">5B.1 · What it builds</a></li>
           <li><a href="#hard">5B.2 · 왜 어려운가 — 숨은 하우스룰</a></li>
           <li><a href="#primer">5B.3 · 신경망이 분류하는 법</a></li>
@@ -66,14 +56,8 @@
           <li><a href="#hood">5B.5 · 내부 동작 — frozen embedder + trained head</a></li>
           <li><a href="#local">5B.6 · Build &amp; run locally</a></li>
           <li><a href="#key">5B.7 · The key idea</a></li>
-          <li><em>Topic 02 · Vision-Language-Action</em></li>
-          <li><a href="#vla">5B.8 · VLA — LLM을 물리 세계로</a></li>
-          <li><a href="#vla-see">5B.9 · See it move</a></li>
-          <li><a href="#vla-hood">5B.10 · Anatomy of a VLA</a></li>
         </ul>
       </nav>
-
-      <div class="topicdiv"><span class="n">Topic 01</span><span class="t">Custom Training — fine-tuning</span><span class="line"></span></div>
 
       <section id="what">
         <h2>5B.1 · What it builds</h2>
@@ -251,97 +235,14 @@ python evaluate.py           # 세 방법 나란히 (F1 + confusion matrix)</cod
         </div>
       </section>
 
-      <div class="topicdiv"><span class="n">Topic 02</span><span class="t">Vision-Language-Action (VLA)</span><span class="line"></span></div>
-
-      <section id="vla">
-        <h2>5B.8 · Vision-Language-Action — LLM을 물리 세계로</h2>
-        <p class="tldr">LLM은 <strong>text → text</strong>를 매핑해요. <strong>VLA</strong>는 <strong>(이미지 + 지시) → 로봇 동작</strong>을 매핑합니다 — 지각→행동이 닫힌 루프로 돕니다. 출력이 말이 아니라 <strong>특정 로봇 몸체의 모터 명령</strong>이에요.</p>
-        <div class="mermaid">
-flowchart LR
-    Obs["camera frame + instruction<br/>+ robot state"] --> VLA["VLA model"]
-    VLA --> Act(["action chunk<br/>(motor commands, not words)"])
-    Act --> World["robot / sim steps the arms"]
-    World -. "next camera frame" .-> Obs
-    class VLA core;
-        </div>
-        <div class="callout analogy">
-          🔁 구조는 <a href="./05A-agents.html#loop">5A의 agent loop</a>와 똑같아요: 관찰이 들어가고 예측이 나옵니다 —
-          다만 예측이 <strong>모션</strong>이고, 다음 관찰이 그 모션에 대한 <strong>세계의 반응</strong>이라는 점만 달라요.
-        </div>
-      </section>
-
-      <section id="vla-see">
-        <h2>5B.9 · See it move — 모델이 진짜 몸을 움직이다</h2>
-        <p class="tldr">아키텍처로 들어가기 전에, 물리 세계 출력을 눈으로 먼저 봅니다. LLM 턴처럼 관찰→예측이지만, 예측이 <strong>모션</strong>이에요.</p>
-        <div style="display:flex; gap:1.4rem; flex-wrap:wrap; align-items:flex-start; margin-top:1rem;">
-          <div style="display:flex; flex-direction:column; gap:.5rem; align-items:center;">
-            <div class="vid">
-              <iframe src="https://www.youtube.com/embed/S-eZpFfMrjY" title="VLA robot arm short"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-            </div>
-            <p class="muted" style="max-width:320px; text-align:center;">저가형 팔이 말로 준 지시를 따라 움직여요.</p>
-          </div>
-          <div style="display:flex; flex-direction:column; gap:.5rem; align-items:center; flex:1; min-width:280px;">
-            <div class="vid-wide">
-              <iframe src="https://www.youtube.com/embed/8dZUOo5xWFw" title="Generalist robot policy"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-            </div>
-            <p class="muted" style="text-align:center;">범용 정책(generalist policy)이 여러 태스크·물체로 일반화하는 모습.</p>
-          </div>
-        </div>
-      </section>
-
-      <section id="vla-hood">
-        <h2>5B.10 · Anatomy of a VLA — action head를 단 멀티모달 LLM</h2>
-        <p class="tldr">익숙한 멀티모달 스택(<strong>vision encoder + language backbone</strong>)인데, 텍스트 생성 head가 <strong>연속 모터 명령을 뱉는 action head</strong>로 바뀐 것뿐이에요.</p>
-        <div class="mermaid">
-flowchart LR
-    Cam["camera frame<br/>+ instruction<br/>+ joint state"] --> Enc["vision encoder<br/>frame -> visual tokens"]
-    Enc --> Back["language backbone<br/>fuses tokens + instruction"]
-    Back --> Head["action expert<br/>-> 14-num action vector"]
-    Head --> Robot(["robot / MuJoCo sim"])
-    Robot -. "next frame" .-> Cam
-    class Head core;
-        </div>
-        <p class="muted">
-          입력: 카메라 프레임 · 지시("transfer the cube") · 로봇 상태(관절 위치). 출력은 단어가 아니라
-          <strong>action chunk</strong>(연속 벡터)예요. 매 제어 틱마다 <code>obs → action → step</code>이 반복됩니다.
-        </p>
-        <div class="concept">
-          <span class="tag">robot.zip · CPU-only 데모</span>
-          <ul>
-            <li><strong>SmolVLA (~450M)</strong>가 MuJoCo 시뮬레이터에서 bimanual ALOHA 팔을 구동 — 루프는 ~40줄.</li>
-            <li>스타터: <code>https://ksetp.netlify.app/assets/special-topics/robot.zip</code></li>
-          </ul>
-        </div>
-        <div class="callout cs">
-          ⚠️ <strong>정직한 한계:</strong> base checkpoint는 <em>다른</em> 로봇 몸체용으로 학습돼서, 이 데모의
-          움직임은 사실 <strong>의미 없는 동작</strong>이에요. 바로 그 간극이 <strong>embodiment(체화)</strong>의 교훈입니다 —
-          같은 정책도 <em>몸이 다르면</em> 그대로는 안 통해요.
-        </div>
-        <div class="quiz" data-answer="1">
-          <p class="q">LLM을 VLA로 바꿀 때 실제로 <strong>교체되는 부분</strong>은 어디일까요?</p>
-          <button class="opt">vision encoder — 카메라를 쓰니까 새로 단다</button>
-          <button class="opt">텍스트 생성 head → action head — 나머지 멀티모달 스택은 그대로 재사용</button>
-          <button class="opt">전부 새로 학습 — LLM과는 완전히 다른 모델이다</button>
-          <p class="explain">
-            VLA는 멀티모달 LLM(vision encoder + language backbone)을 거의 그대로 두고, <strong>출력 head만</strong>
-            단어 대신 <strong>연속 action 벡터</strong>를 뱉는 action expert로 바꿔요. Topic 01의 "frozen embedder +
-            trained head"와 같은 리듬 — <em>무거운 표현은 재사용, 출력층만 목적에 맞게</em>.
-          </p>
-        </div>
-      </section>
-
       <footer>
         <p>
           <a href="./index.html">← Start here</a> ·
           개념: <a href="./05A-agents.html">Module 5A · Agents</a> ·
           이전: <a href="./05A-agents.html">5A · Agents</a> ·
-          다음: <a href="./05C-agent.html">5C · data agent →</a>
+          다음: <a href="./05C-vla.html">5C · VLA 프로젝트 →</a>
         </p>
-        <p>llm-app-lab · Module 5B · Special Topics · starters: <code>finetune.zip</code> · <code>robot.zip</code> · 원본 <a href="https://ksetp.netlify.app/special%20topics" target="_blank" rel="noopener">Special Topics 덱</a></p>
+        <p>llm-app-lab · Module 5B · Special Topic · starter: <code>finetune.zip</code> · 원본 <a href="https://ksetp.netlify.app/special%20topics" target="_blank" rel="noopener">Special Topics 덱</a></p>
       </footer>
     </div>
     <script>
