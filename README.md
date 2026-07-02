@@ -16,19 +16,43 @@ it, and reading the diff before I accept it. My `git log` is the receipt.
 
 ---
 
+## 📁 Repo layout
+
+Every module's project lives under [`Projects/`](Projects/), one folder per build.
+Each has its own README with run instructions.
+
+```
+.
+├── Projects/
+│   ├── Module_02_chat-app/            minimal Claude chat (/api/chat)
+│   ├── Module_03_extractor/
+│   │   ├── starter/                   forced tool_use + Pydantic (the starter)
+│   │   └── webapp/  ⭐                 extended web app — extract + follow-up email
+│   ├── Module_04_rag/                 RAG over a 14 CFR corpus (starter + eval harness)
+│   ├── Module_04_embedding-similarity/ embeddings playground — cosine similarity
+│   ├── Module_05B_finetune/          distill Claude → a tiny local ticket classifier
+│   └── Module_05C_data-agent/        ~20-line agent loop over a read-only SQLite DB
+├── docs/                             my concept notes (GitHub Pages)
+└── TUTORIAL.md                       full curriculum reference
+```
+
+---
+
 ## 🔬 The hands-on builds
 
 The stuff I actually built and broke and fixed. Each one isolates *one* LLM concept.
 
 | Build | What it is | The concept it nails |
 |---|---|---|
-| **[instructor-extractor](instructor-extractor/)** | Paste a messy job post → structured fields + auto follow-up email | Forced `tool_use` **vs.** free-text generation |
-| **[extract-starter](extract-starter/)** | Single-turn structured extraction template | Forced tool call **+ Pydantic validation** as a safety layer |
-| **[embedding-similarity](embedding-similarity/)** | Console playground: two phrases → cosine similarity | What embeddings *measure* (cross-lingual, no API) |
-| **[chat-app](chat-app/)** | Minimal Claude chat over `/api/chat` | Stateless single-turn — and the 5 gaps to production |
-| **[backend](backend/) + [frontend](frontend/)** | Full-stack `Hello from Flask` | Two servers, a dev proxy, `fetch` on mount |
+| **[Module_02_chat-app](Projects/Module_02_chat-app/)** | Minimal Claude chat over `/api/chat` | Stateless single-turn — and the gaps to production |
+| **[Module_03_extractor/starter](Projects/Module_03_extractor/starter/)** | Single-turn structured extraction template | Forced tool call **+ Pydantic validation** as a safety layer |
+| **[Module_03_extractor/webapp](Projects/Module_03_extractor/webapp/)** ⭐ | Paste a messy job post → structured fields + auto follow-up email | Forced `tool_use` **vs.** free-text generation |
+| **[Module_04_rag](Projects/Module_04_rag/)** | Cited answers over a 14 CFR (FAA) corpus | Chunking · embeddings · vector store · citations |
+| **[Module_04_embedding-similarity](Projects/Module_04_embedding-similarity/)** | Console playground: two phrases → cosine similarity | What embeddings *measure* (cross-lingual, no API) |
+| **[Module_05B_finetune](Projects/Module_05B_finetune/)** | Route support tickets to 6 teams, three ways | Zero-shot → few-shot → **distilled classifier** (F1 compared) |
+| **[Module_05C_data-agent](Projects/Module_05C_data-agent/)** | Ask a SQLite DB in English; it writes read-only SQL | The ~20-line **agent loop** + read-only-by-construction safety |
 
-### ⭐ instructor-extractor — the one I extended into a real web app
+### ⭐ Module_03_extractor/webapp — the one I extended into a real web app
 
 Paste an instructor job post (copied from email or KakaoTalk). Claude extracts five
 structured fields, flags the blanks as **⚠️ missing**, copies everything as a TSV row
@@ -48,14 +72,23 @@ screen**:
 
 That contrast — *the output format decides whether you force a tool* — is the whole
 lesson, and I built an app to feel it instead of just reading it.
-&nbsp; → run it: [instructor-extractor/README.md](instructor-extractor/README.md)
+&nbsp; → run it: [Projects/Module_03_extractor/webapp/README.md](Projects/Module_03_extractor/webapp/README.md)
 
-### 🧭 embedding-similarity — building intuition for vectors
+### 🧭 Module_04_embedding-similarity — building intuition for vectors
 
 A tiny REPL: type two phrases, get their cosine similarity on a −1…1 scale. It runs a
 **local multilingual model** (`paraphrase-multilingual-MiniLM-L12-v2`), so `"cat"` and
 `"고양이"` score *high* across languages — no API key, no cost. Great for feeling why
 `"I love this"` vs `"I hate this"` is **not** near −1 (same topic, opposite sentiment).
+
+### 🎯 Module_05B_finetune — "fine-tuning" that actually runs
+
+The Claude API doesn't expose self-serve fine-tuning of Claude itself, so this is the
+runnable version of the same idea: **distillation**. Claude labels/generates the
+training data, then a tiny local model (MiniLM embeddings + logistic-regression head)
+learns the task. The three stages — zero-shot, few-shot, distilled — are scored on the
+**same 48-ticket gold set**, so the F1 numbers show exactly what examples buy you when
+the routing rules are hidden "house rules" that definitions alone can't teach.
 
 ---
 
@@ -67,7 +100,7 @@ at a time: **concept note → original slides → build the starter → mini qui
 | # | Module | What I take from it |
 |---|------|------|
 | 1 | Setup | Six tools + one shared `.env` for the API key |
-| 2 | Foundations | First API call, a chat app, **fixing 5 built-in bugs**, SSE streaming |
+| 2 | Foundations | First API call, a chat app, **fixing built-in bugs**, SSE streaming |
 | 3 | Tools & Structure | Structured output, 4 levels: parseable → schema → tool-loop → MCP |
 | 4 | Context | Indexing pipeline + RAG (chunking, embeddings, vector store, citations) |
 | 5 | Architecture & Agents | A ~20-line agent loop, subagents, memory scope, multi-model |
@@ -90,28 +123,21 @@ through each fix, one diff at a time.
 
 ---
 
-## ▶️ Run the full-stack hello-world
+## ▶️ Running a project
 
-Two servers, so you need **two terminals**.
-
-```bash
-# Terminal 1 — backend
-python -m venv .venv          # first time only
-source .venv/bin/activate     # Windows: .venv\Scripts\activate
-pip install -r backend/requirements.txt
-python backend/app.py         # → http://localhost:5001
-```
+Each build under `Projects/` is self-contained and has its own README with exact steps.
+The general shape (Python projects):
 
 ```bash
-# Terminal 2 — frontend
-cd frontend
-npm install                   # first time only
-npm run dev                   # → http://localhost:5173
+cd Projects/<Module_..>          # e.g. Projects/Module_05B_finetune
+python3.11 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+# then follow that project's README
 ```
 
-Open **http://localhost:5173** — the page calls `/api/hello` (proxied to Flask) and
-shows `Hello from Flask`. Details: [backend/README.md](backend/README.md) ·
-[frontend/README.md](frontend/README.md). Each build has its own README to run it.
+The API key comes from one shared `.env` (`ANTHROPIC_API_KEY`). Projects with a React
+frontend (`Module_02_chat-app`, `Module_04_rag`) run the backend and `npm run dev`
+frontend in two terminals — see their READMEs.
 
 ---
 
@@ -119,18 +145,8 @@ shows `Hello from Flask`. Details: [backend/README.md](backend/README.md) ·
 
 The [`docs/`](docs/) folder is served at <https://bookseal.github.io/llm-app-lab/>. It's
 my own **concept notes** — written in Korean (analogy-first), with English Mermaid
-diagrams and instantly-graded mini quizzes for each module. The
+diagrams (a shared color/animation system in [`docs/mermaid-fx.js`](docs/mermaid-fx.js))
+and instantly-graded mini quizzes for each module. The
 [change log](https://bookseal.github.io/llm-app-lab/history.html) is auto-generated
 from `git log` on every push to `main`
 ([scripts/gen_history.py](scripts/gen_history.py)).
-
-```
-.
-├── instructor-extractor/  ⭐ extended web app — extract + follow-up email
-├── extract-starter/          Module 3 starter — forced tool_use + Pydantic
-├── embedding-similarity/     embeddings playground — cosine similarity
-├── chat-app/                 minimal Claude chat
-├── backend/ + frontend/      full-stack hello-world (Flask + React/Vite)
-├── docs/                     my concept notes (GitHub Pages)
-└── TUTORIAL.md               full curriculum reference
-```
