@@ -7,47 +7,57 @@
     <link rel="stylesheet" href="./style.css?v=3" />
     <script src="./nav.js?v=7" defer></script>
     <style>
-      /* Local-only (this page): a simple staggered "reveal" for any diagram
-         wrapped in .animated. style.css is shared across pages, so nothing here
-         touches it. We animate ONLY opacity — mermaid uses transform to place
-         nodes, so animating transform would scramble the layout. */
+      /* Local-only (this page): reveal EVERY mermaid diagram as it scrolls into
+         view, each with a small ▶ replay button. style.css is shared and stays
+         untouched. Diagrams are visible by default (fail-safe if JS breaks) —
+         the reveal only animates opacity, never transform (mermaid uses
+         transform to place nodes, so animating it would scramble the layout). */
       @keyframes mreveal { from { opacity: 0; } to { opacity: 1; } }
-      .animated { position: relative; }
-      .animated svg .reveal { animation: mreveal .45s ease both; }
-      .animated .replay {
-        position: absolute; top: .4rem; right: .4rem; z-index: 2;
-        font: inherit; font-size: .78rem; cursor: pointer;
-        background: var(--panel, #f0f0f0); color: var(--text, #222);
-        border: 1px solid var(--border, #ccc); border-radius: 6px; padding: .15rem .55rem;
+      .mermaid { position: relative; }
+      .mermaid svg .reveal { animation: mreveal .45s ease both; }
+      .mreplay {
+        position: absolute; top: .4rem; right: .4rem; z-index: 2; line-height: 1;
+        font: inherit; font-size: .8rem; cursor: pointer; opacity: .5;
+        background: var(--panel, #f0f0f0); color: var(--text, #333);
+        border: 1px solid var(--border, #ccc); border-radius: 6px; padding: .2rem .5rem;
       }
-      .animated .replay:hover { border-color: var(--accent, #06c); }
+      .mreplay:hover { opacity: 1; border-color: var(--accent, #06c); }
     </style>
     <script type="module">
       import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
-      // Render explicitly (not startOnLoad) so we can animate right after render.
+      // Render explicitly (not startOnLoad) so we can wire animation after render.
       mermaid.initialize({ startOnLoad: false, theme: "neutral" });
       await mermaid.run();
 
-      // Reveal a diagram's parts one-by-one by staggering an opacity fade.
-      function revealDiagram(svg) {
+      // Reveal a diagram's parts one-by-one via a staggered opacity fade.
+      function reveal(svg) {
+        if (!svg) return;
         const parts = [...svg.querySelectorAll(
           ".node, .cluster, .edgePaths .edgePath, .flowchart-link, .edgeLabel, " +
           ".actor, .messageText, .messageLine0, .messageLine1, .note, .loopLine, .labelText")];
         parts.forEach((el, i) => {
           el.classList.remove("reveal");
-          void el.getBoundingClientRect();        // force reflow so re-adding restarts it
-          el.style.animationDelay = (i * 85) + "ms";
+          void el.getBoundingClientRect();        // reflow so re-adding restarts it
+          el.style.animationDelay = (i * 70) + "ms";
           el.classList.add("reveal");
         });
       }
-      document.querySelectorAll(".animated").forEach((box) => {
-        const svg = box.querySelector("svg");
-        if (!svg) return;
-        revealDiagram(svg);
+      // Play each diagram the first time it scrolls into view; ▶ re-plays it.
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((e) => {
+          if (!e.isIntersecting) return;
+          reveal(e.target.querySelector("svg"));
+          io.unobserve(e.target);
+        });
+      }, { threshold: 0.2 });
+      document.querySelectorAll(".mermaid").forEach((box) => {
+        if (!box.querySelector("svg")) return;
+        io.observe(box);
         const btn = document.createElement("button");
-        btn.className = "replay";
-        btn.textContent = "▶ 다시 재생";
-        btn.addEventListener("click", () => revealDiagram(svg));
+        btn.className = "mreplay";
+        btn.textContent = "▶";
+        btn.title = "애니메이션 다시 재생";
+        btn.addEventListener("click", () => reveal(box.querySelector("svg")));
         box.appendChild(btn);
       });
     </script>
@@ -78,6 +88,7 @@
           <li><a href="#patterns">5A.5 · Patterns (routing·caching·async·progress)</a></li>
           <li><a href="#safety">5A.6 · Computer use &amp; Safety</a></li>
           <li><a href="#project">5A.7 · Project</a></li>
+          <li><a href="#recap">5A.8 · 한눈에 정리 (recap)</a></li>
         </ul>
       </nav>
 
@@ -504,7 +515,7 @@ sequenceDiagram
           멀티턴 세션이 무료로 제공돼요.
         </div>
         <div class="quiz" data-answer="0">
-          <p class="q">이 데이터분석 에이전트에 <code>run_select</code>만 주고 <code>run_sql</code>(임의 실행)을 안 주는 이유는?</p>
+          <p class="q">이 데이터분석 에이전트에 <code>run_query</code>(SELECT 전용)만 주고 <code>run_sql</code>(임의 실행)을 안 주는 이유는?</p>
           <button class="opt">도구 셋 자체를 read-only로 좁혀, 모델이 데이터를 망칠 길을 구조적으로 차단하려고</button>
           <button class="opt">SELECT가 다른 쿼리보다 빨라서</button>
           <button class="opt">프롬프트를 짧게 하려고</button>
@@ -518,6 +529,60 @@ sequenceDiagram
           스타터: <code>agent-app.zip</code> —
           <a href="https://ksetp.netlify.app/assets/agents/agent-app.zip" target="_blank" rel="noopener">다운로드</a>
         </p>
+      </section>
+
+      <!-- 5.8 recap + master loop -->
+      <section id="recap">
+        <h2>5A.8 · 한눈에 정리 — 루프 하나 + 그 위의 레이어들 <a class="slide" href="https://ksetp.netlify.app/agents" target="_blank" rel="noopener">Slide 13–14</a></h2>
+        <p class="tldr">이 모듈 전체를 한 그림으로: <strong>~20줄 루프가 엔진</strong>이고, 나머지는 전부 그 둘레에 덧댄 레이어예요.</p>
+        <p class="entitle">The agent loop, drawn — everything else wraps it</p>
+        <div class="mermaid">
+flowchart TB
+    subgraph CORE["the agent loop — the engine"]
+      direction LR
+      MSG["messages + tools"] --> API["messages.create()"]
+      API --> SR{"stop_reason?"}
+      SR -->|tool_use| RUN["dispatch → run the tool"]
+      RUN --> APP["append tool_result"]
+      APP --> MSG
+      SR -->|end_turn| DONE(["final answer"])
+    end
+    SUB["subagents<br/>recursion + context isolation"] -.-> CORE
+    MEM["memory<br/>conversation → world"] -.-> CORE
+    RT["routing<br/>cheap decides, dear executes"] -.-> CORE
+    CA["prompt caching<br/>static prefix, ~90% cheaper"] -.-> CORE
+    ASY["long-running<br/>background · callbacks · batch"] -.-> CORE
+    SAFE["safety<br/>permission gates + hard limits"] -.-> CORE
+        </div>
+        <div class="concept">
+          <span class="tag">배운 것 8가지</span>
+          <ul>
+            <li><strong>① agent loop</strong> — 모델→도구→결과→반복, ~20줄 엔진</li>
+            <li><strong>② Claude Code</strong> — 그 루프 + UI·권한·~25도구·MCP·메모리(두꺼운 하니스)</li>
+            <li><strong>③ subagents</strong> — 자식 세션에 위임 → 컨텍스트 격리·전문화·병렬</li>
+            <li><strong>④ memory scopes</strong> — conversation·session·user·project·world</li>
+            <li><strong>⑤ routing</strong> — 싼 모델이 난이도 판정, 비싼 모델은 진짜 어려운 것만</li>
+            <li><strong>⑥ prompt caching</strong> — 정적 prefix를 캐시 → 반복 호출 비용 ~90%↓</li>
+            <li><strong>⑦ long-running</strong> — 백그라운드·콜백·batch로 한 요청을 넘어서는 일 처리</li>
+            <li><strong>⑧ safety</strong> — 권한 게이트(허용/확인/샌드박스) + 하드 리밋(스텝·토큰·시간)</li>
+          </ul>
+        </div>
+        <div class="callout cs">
+          🧭 <strong>모양 알아보기 완성:</strong> 이제 어떤 에이전트 제품을 봐도 "이건 루프에 <em>어떤 레이어</em>를
+          덧댄 거지?"로 분해해 읽을 수 있어요. 다음 <a href="./06-production.html">Module 6 · Production</a>은
+          이걸 <em>신뢰할 수 있게</em> 만드는 법(평가·가드레일·보안)을 다룹니다.
+        </div>
+        <div class="quiz" data-answer="1">
+          <p class="q">라우팅(⑤)과 캐싱(⑥)을 함께 쓰면 비용에 특히 좋은 이유는?</p>
+          <button class="opt">둘 다 모델을 더 똑똑하게 만들어 정답률이 오른다</button>
+          <button class="opt">라우팅이 대부분을 싼 모델로 보내고, 남는 비싼 호출도 캐싱이 반복분을 ~90% 깎아 — 비용을 두 겹으로 잡는다</button>
+          <button class="opt">캐싱이 라우팅의 분류 정확도를 높여준다</button>
+          <p class="explain">
+            둘은 <strong>서로 다른 축</strong>을 공격해요. 라우팅은 <em>어떤 모델로 보낼까</em>(호출 단가↓),
+            캐싱은 <em>같은 prefix를 다시 계산하지 말자</em>(반복 비용↓). 겹쳐 쓰면 비싼 호출의 반복분까지 줄어
+            비용 상한이 두 겹으로 눌립니다.
+          </p>
+        </div>
       </section>
 
       <footer>
