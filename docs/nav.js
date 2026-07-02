@@ -81,12 +81,21 @@
       { t: "5A.6 · Computer use & Safety", id: "safety" },
       { t: "5A.7 · Project: data-analyst agent", id: "project" },
     ] },
-    { href: "05B-agent.html", num: "5B", label: "Project: data agent", sections: [
+    { href: "05B-finetune.html", num: "5B", label: "Special Topic: fine-tuning", sections: [
       { t: "5B.1 · What it builds", id: "what" },
-      { t: "5B.2 · How it works", id: "how" },
-      { t: "5B.3 · Run it live", id: "run" },
-      { t: "5B.4 · Build & run locally", id: "local" },
-      { t: "5B.5 · The key idea", id: "key" },
+      { t: "5B.2 · 왜 어려운가 — 숨은 하우스룰", id: "hard" },
+      { t: "5B.3 · 신경망이 분류하는 법", id: "primer" },
+      { t: "5B.4 · 세 가지 방법", id: "stages" },
+      { t: "5B.5 · Frozen embedder + trained head", id: "hood" },
+      { t: "5B.6 · Build & run locally", id: "local" },
+      { t: "5B.7 · The key idea", id: "key" },
+    ] },
+    { href: "05C-agent.html", num: "5C", label: "Project: data agent", sections: [
+      { t: "5C.1 · What it builds", id: "what" },
+      { t: "5C.2 · How it works", id: "how" },
+      { t: "5C.3 · Run it live", id: "run" },
+      { t: "5C.4 · Build & run locally", id: "local" },
+      { t: "5C.5 · The key idea", id: "key" },
     ] },
     { href: "06-production.html", num: "6", label: "Production", sections: [
       { t: "6.1 · Three questions before you ship", id: "three-questions" },
