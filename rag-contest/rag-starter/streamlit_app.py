@@ -589,6 +589,92 @@ def run_agentic(q: str, draft: str | None = None, on_step=None) -> dict:
                 "meta": None, "citations": [], "process": steps, "graph": None}
 
 
+# ── Gap-aware routing: single-shot self-reports its gaps; we fill ONLY those ──
+# Cheaper/more deterministic than the full agentic loop: the model NAMES the missing
+# sub-topics itself (one call, via report_answer), we retrieve each, then one completion
+# generation finishes the answer. Escalates (spends tokens) only when gaps remain.
+REPORT_TOOL = {
+    "name": "report_answer",
+    "description": ("Return your final grounded answer AND list any parts of the question the "
+                    "provided context did not let you fully cover."),
+    "input_schema": {
+        "type": "object",
+        "properties": {
+            "answer": {"type": "string",
+                       "description": "the full grounded answer, with [n] citations"},
+            "unmet_parts": {"type": "array", "items": {"type": "string"},
+                            "description": ("sub-topics the context did NOT cover, each phrased "
+                                            "as a search query (e.g. 'Class D operating rules'). "
+                                            "Empty list if the answer is already complete.")},
+        },
+        "required": ["answer", "unmet_parts"],
+    },
+}
+
+
+def select_gap_queries(unmet_parts: list[str]) -> list[str]:
+    """The escalation policy: which self-declared gaps are worth an extra retrieval?
+
+    Each query returned costs one retrieve() + more tokens, so this is where we decide
+    how much to spend chasing coverage. Returning [] means "single-shot was good enough
+    — don't escalate."
+
+    TODO(human): return the list of queries to actually search. Ideas to weigh:
+      - drop empty/whitespace entries and near-duplicates
+      - cap the count (e.g. at most 3) so cost stays bounded
+      - a very long unmet list often signals out-of-corpus — maybe cap hard or skip
+    """
+    # TODO(human)
+    ...
+
+
+def run_gap_aware(q: str, search_query: str, history: list) -> dict:
+    """Single-shot that self-reports gaps (report_answer tool), then fills only those."""
+    steps = []
+    base = select_context(search_query,
+                          retrieve(search_query, index, method=CHAMPION_METHOD, k=CHAMPION_K,
+                                   embed_model=embed_model, bm25=bm25), embed_model)
+    resp = get_client().messages.create(
+        model=MODEL, max_tokens=MAX_TOKENS, system=SYSTEM_PROMPT,
+        tools=[REPORT_TOOL], tool_choice={"type": "tool", "name": "report_answer"},
+        messages=history + [{"role": "user",
+                             "content": f"CONTEXT:\n{format_context(base)}\n\nQUESTION:\n{q}"}])
+    tin, tout = resp.usage.input_tokens, resp.usage.output_tokens
+    tool = next((b for b in resp.content if b.type == "tool_use"), None)
+    draft = tool.input.get("answer", "") if tool else ""
+    unmet = tool.input.get("unmet_parts", []) if tool else []
+    registry = list(base)
+    steps.append(f"🎯 single-shot draft · model declared **{len(unmet)}** gap(s)")
+
+    queries = select_gap_queries(unmet)
+    if queries:
+        for qq in queries:
+            more = select_context(qq, retrieve(qq, index, method=CHAMPION_METHOD, k=CHAMPION_K,
+                                               embed_model=embed_model, bm25=bm25), embed_model)
+            registry += more
+            secs = " · ".join(dict.fromkeys(h.get("section") or h.get("source") for h in more))
+            steps.append(f"🔎 gap fill: *{qq}* → {secs}")
+        resp2 = get_client().messages.create(
+            model=MODEL, max_tokens=MAX_TOKENS, system=SYSTEM_PROMPT,
+            messages=[{"role": "user", "content":
+                       f"CONTEXT:\n{format_context(registry)}\n\nQUESTION:\n{q}\n\n"
+                       "Give the COMPLETE answer in the same format, now filling the gaps."}])
+        text = resp2.content[0].text
+        tin += resp2.usage.input_tokens
+        tout += resp2.usage.output_tokens
+    else:
+        text = draft
+        steps.append("✅ no gaps worth chasing — single-shot was sufficient (no escalation)")
+
+    meta = {"model": MODEL, "tokens_in": tin, "tokens_out": tout,
+            "cost_usd": _cost_usd(MODEL, tin, tout),
+            "method": f"gap-aware · {len(queries)} fills", "k": CHAMPION_K,
+            "searches": len(queries), "passages": len(registry)}
+    found = list(dict.fromkeys(h.get("section") or h.get("source") for h in registry))
+    return {"text": text, "meta": meta, "citations": _cited(text, registry),
+            "process": steps, "graph": _pipeline_dot(found, len(registry), tin // 4)}
+
+
 st.set_page_config(page_title="FAA RAG Chat", page_icon="🛩️")
 
 # Theme polish (D6): serif headings for the sectional-chart warmth; mono footer chips.
