@@ -3,12 +3,21 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>llm-app-lab — Module 5 · Project: data-analyst agent</title>
+    <title>llm-app-lab — Module 5 · Project — data-analyst agent</title>
     <link rel="stylesheet" href="./style.css?v=6" />
-    <script src="./nav.js?v=10" defer></script>
+    <script src="./nav.js?v=11" defer></script>
     <script src="./run.js?v=1" defer></script>
     <script type="module" src="./mermaid-fx.js?v=1"></script>
     <script type="module" src="./flow-anim.js?v=1"></script>
+    <style>
+      /* Page-local: file-map / role table that reads well on the dark theme. */
+      table.spec { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: .93rem; }
+      table.spec th, table.spec td { text-align: left; padding: .55rem .7rem;
+        border-bottom: 1px solid var(--border); vertical-align: top; }
+      table.spec th { color: var(--muted); font-weight: 600; font-size: .82rem;
+        text-transform: uppercase; letter-spacing: .04em; }
+      table.spec code { white-space: nowrap; }
+    </style>
   </head>
   <body>
     <div class="wrap">
@@ -34,16 +43,25 @@
         <strong>목차</strong>
         <ul>
           <li><a href="#what">5D.1 · What it builds</a></li>
-          <li><a href="#how">5D.2 · How it works</a></li>
-          <li><a href="#run">5D.3 · Run it live</a></li>
-          <li><a href="#local">5D.4 · Build &amp; run locally</a></li>
-          <li><a href="#key">5D.5 · The key idea</a></li>
+          <li><a href="#scaffold">5D.2 · Scaffold — 파일 5개</a></li>
+          <li><a href="#how">5D.3 · 흐름 — the loop is the engine</a></li>
+          <li><a href="#schema">5D.4 · The database (schema)</a></li>
+          <li><a href="#code">5D.5 · 코드 — 세 조각으로 읽기</a></li>
+          <li><a href="#run">5D.6 · Run it live</a></li>
+          <li><a href="#local">5D.7 · Build &amp; run locally</a></li>
+          <li><a href="#key">5D.8 · The key idea</a></li>
         </ul>
       </nav>
 
       <section id="what">
         <h2>5D.1 · What it builds</h2>
-        <p class="tldr">"지난달 매출 상위 5개 카테고리는?" 같은 질문 → 에이전트가 SQL을 돌려 답.</p>
+        <p class="tldr">"지난 분기 매출 상위 3개 제품은?" 같은 질문 → 에이전트가 스키마를 살펴보고 <strong>read-only SQL</strong>을 돌려 답을 말로 설명해요.</p>
+        <p>
+          핵심은 화려한 UI가 아니라 <strong>루프</strong>예요. 모델에게 질문과 <em>도구 3개</em>를 주면,
+          모델은 매 턴 "다음에 어떤 도구를 부를지"만 정합니다. 우리가 그 도구를 실행해 결과를 돌려주고,
+          모델이 더 이상 도구를 안 부를 때까지 반복해요. 이게 <a href="./05A-agents.html#loop">5A.1의 agent loop</a>
+          그대로고, 이 프로젝트는 그 ~20줄을 진짜로 굴리는 자리예요.
+        </p>
         <div class="concept">
           <span class="tag">기구현된 안전 패턴 2개</span>
           <ul>
@@ -51,35 +69,289 @@
             <li><strong>max-steps 예산</strong> — 루프가 N스텝 넘으면 강제 종료(안전 2)</li>
           </ul>
         </div>
+        <div class="callout analogy">
+          🏢 비유하자면 <strong>신입 분석가에게 "읽기 전용 DB 계정"만 발급하는 회사</strong>예요.
+          아무리 실수해도 계정 권한 자체가 SELECT뿐이면 데이터를 지우거나 바꿀 <em>방법이 존재하지 않아요</em>.
+          "쓰지 마세요"라고 <strong>부탁</strong>하는 게 아니라, 쓸 <strong>수단</strong>을 애초에 안 주는 거죠.
+        </div>
+        <div class="mermaid">
+flowchart LR
+    NEWA["new analyst = the model"] --> ROACC["read-only account<br/>list_tables · describe_table · run_query"]
+    ROACC --> STOREDB[("store database")]
+    NEWA -.->|not on the menu| WRITES["INSERT · UPDATE · DROP"]
+    class ROACC core;
+        </div>
+        <p class="muted">
+          점선으로 그린 쓰기 도구(<code>INSERT/UPDATE/DROP</code>)는 <strong>메뉴에 없어요</strong> — 모델이 부르고 싶어도
+          부를 대상 자체가 없습니다. 이 "없음"이 프롬프트 경고보다 튼튼한 진짜 안전장치예요(자세히는 <a href="#code">5D.5</a>).
+        </p>
+      </section>
+
+      <section id="scaffold">
+        <h2>5D.2 · Scaffold — 파일 5개가 전부</h2>
+        <p class="tldr"><code>agent-app.zip</code>을 풀면 코드는 딱 세 파일(<code>agent.py</code>·<code>tools.py</code>·<code>build_db.py</code>) + 데이터(<code>data.db</code>) + README예요. 무거운 건 아무것도 없어요 — 에이전트의 본질은 짧습니다.</p>
+        <div class="mermaid">
+flowchart TB
+    ZIP["agent-app.zip"] --> AG["agent.py<br/>the ~20-line agent loop + CLI"]
+    ZIP --> TL["tools.py<br/>3 read-only tools + SELECT guard"]
+    ZIP --> BD["build_db.py<br/>deterministic seed -> data.db"]
+    ZIP --> DB[("data.db<br/>SQLite · ships prebuilt")]
+    ZIP --> RM["README.md<br/>concept + run + your-job"]
+    class AG core;
+        </div>
+        <table class="spec">
+          <thead><tr><th>파일</th><th>역할</th></tr></thead>
+          <tbody>
+            <tr><td><code>agent.py</code></td><td><strong>루프 본체.</strong> <code>answer_turn()</code>이 모델 호출 → tool_use 감지 → <code>dispatch</code> → 결과 append를 <code>MAX_STEPS</code>번까지 반복. CLI(대화형/one-shot)도 여기.</td></tr>
+            <tr><td><code>tools.py</code></td><td><strong>도구 3개 + 안전 게이트.</strong> <code>list_tables</code>·<code>describe_table</code>·<code>run_query</code>, 그리고 <code>run_query</code>의 SELECT-only 체크와 <code>mode=ro</code> 커넥션. <code>TOOLS</code>(모델에 보낼 정의)와 <code>dispatch</code>(이름→함수)도 여기.</td></tr>
+            <tr><td><code>build_db.py</code></td><td><strong>합성 데이터 생성기.</strong> 고정 씨드로 e-commerce 데이터(~60 제품 · 500 고객 · 3000 주문)를 <code>data.db</code>에 씀. 같은 씨드 → 누구나 같은 답.</td></tr>
+            <tr><td><code>data.db</code></td><td><strong>SQLite 파일.</strong> 이미 빌드돼 함께 옵니다. 에이전트는 이걸 <em>읽기 전용</em>으로만 엽니다.</td></tr>
+            <tr><td><code>README.md</code></td><td>개념 · 실행법 · 스키마 · "네가 할 일"(도구 추가/한계 탐색 등).</td></tr>
+          </tbody>
+        </table>
       </section>
 
       <section id="how">
-        <h2>5D.2 · How it works</h2>
-        <div class="mermaid">
-flowchart LR
-    U(["natural-language question"]) --> Ag["agent loop (~20 lines)"]
-    Ag -->|list_tables| DB[("read-only SQLite")]
-    Ag -->|describe_table| DB
-    Ag -->|run_query| DB
-    DB -.rows.-> Ag
-    Ag --> Ans(["plain-language answer"])
-    classDef core fill:#11271a,stroke:#3fb950,color:#e6edf3,stroke-width:2px;
-    classDef io fill:#0d1f33,stroke:#58a6ff,color:#e6edf3;
-    classDef data fill:#2a2410,stroke:#d29322,color:#e6edf3;
-    classDef done fill:#11271a,stroke:#3fb950,color:#e6edf3;
-    class Ag core;
-    class U io;
-    class DB data;
-    class Ans done;
+        <h2>5D.3 · 흐름 — the loop is the engine</h2>
+        <p class="tldr"><code>answer_turn()</code> 한 함수가 곧 에이전트예요. 아래 다이어그램은 <code>agent.py</code>의 <strong>실제 함수 호출 순서</strong>입니다. <strong>▶ 다음</strong>으로 한 스텝씩 넘겨 보세요 — 점을 도는 애니메이션이 "이 되돌이가 엔진"이라는 걸 보여줘요.</p>
+        <div class="mermaid" data-flow="steps pulse-path"
+             data-steps='[{"node":"USERQ","cap":"사용자가 영어로 질문을 던지면 messages 리스트에 담겨요."},
+                          {"node":"MAXS","cap":"for _ in range(MAX_STEPS): 한 질문의 도구 루프를 12번으로 제한 — 폭주 방지."},
+                          {"node":"CREATE","cap":"client.messages.create(...tools=TOOLS): 대화 전체와 도구 정의를 모델에 보내요."},
+                          {"node":"STOPQ","cap":"응답에 tool_use 블록이 있나? 없으면 이 턴은 끝이에요."},
+                          {"node":"DISPATCH","cap":"dispatch(name, args): 모델이 고른 도구 이름을 우리 파이썬 함수로 연결."},
+                          {"node":"TOOLS3","cap":"list_tables · describe_table · run_query 중 실제 함수가 read-only DB를 만져요."},
+                          {"node":"APPEND","cap":"결과를 tool_result로 messages에 append하고 다시 create 호출로 — 이 되돌이가 엔진."},
+                          {"node":"DONE","cap":"tool_use가 하나도 없으면 모델의 text가 최종 답이에요."}]'>
+flowchart TD
+    USERQ(["user question"]) --> MAXS["for _ in range(MAX_STEPS)<br/>step budget"]
+    MAXS --> CREATE["client.messages.create(tools=TOOLS)"]
+    CREATE --> STOPQ{"any tool_use blocks?"}
+    STOPQ -->|no| DONE(["final answer"])
+    STOPQ -->|yes| DISPATCH["dispatch(name, args)"]
+    DISPATCH --> TOOLS3["list_tables / describe_table / run_query"]
+    TOOLS3 --> APPEND["append tool_result to messages"]
+    APPEND -.-> CREATE
+    class CREATE core;
         </div>
         <p class="muted">
-          모델이 매 턴 "다음에 어떤 도구를 부를지"만 정하고, 결과를 보고 다음 도구를 부르길
-          <code>end_turn</code>까지 반복해요. 이 루프가 곧 엔진(<a href="./05A-agents.html#loop">5A.1</a>).
+          모델은 매 턴 "다음 도구 하나"만 정하고, 결과를 보고 또 정하길 <code>tool_use</code>가 사라질 때까지 반복해요.
+          멀티턴(대화 기억)은 거의 공짜예요 — 하나의 <code>messages</code> 리스트를 질문마다 이어 붙이기만 하면
+          "그럼 그 전 분기는?" 같은 후속 질문이 문맥을 그대로 가져갑니다.
+        </p>
+        <p>실제로 돌리면 이 루프가 <strong>도구 호출을 한 줄씩 찍으며</strong> 진행돼요(<code>agent.py</code>가 각 <code>tool_use</code>를 출력):</p>
+        <pre><code>you › Which single product had the highest revenue in the most recent quarter?
+  → list_tables()
+  → describe_table(table=order_items)
+  → run_query(sql=SELECT p.name, SUM(oi.quantity*oi.unit_price) AS rev ...)
+
+Robot Vacuum — $46,307 in revenue (Mar 3 – May 31, 2026, completed orders).
+
+you › What about the quarter before that?       ← follow-up: uses the history
+  → run_query(sql=WITH product_revenue AS (...) ...)
+
+Robot Vacuum again — $29,637 the prior quarter, so revenue jumped ~56%.</code></pre>
+        <p class="muted">
+          보이나요 — 첫 질문은 <code>list_tables</code> → <code>describe_table</code>로 <strong>먼저 살펴본 뒤</strong> 쿼리해요.
+          두 번째 질문("그 전 분기는?")은 테이블을 다시 안 봐요 — <code>messages</code>에 남은 문맥 덕분에 곧장 쿼리 하나로 답합니다.
+          이게 멀티턴이 "거의 공짜"라는 뜻이에요.
+        </p>
+        <div class="quiz" data-answer="2">
+          <p class="q">이 루프가 "이제 끝"이라고 <strong>판단하는 근거</strong>는 무엇일까요?</p>
+          <button class="opt">모델이 낸 텍스트를 우리가 읽어보고, 끝난 것 같으면 사람이 멈춘다</button>
+          <button class="opt">항상 정해진 스텝 수(<code>MAX_STEPS</code>)를 다 채운 뒤 멈춘다</button>
+          <button class="opt">응답에 <code>tool_use</code> 블록이 없으면(= <code>stop_reason</code>이 더 이상 도구를 안 부름) 그 text가 답이라 루프를 끝낸다</button>
+          <p class="explain">
+            종료는 우리가 텍스트를 눈으로 읽어 판단하는 게 아니라 <strong>구조적 신호</strong>로 결정돼요. 코드는
+            <code>tool_calls = [b … if b.type == "tool_use"]</code>를 보고, 비어 있으면 곧장 text를 반환합니다.
+            즉 <strong><code>stop_reason</code>/tool_use 유무가 루프를 운전</strong>해요 — 사람의 판단이 아니라.
+          </p>
+        </div>
+        <div class="quiz" data-answer="1">
+          <p class="q"><code>MAX_STEPS = 12</code>는 주로 <strong>무엇을 위한</strong> 장치일까요?</p>
+          <button class="opt">API 비용을 아끼려는 용도일 뿐이다</button>
+          <button class="opt">스스로 멈출 보장이 없는 루프에 <b>정지 보장(halting guarantee)</b>을 주는 안전장치 — 헷갈린 에이전트가 영원히 도는 걸 막는다</button>
+          <button class="opt">답을 더 정확하게 만들려고</button>
+          <p class="explain">
+            비용 절감은 부수효과예요. 본질은 <strong>이 루프에 종료 보장이 없다는 것</strong> — 모델이 계속 도구를
+            부르면 원리상 무한히 돌 수 있어요. <code>for _ in range(MAX_STEPS)</code>가 그 위험한 무한을 잘라
+            "안 끝나도 12스텝이면 멈춘다"를 보장합니다(안전 슬라이드의 "1만 번의 작은 실패" 방지).
+          </p>
+        </div>
+      </section>
+
+      <section id="schema">
+        <h2>5D.4 · The database — 무엇을 물어볼 수 있나</h2>
+        <p class="tldr">"매출 top5" 같은 질문이 말이 되려면 데이터가 어떻게 생겼는지 알아야 해요. <code>build_db.py</code>가 만드는 스키마는 흔한 e-commerce 4테이블이에요.</p>
+        <div class="mermaid">
+flowchart LR
+    CUST["customers<br/>id · name · email · country · signup_date"]
+    PROD["products<br/>id · name · category · price · cost"]
+    ORD["orders<br/>id · customer_id · order_date · status"]
+    ITEM["order_items<br/>id · order_id · product_id · quantity · unit_price"]
+    CUST -->|customer_id| ORD
+    ORD -->|order_id| ITEM
+    PROD -->|product_id| ITEM
+    class ITEM core;
+        </div>
+        <p class="muted">
+          "매출"은 한 테이블에 없어요 — <code>order_items.quantity × unit_price</code>를 <code>orders</code>에 조인해
+          <code>status = 'completed'</code>만 골라 합쳐야 나옵니다. 그래서 에이전트는 <em>바로 쿼리하지 않고</em> 먼저
+          <code>list_tables</code> → <code>describe_table</code>로 스키마를 확인해요("look before it leaps").
+          <code>cancelled/refunded</code> 주문과 일부 빠진 <code>country</code> 값 같은 <strong>현실적 함정</strong>이 일부러 섞여 있어요.
+        </p>
+        <p>이 규칙들을 에이전트에게 강제하는 건 <code>agent.py</code>의 <strong>시스템 프롬프트</strong>예요 — "먼저 살펴봐라 · 최신 <code>order_date</code> 기준으로 계산해라 · <code>completed</code>만 매출로 쳐라":</p>
+        <pre><code>SYSTEM = """You are a data analyst. You answer questions about a SQLite database \
+by inspecting its schema and running read-only SQL queries.
+
+Always start by checking what's there: call list_tables, then describe_table on \
+the tables you need, before writing any query. Use SQLite syntax. The data spans \
+about 18 months; when a question is time-relative ("last quarter", "recent month"), \
+work it out from the most recent order_date in the data, not today's date. Unless \
+asked otherwise, treat only 'completed' orders as revenue.
+..."""</code></pre>
+        <p class="muted">
+          왜 프롬프트로 이걸 정할까요? — 이건 <em>안전</em>이 아니라 <strong>분석 규약</strong>이라서예요. "쓰지 마"는 프롬프트로
+          부탁하면 안 되고(도구를 안 주는 게 정답), "revenue는 completed만"은 <em>정답의 정의</em>라 프롬프트가 제자리예요.
+          안전은 구조로, 규약은 프롬프트로 — 둘을 헷갈리지 않는 게 포인트예요.
+        </p>
+      </section>
+
+      <section id="code">
+        <h2>5D.5 · 코드 — 세 조각으로 읽기</h2>
+        <p class="tldr">에이전트의 전부를 세 조각으로 봅니다: ① 루프(<code>agent.py</code>) ② 안전 게이트(<code>tools.py</code>) ③ 어떤 데이터가 있나(<code>build_db.py</code>). 각 다이어그램의 <strong>▶ 다음</strong>을 누르면 해당 코드 줄이 같이 하이라이트돼요.</p>
+
+        <h3>① The loop — <code>answer_turn()</code></h3>
+        <p>모델 호출 → <code>tool_use</code> 감지 → <code>dispatch</code> → 결과 append. 이 네 동작이 <code>MAX_STEPS</code> 예산 안에서 돕니다.</p>
+        <div class="mermaid" data-flow="steps" data-code="#code-loop"
+             data-steps='[{"node":"LMAX","cap":"12번 예산으로 루프를 감싸 무한 반복을 원천 차단.","lines":"1"},
+                          {"node":"LCREATE","cap":"모델에 대화+도구를 보내고 응답을 assistant로 append.","lines":"2-6"},
+                          {"node":"LCHK","cap":"응답 블록에서 tool_use를 골라내요 — 없으면 text가 곧 답.","lines":"8-10"},
+                          {"node":"LRUN","cap":"각 tool_use를 dispatch로 실제 함수에 연결해 실행.","lines":"13-20"},
+                          {"node":"LFEED","cap":"결과를 tool_result로 append하고 다시 위로 — 되돌이.","lines":"21"}]'>
+flowchart LR
+    LMAX["for _ in range(MAX_STEPS)"] --> LCREATE["messages.create()"]
+    LCREATE --> LCHK{"any tool_use?"}
+    LCHK -->|no| LDONE["return text"]
+    LCHK -->|yes| LRUN["dispatch(name, args)"]
+    LRUN --> LFEED["append tool_result"]
+    LFEED -.-> LCREATE
+    class LCREATE core;
+        </div>
+        <pre id="code-loop"><code>    for _ in range(MAX_STEPS):
+        resp = client.messages.create(
+            model=MODEL, max_tokens=2048, system=SYSTEM,
+            messages=messages, tools=TOOLS,
+        )
+        messages.append({"role": "assistant", "content": resp.content})
+
+        tool_calls = [b for b in resp.content if b.type == "tool_use"]
+        if not tool_calls:                       # no tools requested → done
+            return "".join(b.text for b in resp.content if b.type == "text").strip()
+
+        results = []
+        for call in tool_calls:
+            print(f"  → {call.name}({_fmt(call.input)})")
+            output = dispatch(call.name, call.input)
+            results.append({
+                "type": "tool_result",
+                "tool_use_id": call.id,
+                "content": output,
+            })
+        messages.append({"role": "user", "content": results})
+
+    return "(stopped: hit the step budget without finishing)"</code></pre>
+        <div class="quiz" data-answer="1">
+          <p class="q">모델이 <code>run_query</code>를 "호출"할 때, 실제로 DB를 만지는 건 <strong>누구</strong>일까요?</p>
+          <button class="opt">모델이 직접 SQLite에 연결해 쿼리를 실행한다</button>
+          <button class="opt">모델은 도구 이름과 SQL <b>문자열만 지목</b>할 뿐 — 실제로 DB를 여는 건 우리 코드의 <code>dispatch()</code> → <code>run_query()</code>. 이 경계가 안전의 핵심이다</button>
+          <button class="opt">Anthropic 서버가 대신 DB에 접속한다</button>
+          <p class="explain">
+            모델의 <code>tool_use</code>는 "<em>run_query를 이 SQL로 불러줘</em>"라는 <strong>요청</strong>일 뿐, 아무것도 실행하지 않아요.
+            우리 코드의 <code>dispatch(call.name, call.input)</code>가 그 요청을 받아 <em>우리가 정한 함수</em>를 돌립니다.
+            바로 이 경계 덕분에 — 모델이 무슨 이름을 대든 — 우리가 준 세 함수 밖으로는 나갈 수 없어요.
+          </p>
+        </div>
+        <p>그 경계가 바로 <code>dispatch</code>예요 — 모델이 준 이름을 우리 함수로 라우팅하는 짧은 스위치. 등록 안 된 이름은 그냥 문자열로 거절돼요:</p>
+        <pre><code>def dispatch(name: str, tool_input: dict) -> str:
+    """Route a tool_use block to the matching function."""
+    if name == "list_tables":
+        return list_tables()
+    if name == "describe_table":
+        return describe_table(tool_input["table"])
+    if name == "run_query":
+        return run_query(tool_input["sql"])
+    return f"Unknown tool: {name}"</code></pre>
+
+        <h3>② The safety gate — <code>run_query()</code></h3>
+        <p>안전은 두 겹이에요. <strong>진짜 방벽은 <code>mode=ro</code> 커넥션</strong>(SQLite가 쓰기를 물리적으로 거부), 그 위의 SELECT 체크는 에러 대신 친절한 메시지를 주는 얇은 층이에요.</p>
+        <div class="mermaid" data-flow="steps" data-code="#code-guard"
+             data-steps='[{"node":"GGUARD","cap":"먼저 문자열이 select/with로 시작하나 확인해요.","lines":"9-11"},
+                          {"node":"GREJECT","cap":"쓰기 SQL이면 실행 없이 친절한 거절 메시지를 돌려줘요.","lines":"11"},
+                          {"node":"GCONN","cap":"진짜 방벽은 여기: mode=ro로 열어 SQLite가 쓰기를 물리적으로 거부.","lines":"1-3"},
+                          {"node":"GEXEC","cap":"그제서야 단일 SELECT를 실행하고 최대 100행만 가져와요.","lines":"13-16"}]'>
+flowchart LR
+    GSQL["sql string"] --> GGUARD{"SELECT / WITH?"}
+    GGUARD -->|no| GREJECT["return 'Rejected…'"]
+    GGUARD -->|yes| GCONN["_connect(mode=ro)"]
+    GCONN --> GEXEC["conn.execute(sql)"]
+    class GCONN core;
+        </div>
+        <pre id="code-guard"><code>def _connect():
+    # Read-only connection — any attempted write raises sqlite3.OperationalError.
+    return sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True)
+
+# … list_tables / describe_table omitted …
+
+def run_query(sql: str) -> str:
+    """Run a read-only SQL SELECT and return up to 100 rows."""
+    head = sql.strip().lstrip("(").lower()
+    if not (head.startswith("select") or head.startswith("with")):
+        return "Rejected: only read-only SELECT queries are allowed."
+    try:
+        with _connect() as conn:
+            cur = conn.execute(sql)        # runs a single statement only
+            cols = [d[0] for d in cur.description] if cur.description else []
+            rows = cur.fetchmany(100)
+    except (sqlite3.Error, sqlite3.Warning) as e:
+        return f"SQL error: {e}"
+    # … then format the rows into text …
+    return "\n".join(out)</code></pre>
+        <div class="callout">
+          🔒 왜 두 겹이냐면 — SELECT 체크만 있으면 언젠가 우회당할 수 있어요(교묘한 문자열). 하지만
+          <code>mode=ro</code>는 우회가 불가능해요: 커넥션 자체가 쓰기를 못 하니까요. <strong>체크는 UX(친절한 메시지),
+          커넥션은 안전(진짜 방벽)</strong> — 안전은 프롬프트가 아니라 <em>연결의 성질</em>에서 나옵니다.
+        </div>
+
+        <h3>③ What data exists — <code>build_db.py</code></h3>
+        <p>"지난 분기 매출"이 말이 되려면 데이터의 <strong>모양·범위</strong>를 알아야 해요. 몇 줄만 보면 왜 시간 질문을 "오늘"이 아니라 "가장 최근 주문일" 기준으로 풀어야 하는지 보여요.</p>
+        <div class="mermaid" data-flow="steps" data-code="#code-data"
+             data-steps='[{"node":"DSPAN","cap":"데이터는 ~18개월치, 2026-05-31에 끝나요 — 시간 질문은 이 최신 날짜 기준으로 계산.","lines":"1-2"},
+                          {"node":"DVOL","cap":"고객 500명 · 주문 3000건. 씨드가 고정이라 누구나 같은 답이 나와요.","lines":"4-5"},
+                          {"node":"DSTAT","cap":"주문 상태가 섞여 있어요 — completed만 매출로 세야 정확(SYSTEM 프롬프트도 그렇게 지시).","lines":"9-10"}]'>
+flowchart LR
+    DSPAN["~18 months · ends 2026-05-31"] --> DVOL["500 customers · 3000 orders"]
+    DVOL --> DSTAT["status mix:<br/>completed / cancelled / refunded"]
+        </div>
+        <pre id="code-data"><code>END_DATE = date(2026, 5, 31)
+START_DATE = END_DATE - timedelta(days=545)  # ~18 months
+
+N_CUSTOMERS = 500
+N_ORDERS = 3000
+
+# … product catalog + weighted country list omitted …
+
+# Orders are weighted toward "completed"; the rest exercise status filtering.
+STATUS = ["completed"] * 80 + ["cancelled"] * 12 + ["refunded"] * 8</code></pre>
+        <p class="muted">
+          그래서 시스템 프롬프트가 에이전트에게 못 박아요: <em>"시간 상대 질문은 데이터의 가장 최근 <code>order_date</code>에서
+          계산하고, 별말 없으면 <code>completed</code> 주문만 매출로 쳐라."</em> 데이터가 언제 실행하든 상하지 않도록
+          <strong>벽시계가 아니라 데이터 자체를 기준</strong>으로 삼는 설계예요.
         </p>
       </section>
 
       <section id="run">
-        <h2>5D.3 · Run it live</h2>
+        <h2>5D.6 · Run it live</h2>
         <p class="tldr">빌드해 두면, 버튼이 서버에서 잠깐 띄워 URL을 돌려줍니다.</p>
         <div class="runbox" data-app="agent" data-local="#local"></div>
         <div class="callout cs">
@@ -89,23 +361,39 @@ flowchart LR
       </section>
 
       <section id="local">
-        <h2>5D.4 · Build &amp; run locally</h2>
+        <h2>5D.7 · Build &amp; run locally</h2>
         <pre><code># 스타터: agent-app.zip (SQLite + read-only SQL 도구 3개 + max-steps)
 #   https://ksetp.netlify.app/assets/agents/agent-app.zip
 unzip agent-app.zip && cd agent-app
 python3.11 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 
-python app.py            # → http://localhost:5000  (질문을 영어로 입력)</code></pre>
+python agent.py            # 대화형 세션 (질문을 영어로 입력)
+python agent.py "How many orders completed last month?"   # one-shot</code></pre>
         <p class="muted">
-          <code>ANTHROPIC_API_KEY</code>는 공유 <code>.env</code>를 그대로 씁니다. 위험 도구를 애초에 안 주는
-          게 가장 튼튼한 안전장치라는 걸 코드에서 확인해 보세요.
+          <code>ANTHROPIC_API_KEY</code>는 공유 <code>.env</code>를 그대로 씁니다. 데이터를 바꾸고 싶으면
+          <code>python build_db.py</code>로 <code>data.db</code>를 다시 만들 수 있어요(씨드 고정 → 같은 결과).
+          위험 도구를 애초에 안 주는 게 가장 튼튼한 안전장치라는 걸 <a href="#code">코드</a>에서 확인해 보세요.
         </p>
       </section>
 
       <section id="key">
-        <h2>5D.5 · The key idea — the loop is the engine</h2>
-        <p class="tldr">"모델 호출 → 도구 실행 → 결과 append → 반복" 이 ~20줄이 모든 에이전트의 본질.</p>
+        <h2>5D.8 · The key idea — the loop is the engine</h2>
+        <p class="tldr">"모델 호출 → 도구 실행 → 결과 append → 반복" 이 ~20줄이 모든 에이전트의 본질. 안전은 <strong>루프 밖 설계</strong>에서 나와요 — 준 도구(read-only)와 예산(max-steps).</p>
+        <p class="muted">
+          이 프로젝트가 5A·5B·5C와 같은 리듬을 공유해요: <strong>무거운 건 그대로 재사용하고, 목적에 맞게 얇은 층만 바꾼다</strong>.
+          여기선 모델을 손대지 않고 <em>루프(제어 구조)</em>와 <em>도구 셋</em>만 목적에 맞췄어요 —
+          그게 "에이전트"라는 것의 전부입니다.
+        </p>
+        <div class="concept">
+          <span class="tag">더 해보기 (README의 "Your job")</span>
+          <ul>
+            <li><strong>도구 추가</strong> — <code>top_n(metric, table, n)</code>이나 <code>monthly_trend(metric)</code> 같은 함수를 만들고 <code>TOOLS</code>에 등록 + <code>dispatch</code>에 연결. 도구 하나 추가가 곧 능력 하나 추가예요.</li>
+            <li><strong>한계 탐색</strong> — 에이전트가 <em>틀리거나 비효율적</em>인 질문을 찾아보세요(예: refunded를 매출로 세거나, 한 방이면 될 걸 다섯 쿼리로). 왜 그런지가 진짜 배움이에요.</li>
+            <li><strong>루프 조이기</strong> — 동일 쿼리 반복 감지(loop detection)를 넣거나, 최종 SQL을 출력하게. <code>MAX_STEPS</code>만이 유일한 안전망이 아니게요.</li>
+            <li><strong>데이터 교체</strong> — <code>build_db.py</code>를 다른 스키마(SaaS 구독 DB, 내 CSV)로 바꿔도 <em>같은 에이전트가 그대로</em> 동작하는지 확인. 루프는 스키마를 모르니까요.</li>
+          </ul>
+        </div>
         <div class="quiz" data-answer="2">
           <p class="q">이 에이전트에 <code>run_query</code>(SELECT 전용)만 주고 임의 SQL 실행 도구를 안 주는 이유는?</p>
           <button class="opt">SELECT가 더 빨라서</button>

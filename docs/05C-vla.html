@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>llm-app-lab — Module 5 · Project: VLA on your laptop (robot.zip)</title>
     <link rel="stylesheet" href="./style.css?v=6" />
-    <script src="./nav.js?v=10" defer></script>
+    <script src="./nav.js?v=11" defer></script>
     <script src="./run.js?v=1" defer></script>
     <script type="module" src="./mermaid-fx.js?v=1"></script>
     <script type="module" src="./flow-anim.js?v=1"></script>
@@ -42,7 +42,7 @@
         <div class="callout cs">
           🚧 <strong>CPU-only · 느립니다(스텝당 ~1–3초).</strong> 첫 실행에 SmolVLA 가중치 ~1.8&nbsp;GB를 받고,
           MuJoCo 에셋도 내려받아요. 그리고 <strong>능숙한 동작은 기대하지 마세요</strong> — 왜 그런지가 이 프로젝트의
-          가장 중요한 교훈입니다(<a href="#embodiment">5C.8</a>).
+          가장 중요한 교훈입니다(<a href="#embodiment">5C.9</a>).
         </div>
       </header>
 
@@ -53,12 +53,14 @@
           <li><a href="#scaffold">5C.2 · Scaffold — 파일 4개</a></li>
           <li><a href="#stack">5C.3 · The stack &amp; why</a></li>
           <li><a href="#loop">5C.4 · The loop — 핵심 아이디어</a></li>
-          <li><a href="#check">5C.5 · 먼저 실행: check_setup.py</a></li>
-          <li><a href="#buildobs">5C.6 · build_observation — obs 조립</a></li>
-          <li><a href="#rollout">5C.7 · The rollout loop</a></li>
-          <li><a href="#embodiment">5C.8 · Embodiment &amp; 정직한 한계</a></li>
-          <li><a href="#local">5C.9 · Build &amp; run locally</a></li>
-          <li><a href="#key">5C.10 · The key idea</a></li>
+          <li><a href="#flow">5C.5 · main() 호출 순서 — 흐름 ★</a></li>
+          <li><a href="#check">5C.6 · 먼저 실행: check_setup.py</a></li>
+          <li><a href="#buildobs">5C.7 · build_observation — obs 조립</a></li>
+          <li><a href="#rollout">5C.8 · The rollout loop</a></li>
+          <li><a href="#embodiment">5C.9 · Embodiment &amp; 정직한 한계</a></li>
+          <li><a href="#further">5C.10 · Going further — 몸에 맞는 정책</a></li>
+          <li><a href="#local">5C.11 · Build &amp; run locally</a></li>
+          <li><a href="#key">5C.12 · The key idea</a></li>
         </ul>
       </nav>
 
@@ -85,7 +87,23 @@
         </div>
         <div class="callout">
           🧭 우리가 돌릴 건 이 영상만큼 능숙하진 않아요. <strong>메커니즘(루프)</strong>을 CPU에서 직접 굴려보는 게 목표고,
-          왜 동작이 어설픈지는 <a href="#embodiment">5C.8 embodiment</a>에서 정확히 짚습니다.
+          왜 동작이 어설픈지는 <a href="#embodiment">5C.9 embodiment</a>에서 정확히 짚습니다.
+        </div>
+        <div class="concept">
+          <span class="tag">VLA란? — 한 문장으로</span>
+          <p>LLM이 <strong>텍스트 → 텍스트</strong>라면, <strong>Vision-Language-Action</strong> 모델은
+            <strong>(이미지 + 자연어 지시) → action</strong>이에요:</p>
+          <ul>
+            <li><strong>Vision</strong> — 로봇이 지금 보는 카메라 프레임 한 장 이상.</li>
+            <li><strong>Language</strong> — 자연어 목표("transfer the cube to the other arm").</li>
+            <li><strong>Action</strong> — 관절/엔드이펙터 델타 + 그리퍼 개폐 같은 <em>저수준 명령 벡터</em>.
+              이 데모의 양팔 ALOHA는 스텝마다 <strong>14차원</strong>(6-DoF 팔 2개 + 그리퍼 2개)을 냅니다.</li>
+          </ul>
+          <p class="why">구조적으로 VLA는 <strong>멀티모달 LLM(비전 인코더 + 언어 모델)</strong>에서 텍스트 생성 head를
+            <strong>action head</strong>로 갈아끼운 것과 비슷해요. SmolVLA는 작은 vision-language backbone에 "action expert"를 붙여
+            짧은 <em>action 청크</em>를 냅니다. 학습은 <strong>텔레오퍼레이션 시연의 모방(imitation)</strong> —
+            (카메라, state, 지시, action) 튜플로 이뤄져요. LLM에서 넘어올 때의 결정적 전환은 <strong>출력이 언어가 아니라
+            특정 로봇 몸체를 위한 모터 명령</strong>이라는 것 — 그래서 embodiment가 그렇게 중요해집니다.</p>
         </div>
       </section>
 
@@ -132,19 +150,37 @@ flowchart LR
             <tr><td>런타임</td><td>PyTorch · CPU</td><td>CUDA 불필요. 이 스택의 MPS(애플 GPU) 지원은 들쭉날쭉 → CPU가 신뢰 기본값.</td></tr>
           </tbody>
         </table>
+        <div class="concept">
+          <span class="tag">왜 이렇게 골랐나 — 한 겹 더</span>
+          <ul>
+            <li><strong>왜 LeRobot 하나로?</strong> VLA를 손으로 돌리려면 보통 정책 모델·obs/action 규약·전처리기·체크포인트 로더를
+              <em>서로 다른 저장소</em>에서 긁어와 아귀를 맞춰야 해요. LeRobot은 이 네 조각을 <strong>같은 버전으로 묶어</strong> 배포하니,
+              <code>from_pretrained</code> 하나로 정책과 그 정책이 기대하는 규약이 함께 딸려옵니다. "glue code를 안 쓰는 게 아니라
+              <em>이미 붙어서 온다</em>"가 핵심이에요.</li>
+            <li><strong>왜 하필 SmolVLA(~450M)?</strong> "노트북 CPU에서 실제로 도는 <em>진짜</em> VLA"의 하한선이라서예요. 더 유명한
+              OpenVLA-7B는 아키텍처는 같지만 CPU 한 스텝에 수 <em>분</em>이 걸려 라이브 루프로는 비현실적입니다. 작다고 장난감이 아니라,
+              <strong>메커니즘을 눈으로 볼 수 있는 최소 크기</strong>라는 게 선택 이유예요.</li>
+            <li><strong>왜 GPU가 아니라 CPU?</strong> 이 스택에서 MPS(애플 GPU) 지원이 들쭉날쭉해, "빠르지만 가끔 터지는" 경로보다
+              "느리지만 항상 도는" 경로를 기본값으로 뒀어요. 이 데모의 목적은 처리량이 아니라 <strong>루프를 한 스텝씩 이해</strong>하는 것이라
+              CPU의 느림이 오히려 관찰에 유리합니다(스텝당 ~1–3초 = 로그를 읽을 시간).</li>
+          </ul>
+        </div>
       </section>
 
       <section id="loop">
         <h2>5C.4 · The loop — 핵심 아이디어</h2>
         <p class="tldr">VLA의 본질을 한 루프로: <strong>카메라 이미지 + 지시</strong> → VLA → <strong>action 벡터</strong> → 시뮬이 로봇을 움직임 → 다음 프레임 → 반복. <code>run_demo.py</code>가 정확히 이 루프예요(실질 ~40줄).</p>
-        <div class="mermaid">
+        <div class="mermaid" data-flow="pulse-path" data-cycle="OBS,VLA,ACT,SIM">
 flowchart LR
-    Obs["camera frame + robot state<br/>+ instruction"] --> VLA["SmolVLA"]
-    VLA --> Act(["action vector<br/>(14 numbers — not words)"])
-    Act --> Sim["MuJoCo steps the arms"]
-    Sim -. "next camera frame" .-> Obs
+    OBS["camera frame + robot state<br/>+ instruction"] --> VLA["SmolVLA"]
+    VLA --> ACT(["action vector<br/>(14 numbers — not words)"])
+    ACT --> SIM["MuJoCo steps the arms"]
+    SIM -. "next camera frame" .-> OBS
     class VLA core;
         </div>
+        <p class="muted">🔵 점(dot)이 이 네 노드를 <strong>영원히 도는 게</strong> 이 프로젝트의 전부예요 —
+          <code>OBS → VLA → ACT → SIM → OBS</code>. "루프가 엔진"이라는 걸 눈으로 붙잡아 두세요. 아래 <a href="#flow">5C.5</a>는
+          이 루프를 <em>실제 함수 이름</em>으로 펼칩니다.</p>
         <div class="callout analogy">
           🔁 <a href="./05A-agents.html#loop">5A의 agent loop</a>와 구조가 똑같아요: 관찰이 들어가고 예측이 나옵니다 —
           다만 예측이 <strong>단어가 아니라 모션</strong>이고, 다음 관찰이 그 모션에 대한 <strong>세계의 반응</strong>이라는 점만 달라요.
@@ -162,8 +198,79 @@ flowchart LR
         </div>
       </section>
 
+      <section id="flow">
+        <h2>5C.5 · main() 호출 순서 — 흐름을 함수 이름으로 ★</h2>
+        <p class="tldr">위 루프를 <code>run_demo.py</code>의 <strong>실제 함수 호출 순서</strong>로 펼친 지도예요. 앞쪽 4개는 <strong>한 번만 하는 셋업</strong>,
+          뒤쪽은 <strong>매 스텝 도는 루프</strong>. <strong>▶ 다음</strong>을 눌러 한 함수씩 불이 켜지는 걸 따라가 보세요 — 파란 점은 루프 구간을 계속 돕니다.</p>
+        <div class="mermaid" data-flow="steps pulse-path" data-cycle="BOBS,PRE,SEL,POST,FIT2,STEP"
+             data-steps='[{"node":"LOADC","cap":"SmolVLA 클래스를 import — LeRobot 버전마다 경로가 달라 두 곳을 시도해요"},
+                          {"node":"PRET","cap":"허브에서 체크포인트 가중치를 로드해 policy 객체를 만들어요 (첫 실행 ~1.8GB)"},
+                          {"node":"PROC","cap":"체크포인트 옆의 전·후처리기를 함께 로드 — 토큰화·정규화 규칙이 여기 있어요"},
+                          {"node":"RESET","cap":"gym-aloha 시뮬을 만들고 첫 관찰(obs)을 받아요"},
+                          {"node":"BOBS","cap":"시뮬 raw obs를 체크포인트가 기대하는 모양으로 조립 (5C.7)"},
+                          {"node":"PRE","cap":"지시문 토큰화 + 정규화 + 배치 + device — 모델이 먹을 형태로 (5C.8)"},
+                          {"node":"SEL","cap":"VLA가 정규화된 action 벡터를 예측해요 (inference_mode)"},
+                          {"node":"POST","cap":"action을 역정규화하고 cpu로 되돌려요"},
+                          {"node":"FIT2","cap":"dim이 안 맞으면 자르기/제로패딩 + 시뮬 범위로 clip (5C.9)"},
+                          {"node":"STEP","cap":"시뮬이 팔을 움직이고 다음 obs를 돌려줘요 → 루프백"},
+                          {"node":"REND","cap":"프레임을 렌더해 rollout.mp4에 적립해요"}]'>
+flowchart LR
+    LOADC["load_smolvla_class()"] --> PRET["from_pretrained()"]
+    PRET --> PROC["make_pre_post_processors()"]
+    PROC --> RESET["env.reset(seed=0)"]
+    RESET --> BOBS["build_observation()"]
+    BOBS --> PRE["preprocessor()"]
+    PRE --> SEL["select_action()"]
+    SEL --> POST["postprocessor()"]
+    POST --> FIT2["force-fit dims + clip"]
+    FIT2 --> STEP["env.step(action)"]
+    STEP --> REND["env.render()"]
+    STEP -. "next obs" .-> BOBS
+    REND -. "when done" .-> SAVE["imageio.mimsave()"]
+    class SEL core;
+        </div>
+        <div class="callout analogy">
+          🧭 셋업(<code>LOADC→PRET→PROC→RESET</code>)은 <strong>딱 한 번</strong>, 루프(<code>BOBS→…→STEP</code>)는 <strong>스텝마다</strong>예요.
+          점이 도는 여섯 노드가 곧 5C.4의 <code>OBS→VLA→ACT→SIM</code>을 코드로 확대한 것 — 같은 루프, 다른 배율입니다.
+          <code>REND</code>는 루프와 별개로 프레임을 쌓다가, 끝나면 <code>SAVE</code>로 영상을 저장해요.
+        </div>
+        <p>셋업 네 노드(<code>LOADC→PRET→PROC→RESET</code>)의 <strong>실제 코드</strong>는 이렇게 짧아요. 두 군데를 눈여겨보세요 —
+          ① <code>policy.reset()</code>이 비우는 <strong>action-chunk 큐</strong>, ② 전·후처리기를 만들 때의 <strong>device 오버라이드</strong>.</p>
+        <pre><code>    SmolVLAPolicy = load_smolvla_class()
+    policy = SmolVLAPolicy.from_pretrained(args.checkpoint)
+    policy.config.device = args.device
+    policy.to(args.device)
+    policy.eval()
+    policy.reset()  # clears the internal action-chunk queue
+
+    # The pre-processor tokenizes the instruction + normalizes inputs; the
+    # post-processor un-normalizes the predicted action. These live alongside the
+    # checkpoint on the hub, so we load them from the same path.
+    #
+    # The saved processor config hard-codes device 'cuda' — its DeviceProcessorStep
+    # asserts CUDA at construction time, which fails on a Mac. Override it to our
+    # device via the factory's per-step overrides (keyed by the step name).
+    device_override = {"device_processor": {"device": args.device}}
+    preprocessor, postprocessor = make_pre_post_processors(
+        policy.config,
+        pretrained_path=args.checkpoint,
+        preprocessor_overrides=device_override,
+        postprocessor_overrides=device_override,
+    )
+
+    env = gym.make(env_id, obs_type="pixels_agent_pos", render_mode="rgb_array")
+    obs, _ = env.reset(seed=0)</code></pre>
+        <div class="callout">
+          🧩 <strong>action-chunk 큐</strong>: SmolVLA의 action expert는 한 번에 <em>여러 스텝치 action(청크)</em>을 예측해요.
+          그래서 <code>select_action</code>은 매번 새로 추론하는 게 아니라 큐에서 하나씩 꺼내 주고, 큐가 비면 다시 채웁니다.
+          <code>policy.reset()</code>은 이 큐를 비워 <strong>깨끗한 상태에서 롤아웃을 시작</strong>하게 해요 —
+          이전 에피소드의 잔여 action이 새 롤아웃에 새지 않도록요. <code>device_override</code>는 CUDA 머신에서 저장된 처리기 설정을
+          Mac의 CPU로 되돌리는 실무 트릭이고요(README 트러블슈팅과 이어져요).
+        </div>
+      </section>
+
       <section id="check">
-        <h2>5C.5 · 먼저 실행: check_setup.py</h2>
+        <h2>5C.6 · 먼저 실행: check_setup.py</h2>
         <p class="tldr">로봇-러닝 생태계는 빨리 변해요(import 경로·env id·키가 드리프트). 그래서 <strong>롤아웃 전에</strong> 스펙을 출력해 어긋남을 먼저 드러냅니다.</p>
         <pre><code># check_setup.py — 4단계로 "지금 내 환경의 진짜 스펙"을 찍어줌
 # 1) torch / lerobot import 되나
@@ -173,9 +280,32 @@ flowchart LR
 # 4) SmolVLA 로드 → 체크포인트가 '기대하는' 스펙 출력:
 #      cfg.input_features   (카메라 키 · state dim)
 #      cfg.output_features  (action dim — 학습 당시 로봇 기준)</code></pre>
+        <p>진짜 <code>main()</code>의 네 단계는 이렇게 생겼어요 — <strong>각 단계가 print로 자기 결과를 찍어</strong> 어디서 어긋났는지 눈에 보이게 합니다.</p>
+        <pre><code>def main() -> int:
+    print("\n1. Core imports")
+    # … import torch, lerobot
+
+    print("\n2. Simulator (gym-aloha / MuJoCo)")
+    import gym_aloha  # noqa: F401  (registers the gym_aloha/* envs)
+    env_ids = [s for s in gym.registry.keys() if "aloha" in s.lower()]
+
+    print("\n3. Make an env and show its spec")
+    env = gym.make(env_id, obs_type="pixels_agent_pos", render_mode="rgb_array")
+    ok(f"action_space: {env.action_space.shape}  (this is the # of action dims the policy must output)")
+    ok(f"agent_pos dim: {obs['agent_pos'].shape}")
+
+    print("\n4. Load the SmolVLA policy and show what IT expects")
+    policy = SmolVLAPolicy.from_pretrained("lerobot/smolvla_base")
+    cfg = policy.config
+    in_feats = getattr(cfg, "input_features", None)
+    out_feats = getattr(cfg, "output_features", None)
+    print(f"     input_features:  {in_feats}")
+    print(f"     output_features: {out_feats}")</code></pre>
         <p class="muted">
-          왜 중요하냐면 — 4단계가 찍는 <strong>체크포인트의 action dim</strong>과 3단계의 <strong>시뮬 action dim</strong>이
-          <em>다를 수 있어요</em>. 그 불일치가 곧 <a href="#embodiment">embodiment 교훈</a>의 씨앗입니다.
+          왜 중요하냐면 — 4단계가 찍는 <strong>체크포인트의 action dim</strong>(<code>output_features</code>)과 3단계의
+          <strong>시뮬 action dim</strong>(<code>action_space.shape</code>)이 <em>다를 수 있어요</em>. <code>check_setup.py</code>는
+          바로 이 두 숫자를 나란히 찍고 "다르면 다른 로봇 몸체용 체크포인트"라는 노트까지 출력합니다 — 그 불일치가 곧
+          <a href="#embodiment">embodiment 교훈</a>의 씨앗입니다.
         </p>
         <div class="mermaid">
 flowchart LR
@@ -184,43 +314,54 @@ flowchart LR
     C --> S3["4 · SmolVLA 스펙<br/>input_features / output_features"]
     S2 --> Cmp{"두 action dim<br/>이 맞나?"}
     S3 --> Cmp
-    Cmp -. "다르면" .-> Note["다른 로봇 몸체용 체크포인트<br/>→ 5C.8 참고"]
+    Cmp -. "다르면" .-> Note["다른 로봇 몸체용 체크포인트<br/>→ 5C.9 참고"]
     class Cmp core;
         </div>
       </section>
 
       <section id="buildobs">
-        <h2>5C.6 · build_observation — obs 조립</h2>
-        <p class="tldr">매 스텝, 시뮬이 준 raw 데이터를 <strong>체크포인트가 기대하는 모양</strong>으로 맞춰요. 핵심: 모양을 하드코딩하지 않고 <code>policy.config.input_features</code>에서 <em>읽어와서</em> 맞춥니다.</p>
-        <pre><code>def build_observation(policy, obs, instruction):
-    feats = policy.config.input_features        # {key: PolicyFeature(type, shape)}
+        <h2>5C.7 · build_observation — obs 조립</h2>
+        <p class="tldr">매 스텝, 시뮬이 준 raw 데이터를 <strong>체크포인트가 기대하는 모양</strong>으로 맞춰요. 핵심: 모양을 하드코딩하지 않고 <code>policy.config.input_features</code>에서 <em>읽어와서</em> 맞춥니다. <strong>▶ 다음</strong>을 누르면 다이어그램 노드와 <em>실제 코드 줄</em>이 함께 켜져요.</p>
+        <pre id="code-buildobs"><code>def build_observation(policy, obs: dict, instruction: str):
+    # … read expected keys/shapes from config.input_features; fit the sim to them
+    import torch
+    feats = policy.config.input_features  # {key: PolicyFeature(type, shape)}
     visual_keys = [k for k in feats if k.startswith("observation.images")]
-
+    pixels = obs.get("pixels")
+    frames = list(pixels.values()) if isinstance(pixels, dict) else [pixels]
     batch = {}
-    for key in visual_keys:                     # 카메라마다
-        _, h, w = feats[key].shape              # 체크포인트가 원하는 (C,H,W)
-        img = to_tensor(frame) / 255.0
-        batch[key] = interpolate(img, size=(h, w))   # 그 HxW로 리사이즈
-
+    for i, key in enumerate(visual_keys):
+        frame = frames[i] if i < len(frames) else frames[-1]
+        _, h, w = feats[key].shape  # (C, H, W)
+        img = torch.from_numpy(frame).float().permute(2, 0, 1) / 255.0  # (C,H,W), unbatched
+        img = torch.nn.functional.interpolate(
+            img.unsqueeze(0), size=(h, w), mode="bilinear", align_corners=False
+        ).squeeze(0)
+        batch[key] = img
     if "observation.state" in feats:
         want = feats["observation.state"].shape[0]
-        s = np.asarray(obs["agent_pos"])
-        batch["observation.state"] = pad_or_truncate(s, want)  # state 길이 맞춤
-
-    batch["task"] = instruction                 # "vision-language-action"의 language
-    return batch                                # UNBATCHED · un-normalized (전처리기가 마무리)</code></pre>
-        <div class="mermaid">
+        s = np.asarray(obs["agent_pos"], dtype=np.float32)
+        s = np.pad(s, (0, want - len(s)))[:want] if len(s) < want else s[:want]
+        batch["observation.state"] = torch.from_numpy(s)  # (D,), unbatched
+    batch["task"] = instruction  # the language half of "vision-language-action"
+    return batch</code></pre>
+        <div class="mermaid" data-flow="steps" data-code="#code-buildobs"
+             data-steps='[{"node":"FEAT","cap":"체크포인트가 기대하는 키·모양을 config.input_features에서 읽어와요","lines":"4-5"},
+                          {"node":"IMGV","cap":"카메라마다 프레임을 체크포인트가 원하는 HxW로 리사이즈해요","lines":"9-16"},
+                          {"node":"STATE","cap":"agent_pos를 기대 길이에 맞춰 pad/truncate해요","lines":"17-21"},
+                          {"node":"TASKN","cap":"지시문을 task로 넣어요 — vision-language-action의 language","lines":"22"},
+                          {"node":"BATCH","cap":"UNBATCHED·un-normalized raw batch를 리턴 (정규화는 전처리기가 마무리)","lines":"23"}]'>
 flowchart LR
-    Sim["sim obs<br/>pixels · agent_pos"] --> BO["build_observation"]
-    Cfg["policy.config<br/>input_features"] --> BO
-    Instr["instruction"] --> BO
-    BO --> V["images.* → HxW 리사이즈"]
-    BO --> St["observation.state → pad/truncate"]
-    BO --> Tk["task = instruction"]
-    V --> Batch(["raw batch dict"])
-    St --> Batch
-    Tk --> Batch
-    class Cfg core;
+    SIMOBS["sim obs<br/>pixels · agent_pos"] --> ASM["build_observation"]
+    FEAT["policy.config<br/>input_features"] --> ASM
+    INSTR["instruction"] --> ASM
+    ASM --> IMGV["images.* → HxW 리사이즈"]
+    ASM --> STATE["observation.state → pad/truncate"]
+    ASM --> TASKN["task = instruction"]
+    IMGV --> BATCH(["raw batch dict"])
+    STATE --> BATCH
+    TASKN --> BATCH
+    class FEAT core;
         </div>
         <div class="quiz" data-answer="0">
           <p class="q">모양(HxW·state 길이)을 코드에 하드코딩하지 않고 <code>config.input_features</code>에서 읽는 이유는?</p>
@@ -236,31 +377,47 @@ flowchart LR
       </section>
 
       <section id="rollout">
-        <h2>5C.7 · The rollout loop — 예측 한 스텝</h2>
-        <p class="tldr">조립한 raw obs를 <strong>전처리기</strong>(토크나이즈+정규화+배치+device)에 통과 → <code>select_action</code> → <strong>후처리기</strong>(역정규화) → 시뮬 <code>step</code>. 이게 매 틱 반복돼요.</p>
-        <pre><code>for t in range(steps):
-    raw    = build_observation(policy, obs, instruction)
-    batch  = preprocessor(raw)                  # tokenize + normalize + batch + device
+        <h2>5C.8 · The rollout loop — 예측 한 스텝</h2>
+        <p class="tldr">조립한 raw obs를 <strong>전처리기</strong>(토크나이즈+정규화+배치+device)에 통과 → <code>select_action</code> → <strong>후처리기</strong>(역정규화) → 시뮬 <code>step</code>. 이게 매 틱 반복돼요. <strong>▶ 다음</strong>으로 각 노드가 <em>진짜 코드 줄</em>에 어떻게 대응하는지 짚어 보세요.</p>
+        <pre id="code-rollout"><code>for t in range(args.steps):
+    raw = build_observation(policy, obs, instruction)
+    batch = preprocessor(raw)                 # tokenize + normalize + batch + device
     with torch.inference_mode():
-        action = policy.select_action(batch)    # (1, action_dim), normalized
-    action = postprocessor(action)              # un-normalize, back to cpu
+        action = policy.select_action(batch)  # (1, action_dim), normalized
+    action = postprocessor(action)            # un-normalize, back to cpu
+    action = np.asarray(action.squeeze(0).detach().cpu(), dtype=np.float32)
 
-    action = force_fit(action, env_dim)         # dim 안 맞으면 자르기/패딩 + clip (5C.8)
-    obs, reward, *_ = env.step(action)          # 시뮬이 팔을 움직이고 다음 obs 반환
-    frames.append(env.render())                 # rollout.mp4 프레임 적립</code></pre>
-        <div class="mermaid">
-sequenceDiagram
-    participant Sim as gym-aloha (MuJoCo)
-    participant Obs as build_observation
-    participant Pre as preprocessor
-    participant VLA as SmolVLA.select_action
-    participant Post as postprocessor
-    Sim->>Obs: frame + agent_pos
-    Obs->>Pre: raw batch + instruction
-    Pre->>VLA: tokenized · normalized · batched
-    VLA->>Post: action (normalized)
-    Post->>Sim: un-normalized action -> env.step
-    Sim-->>Obs: next frame (loop)
+    # Embodiment adaptation: the base checkpoint outputs actions for a
+    # different robot than this sim, so the dims won't match. We force-fit
+    # (truncate / zero-pad) and clip to the sim's range so the LOOP runs. …
+    if action.shape[0] != env_dim and not warned:
+        print(…)                              # one-time mismatch warning (see 5C.9)
+        warned = True
+    if action.shape[0] > env_dim:
+        action = action[:env_dim]
+    elif action.shape[0] < env_dim:
+        action = np.pad(action, (0, env_dim - action.shape[0]))
+    action = np.clip(action, env.action_space.low, env.action_space.high).astype(np.float32)
+
+    obs, reward, terminated, truncated, _ = env.step(action)
+    frames.append(env.render())</code></pre>
+        <div class="mermaid" data-flow="steps pulse-path" data-cycle="RAWB,PREP,PRED,POSTP,FFIT,ESTEP" data-code="#code-rollout"
+             data-steps='[{"node":"RAWB","cap":"raw obs를 조립 (5C.7의 build_observation)","lines":"2"},
+                          {"node":"PREP","cap":"토큰화+정규화+배치+device — 이 단계를 빼먹으면 KeyError","lines":"3"},
+                          {"node":"PRED","cap":"VLA가 정규화된 action을 예측 (inference_mode)","lines":"4-5"},
+                          {"node":"POSTP","cap":"역정규화 후 numpy 벡터로 변환","lines":"6-7"},
+                          {"node":"FFIT","cap":"dim이 안 맞으면 자르기/제로패딩 + 시뮬 범위로 clip (5C.9)","lines":"12-19"},
+                          {"node":"ESTEP","cap":"시뮬이 팔을 움직이고 다음 obs를 반환","lines":"21"},
+                          {"node":"FRND","cap":"프레임을 렌더해 rollout.mp4로 적립","lines":"22"}]'>
+flowchart LR
+    RAWB["build_observation()"] --> PREP["preprocessor()"]
+    PREP --> PRED["select_action()"]
+    PRED --> POSTP["postprocessor()"]
+    POSTP --> FFIT["force-fit + clip"]
+    FFIT --> ESTEP["env.step()"]
+    ESTEP --> FRND["env.render()"]
+    ESTEP -. "next obs" .-> RAWB
+    class PRED core;
         </div>
         <div class="callout">
           🧩 <strong>전처리기/후처리기</strong>는 체크포인트 옆에 저장돼 함께 로드돼요(<code>make_pre_post_processors</code>).
@@ -278,10 +435,22 @@ sequenceDiagram
             순서가 이 루프의 뼈대입니다.
           </p>
         </div>
+        <div class="quiz" data-answer="2">
+          <p class="q">전·후처리기(<code>make_pre_post_processors</code>)를 "있으면 편한 <strong>선택적 glue</strong>"라고 봐도 될까요?</p>
+          <button class="opt">네 — 그냥 numpy 정리라 직접 <code>torch.tensor()</code>로 대체 가능</button>
+          <button class="opt">네 — 정규화만 하는 거라 값이 조금 달라질 뿐</button>
+          <button class="opt">아니오 — <b>체크포인트에 묶인</b> 토큰화·정규화 규칙이라, 빼면 <code>select_action</code>이 <code>KeyError</code>로 터짐</button>
+          <p class="explain">
+            전처리기는 이 체크포인트가 <em>학습 때 쓴 그대로</em>의 토큰화기·정규화 통계를 담고 있어요. 그래서 지시문이 여기서
+            <code>observation.language.tokens</code>로 바뀌고, 입력이 학습 분포로 정규화됩니다. 이걸 건너뛰면 모델이 기대하는 키가 없어
+            <code>KeyError: observation.language.tokens</code>로 죽고, 설령 통과해도 정규화가 어긋나 값이 무의미해져요 —
+            그래서 <strong>체크포인트와 한 몸</strong>이지 곁다리 glue가 아닙니다.
+          </p>
+        </div>
       </section>
 
       <section id="embodiment">
-        <h2>5C.8 · Embodiment &amp; 정직한 한계</h2>
+        <h2>5C.9 · Embodiment &amp; 정직한 한계</h2>
         <p class="tldr">루프는 끝까지 돌지만 <strong>동작은 의미가 없어요</strong>. base 체크포인트는 <strong>SO-101</strong>(단일 저가 팔)용인데 시뮬은 <strong>양팔 ALOHA</strong>라, 카메라·state·action의 <em>모양과 의미</em>가 다릅니다. 그 간극이 바로 embodiment 수업이에요.</p>
         <div class="mermaid">
 flowchart LR
@@ -293,6 +462,14 @@ flowchart LR
     Fit --> Move["팔은 움직임<br/>하지만 무의미"]
     class FF core;
         </div>
+        <p>이 <code>force-fit</code>이 실제로 뭘 하는지 눈으로 보면 이래요 — 모델이 낸 벡터를 시뮬이 원하는 슬롯 수에 <strong>억지로</strong> 맞춥니다:</p>
+        <div class="fx-mismatch" data-model="6" data-sim="14"></div>
+        <p class="muted">
+          위 숫자(모델 6 · 시뮬 14)는 <strong>대략</strong>이에요 — SO-101 단일 팔(≈6) 정책을 양팔 ALOHA(14) 시뮬에 넣으면 모자란 슬롯을
+          <em>zero-pad</em>합니다(반대로 모델이 더 크면 <em>truncate</em>). <strong>정확한 값은 각자
+          <code>check_setup.py</code>가 찍어주는 <code>output_features</code> ↔ <code>action_space</code>를 보세요</strong>;
+          라이브러리·체크포인트 버전마다 드리프트할 수 있어요. 핵심은 숫자가 아니라 <strong>억지로 맞춘다</strong>는 사실입니다.
+        </p>
         <p class="muted">
           <code>run_demo.py</code>는 이걸 알고 <strong>일부러</strong> 처리해요: action dim이 안 맞으면 한 번 경고를 찍고
           <em>잘라내기/제로패딩 + 시뮬 범위로 clip</em>해서 루프가 끝까지 돌게 합니다. <strong>메커니즘은 정확히 보여주되,
@@ -317,10 +494,44 @@ flowchart LR
             해결책은 <em>몸이 맞는 정책</em>(매칭 체크포인트 또는 fine-tune)입니다.
           </p>
         </div>
+        <div class="quiz" data-answer="1">
+          <p class="q">데모를 돌렸더니 <strong>루프가 끝까지 잘 돌았어요</strong>. 그럼 이 정책이 이 로봇에 맞는다고 봐도 될까요?</p>
+          <button class="opt">네 — 루프가 크래시 없이 200스텝을 돌았으니 embodiment가 맞는 거예요</button>
+          <button class="opt">아니오 — <b>force-fit</b>이 dim을 억지로 맞춰 <b>루프가 도는 것과 몸이 맞는 것은 별개</b>이고, 동작은 여전히 무의미할 수 있어요</button>
+          <button class="opt">네 — reward가 조금이라도 나오면 맞는 거예요</button>
+          <p class="explain">
+            "루프가 돈다 ≠ 정책이 이 몸에 맞는다." <code>force-fit</code>(truncate/zero-pad + clip)은 dim 불일치를 <strong>숨기고</strong>
+            루프만 굴러가게 만들 뿐이에요. 크래시가 없다고 embodiment가 맞는 게 아니라, 오히려 force-fit이 <em>불일치를 눈에 안 띄게</em>
+            덮어버린 거죠. 맞는지 확인하려면 <code>check_setup.py</code>의 두 dim이 실제로 같은지, 그리고 태스크가 <strong>완수</strong>되는지를 봐야 합니다.
+          </p>
+        </div>
+      </section>
+
+      <section id="further">
+        <h2>5C.10 · Going further — 이 몸에 맞는 정책으로</h2>
+        <p class="tldr">base 체크포인트로 "루프를 구경"하는 게 이 폴더의 목적(=옵션 0)이에요. 여기서 <strong>제대로 동작</strong>까지 가고 싶다면, 자연스러운 다음 걸음들이 있습니다 — 대부분 <a href="./05B-finetune.html">5B fine-tuning</a>과 곧장 이어져요.</p>
+        <div class="concept">
+          <span class="tag">README · Going further</span>
+          <ul>
+            <li><strong>LIBERO</strong> — <em>언어로 지정된</em> 조작 태스크 벤치마크예요. VLA 평가용으로 만들어져 OpenVLA류 체크포인트와 잘 맞고,
+              "지시를 바꾸면 행동이 바뀌는지"를 정량으로 확인할 수 있어요.</li>
+            <li><strong>SmolVLA를 fine-tune</strong> — 작은 (sim 또는 실제 SO-101) 데이터셋으로 이 몸에 특화시키면, VLA가 embodiment에
+              <em>어떻게</em> 맞춰지는지를 몸으로 느낄 수 있어요. CPU로도 밤새 돌리면 수십 에피소드는 가능합니다.</li>
+            <li><strong>실제 하드웨어</strong> — SmolVLA는 저가형 <strong>SO-101</strong> 팔을 겨냥해요. LeRobot 문서가
+              <code>teleoperate → record → train → deploy</code> 전 과정을 안내합니다(시뮬의 embodiment 간극이 사라지는 지점이에요).</li>
+            <li><strong>정책 계열 비교</strong> — 같은 시뮬에서 <code>ACT</code> / <code>Diffusion Policy</code> / <code>SmolVLA</code>를 바꿔 끼워
+              "언어 없는" 행동복제(behavior cloning)와 언어 조건 VLA의 차이를 대조해 보세요. 단, 신뢰성 있게 구할 수 있는 <em>sim</em>
+              체크포인트는 종종 언어가 없는 ACT/Diffusion이라, "language" 부분은 fine-tune으로 채워야 할 수 있어요.</li>
+          </ul>
+        </div>
+        <div class="callout">
+          🧵 이 목록의 밑줄은 전부 하나예요: <strong>무거운 backbone은 그대로, 얇은 층(action head)만 이 몸에 맞춘다</strong> —
+          그게 <a href="./05B-finetune.html">5B</a>가 embedder를 얼리고 head만 학습한 것과 정확히 같은 리듬입니다.
+        </div>
       </section>
 
       <section id="local">
-        <h2>5C.9 · Build &amp; run locally</h2>
+        <h2>5C.11 · Build &amp; run locally</h2>
         <p class="tldr">Python 3.10 권장, CPU면 충분. 순서: 설치 → <code>check_setup.py</code>(스펙 확인) → <code>run_demo.py</code>(루프).</p>
         <pre><code># 스타터: robot.zip (README + requirements + check_setup.py + run_demo.py)
 #   https://ksetp.netlify.app/assets/special-topics/robot.zip
@@ -344,7 +555,7 @@ python run_demo.py --instruction "pick up the cube and pass it to the other hand
       </section>
 
       <section id="key">
-        <h2>5C.10 · The key idea — 루프가 본질, API는 곁가지</h2>
+        <h2>5C.12 · The key idea — 루프가 본질, API는 곁가지</h2>
         <p class="tldr">VLA = <strong>멀티모달 LLM + action head</strong>를 <strong>닫힌 지각-행동 루프</strong>로 돌리는 것. 이 루프가 durable하고, 라이브러리 이름·키는 흐릅니다. 그리고 몸(embodiment)이 안 맞으면 정책은 안 통해요.</p>
         <div class="quiz" data-answer="1">
           <p class="q">세 모듈을 관통하는 <strong>공통 패턴</strong>을 가장 잘 요약한 것은?</p>
