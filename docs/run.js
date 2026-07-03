@@ -12,7 +12,7 @@
 (function () {
   // ── configure this once the launcher is deployed, e.g.:
   //    const LAUNCHER_BASE = "https://launch.bit-habit.com";
-  const LAUNCHER_BASE = ""; // empty → local-only mode
+  const LAUNCHER_BASE = "https://launch.bit-habit.com";
   const POLL_MS = 2500;
   const POLL_MAX = 48; // ~2 min before giving up
 
