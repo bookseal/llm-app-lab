@@ -4,6 +4,10 @@
 > Not a folder of exercises: a hosted teaching site with animated concept notes, instant
 > quizzes, and apps you can boot from inside the page on demand.
 
+![Run it live — a static docs page presses one button, a launcher scales a Kubernetes pod 0→1, and the real data-analyst agent answers questions in a terminal embedded right in the page](docs/assets/run-it-live.gif)
+
+<sup>The **▶ Run it live** flow: a static page boots a real agent on demand (k3s scale-to-zero) and embeds its terminal in the page — idle pods shut back down. **[Try it yourself →](https://llm-app-lab.bit-habit.com/05D-agent.html)**</sup>
+
 ### ▶ See it live
 
 | | |
