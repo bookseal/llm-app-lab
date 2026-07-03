@@ -200,7 +200,9 @@
 
   // Part 2 (bottom): the current page's sections (module OR project page).
   let curEntry = OUTLINE.find((m) => m.href === here) || null;
-  let curTitle = curEntry ? "이 페이지 · Module " + curEntry.num : "";
+  let curTitle = curEntry
+    ? (curEntry.num === "★" ? "이 페이지" : "이 페이지 · Module " + curEntry.num)
+    : "";
   if (!curEntry) {
     for (const mod of OUTLINE) {
       const p = (mod.projects || []).find((pr) => pr.href === here);

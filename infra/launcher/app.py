@@ -33,6 +33,16 @@ APPS = {
         "namespace": "default",
         "url": "https://agent.bit-habit.com",
     },
+    "extractor": {
+        "deployment": "app-extractor",
+        "namespace": "default",
+        "url": "https://extractor.bit-habit.com",
+    },
+    "rag": {
+        "deployment": "app-rag",
+        "namespace": "default",
+        "url": "https://rag.bit-habit.com",
+    },
 }
 IDLE_MINUTES = 20          # scale back to 0 this long after the last /launch
 ALLOWED_ORIGIN = "https://llm-app-lab.bit-habit.com"

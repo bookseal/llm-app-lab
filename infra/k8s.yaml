@@ -26,11 +26,11 @@ metadata:
 rules:
   - apiGroups: ["apps"]
     resources: ["deployments"]
-    resourceNames: ["app-agent"]
+    resourceNames: ["app-agent", "app-extractor", "app-rag"]
     verbs: ["get"]
   - apiGroups: ["apps"]
     resources: ["deployments/scale"]
-    resourceNames: ["app-agent"]
+    resourceNames: ["app-agent", "app-extractor", "app-rag"]
     verbs: ["get", "update", "patch"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
@@ -149,3 +149,110 @@ spec:
   tls:
     - hosts: [agent.bit-habit.com]
       secretName: tls-secret   # the cluster-wide *.bit-habit.com wildcard
+---
+# ── Module 3 extractor (Flask, server-rendered UI) — scale-to-zero ──
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-extractor
+  namespace: default
+spec:
+  replicas: 0
+  selector: { matchLabels: { app: app-extractor } }
+  template:
+    metadata:
+      labels: { app: app-extractor }
+    spec:
+      containers:
+        - name: extractor
+          image: llm-app-lab/app-extractor:v1
+          imagePullPolicy: IfNotPresent
+          ports: [{ containerPort: 5001 }]
+          envFrom:
+            - secretRef: { name: anthropic }
+          readinessProbe:
+            tcpSocket: { port: 5001 }
+            initialDelaySeconds: 2
+          resources:
+            requests: { cpu: 50m, memory: 128Mi }
+            limits: { cpu: 500m, memory: 512Mi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-extractor
+  namespace: default
+spec:
+  selector: { app: app-extractor }
+  ports: [{ port: 80, targetPort: 5001 }]
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-extractor
+  namespace: default
+spec:
+  rules:
+    - host: extractor.bit-habit.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend: { service: { name: app-extractor, port: { number: 80 } } }
+  tls:
+    - hosts: [extractor.bit-habit.com]
+      secretName: tls-secret
+---
+# ── Module 4 RAG (Streamlit) — scale-to-zero. Heavier (torch); first query
+#    downloads the BGE embedding model. ──
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-rag
+  namespace: default
+spec:
+  replicas: 0
+  selector: { matchLabels: { app: app-rag } }
+  template:
+    metadata:
+      labels: { app: app-rag }
+    spec:
+      containers:
+        - name: rag
+          image: llm-app-lab/app-rag:v1
+          imagePullPolicy: IfNotPresent
+          ports: [{ containerPort: 8501 }]
+          envFrom:
+            - secretRef: { name: anthropic }
+          readinessProbe:
+            tcpSocket: { port: 8501 }
+            initialDelaySeconds: 3
+          resources:
+            requests: { cpu: 100m, memory: 512Mi }
+            limits: { cpu: "2", memory: 2Gi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-rag
+  namespace: default
+spec:
+  selector: { app: app-rag }
+  ports: [{ port: 80, targetPort: 8501 }]
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-rag
+  namespace: default
+spec:
+  rules:
+    - host: rag.bit-habit.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend: { service: { name: app-rag, port: { number: 80 } } }
+  tls:
+    - hosts: [rag.bit-habit.com]
+      secretName: tls-secret
