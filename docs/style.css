@@ -1,14 +1,35 @@
+/* Color scheme: LIGHT by default, DARK when the OS asks for it.
+   Page chrome (bg/text/cards/borders/accents) flips; code blocks and Mermaid
+   diagrams stay dark in BOTH modes (their inner colors are hand-tuned for a
+   dark canvas) — a deliberate "light page, dark code/diagram panels" look. */
 :root {
-  --bg: #0d1117;
-  --panel: #161b22;
-  --border: #30363d;
-  --text: #e6edf3;
-  --muted: #9198a1;
-  --accent: #58a6ff;
-  --accent2: #3fb950;
-  --code-bg: #1f2630;
+  /* ── flips with color scheme (light values) ── */
+  --bg: #ffffff;
+  --panel: #f6f8fa;
+  --border: #d0d7de;
+  --text: #1f2328;
+  --muted: #656d76;
+  --accent: #0969da;
+  --accent2: #1a7f37;
+  /* ── fixed dark surfaces (same in both modes) ── */
+  --code-bg: #1f2630;    /* code blocks */
+  --code-text: #e6edf3;  /* text on code/diagram surfaces */
+  --diagram-bg: #161b22; /* .mermaid + fx-* widgets */
+  --diagram-border: #30363d;
   --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 }
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0d1117;
+    --panel: #161b22;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #9198a1;
+    --accent: #58a6ff;
+    --accent2: #3fb950;
+  }
+}
+:root { color-scheme: light dark; }
 
 * { box-sizing: border-box; }
 
@@ -183,20 +204,22 @@ nav.toc li { margin: .15rem 0; }
   .mermaid svg .fnode-breathe { animation: none; }
 }
 
-/* fx-* teaching widgets (dark cards like .mermaid) */
+/* fx-* teaching widgets — kept dark in both modes (their bars are tuned for a
+   dark canvas), so text/labels use fixed-light colors, not the flipping tokens. */
 .fx-morph, .fx-mismatch {
-  position: relative; background: var(--panel); border: 1px solid var(--border);
+  position: relative; background: var(--diagram-bg); border: 1px solid var(--diagram-border);
+  color: var(--code-text);
   border-radius: 10px; padding: 1.1rem 1.1rem 1.3rem; margin: 1.2rem 0;
 }
 .fx-morph { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
-.fx-morph-text { font-family: var(--mono); font-size: .92rem; color: var(--text); transition: opacity .4s; }
-.fx-morph-arrow { color: var(--accent2); font-size: .85rem; white-space: nowrap; }
+.fx-morph-text { font-family: var(--mono); font-size: .92rem; color: var(--code-text); transition: opacity .4s; }
+.fx-morph-arrow { color: #3fb950; font-size: .85rem; white-space: nowrap; }
 .fx-morph-bars, .fx-bars { display: flex; align-items: flex-end; gap: 4px; height: 64px; }
 .fx-bar {
-  width: 13px; background: var(--accent); border-radius: 3px 3px 0 0;
+  width: 13px; background: #58a6ff; border-radius: 3px 3px 0 0;
   transition: height .4s ease, opacity .35s, width .35s; height: 24px;
 }
-.fx-label { font-size: .78rem; color: var(--muted); margin-top: .3rem; }
+.fx-label { font-size: .78rem; color: #9198a1; margin-top: .3rem; }
 .fx-row { margin: .35rem 0; }
 .fx-mismatch .model .fx-bar { background: var(--accent); }
 .fx-mismatch .sim .fx-bar { background: #2a2410; border: 1px solid #d29322; }
@@ -250,18 +273,20 @@ body.rail-collapsed .rail-outline { display: none; }
 code {
   font-family: var(--mono);
   background: var(--code-bg);
+  color: var(--code-text);
   padding: .1rem .35rem;
   border-radius: 5px;
   font-size: .9em;
 }
 pre {
   background: var(--code-bg);
-  border: 1px solid var(--border);
+  color: var(--code-text);
+  border: 1px solid var(--diagram-border);
   border-radius: 8px;
   padding: 1rem;
   overflow-x: auto;
 }
-pre code { background: none; padding: 0; }
+pre code { background: none; padding: 0; color: inherit; }
 
 .concept {
   background: var(--panel);
@@ -300,7 +325,7 @@ pre code { background: none; padding: 0; }
 
 /* opt-in deeper explanation — hidden by default so the page stays light */
 details.more {
-  background: var(--code-bg);
+  background: var(--panel);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: .5rem 1rem;
@@ -364,7 +389,7 @@ h2 .slide, h3 .slide { letter-spacing: 0; }
   display: block;
   width: 100%;
   text-align: left;
-  background: var(--code-bg);
+  background: var(--panel);
   color: var(--text);
   border: 1px solid var(--border);
   border-radius: 8px;
@@ -465,8 +490,8 @@ footer {
    draws edges; a node tagged `core` glows. Defined once here for all pages. */
 .mermaid {
   position: relative;
-  background: var(--panel);
-  border: 1px solid var(--border);
+  background: var(--diagram-bg);
+  border: 1px solid var(--diagram-border);
   border-radius: 10px;
   padding: 1.1rem;
   margin: 1.2rem 0;
