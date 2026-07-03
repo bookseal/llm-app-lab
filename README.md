@@ -176,10 +176,51 @@ manifests: [`infra/`](infra/).
 
 ## 📒 About the learning site
 
-The [`docs/`](docs/) folder is served at <https://bookseal.github.io/llm-app-lab/>. It's
+The [`docs/`](docs/) folder is served at <https://llm-app-lab.bit-habit.com/>. It's
 my own **concept notes** — written in Korean (analogy-first), with English Mermaid
-diagrams (a shared color/animation system in [`docs/mermaid-fx.js`](docs/mermaid-fx.js))
-and instantly-graded mini quizzes for each module. The
-[change log](https://bookseal.github.io/llm-app-lab/history.html) is auto-generated
-from `git log` on every push to `main`
+diagrams and instantly-graded mini quizzes for each module (96 diagrams across the
+site). The [change log](https://llm-app-lab.bit-habit.com/history.html) is
+auto-generated from `git log` on every push to `main`
 ([scripts/gen_history.py](scripts/gen_history.py)).
+
+### Visualization stack — how the diagrams are drawn & animated
+
+Two libraries, both loaded as ES modules straight from the jsDelivr CDN (no build
+step, no `node_modules`). A page never touches them directly — it only writes
+`<div class="mermaid">` blocks and a few `data-*` attributes, and loads **four
+shared scripts** that do the work in one place:
+
+| File | Library | Responsibility |
+|---|---|---|
+| [`docs/mermaid-fx.js`](docs/mermaid-fx.js) | `mermaid@11` (ESM) | Renders every `.mermaid` block; dark theme; **shape-based auto-coloring**; the reveal animation; the `core` glow; a `▶` replay button. Fires a `mermaid-fx:done` event when SVGs exist. |
+| [`docs/flow-anim.js`](docs/flow-anim.js) | `animejs@4` (ESM) | Waits for `mermaid-fx:done`, then adds meaning-encoding motion (below). Degrades gracefully if the CDN import fails; honors `prefers-reduced-motion`. |
+| [`docs/style.css`](docs/style.css) | — | Every class the two scripts use (`.mermaid`, `.flowdot`, `.fnode-*`, `.fx-*`, …) lives here once. |
+| [`docs/nav.js`](docs/nav.js) | — | The two-part sidebar rail (modules 1–7 + indented projects on top, current page's sections with scroll-spy below). Not a viz lib, but the fourth shared script. |
+
+**Diagrams are English-only and colored by *shape*, not by hand** — `mermaid-fx.js`
+reads each node's SVG shape and picks a role color, so authors just choose the
+right shape:
+
+| Mermaid shape | Role | Color |
+|---|---|---|
+| `["…"]` plain box | a step (io) | blue |
+| `{"…"}` rhombus | a choice / decision | purple |
+| `[("…")]` cylinder | a store (data) | amber |
+| `(["…"])` stadium / circle | start or end | green |
+
+A node tagged `class X core;` gets a pulsing green glow to mark the key node.
+
+**Animations encode meaning, never decorate** (declared with `data-*` attributes,
+no per-page JS). All are user-paced or ambient — nothing auto-plays a walkthrough:
+
+| Effect | Attribute | What it shows | Used in |
+|---|---|---|---|
+| Touring ball | `data-flow="pulse-path" data-cycle="A,B,C"` (+ optional `data-alt="B,X"`) | A **green** dot tours the common path forever; turns **yellow** on a special-case branch, then back to green | 5B pipeline feedback, 5C obs→action loop, 5D agent loop, launcher flow |
+| Freeze / train | `data-flow="freeze-train" data-frozen="EMB" data-trained="HEAD"` | Frozen node desaturated & still, trained node breathing — the "only the head learns" contrast | 5B (MiniLM vs LR head) |
+| Text → vector | `<div class="fx-morph" data-text="…" data-dims="8">` | A string collapses into a bar-vector — embedding intuition | 5B |
+| Dim mismatch | `<div class="fx-mismatch" data-model="6" data-sim="14">` | Model outputs N bars vs sim's M slots; extras shake red & get cut, gaps zero-pad — the VLA embodiment/force-fit lesson | 5C |
+
+The write-up page [`docs/launcher.html`](https://llm-app-lab.bit-habit.com/launcher.html)
+uses the same touring-ball to explain the "Run it live" flow. The full authoring
+contract (node-ID rules, attribute reference) lives in
+[`TASK-05-projects-enrich.md`](TASK-05-projects-enrich.md).
