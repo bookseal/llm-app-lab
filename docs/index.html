@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Build with LLMs — llm-app-lab</title>
     <link rel="stylesheet" href="./style.css?v=8" />
-    <script src="./nav.js?v=11" defer></script>
+    <script src="./nav.js?v=12" defer></script>
     <script type="module" src="./mermaid-fx.js?v=1"></script>
   </head>
   <body>
@@ -32,6 +32,71 @@
           same two-server shape, plus one new skill per module.
         </div>
       </header>
+
+      <!-- ───────────────── RUN IT LIVE (hero visual) ───────────────── -->
+      <section id="live">
+        <h2>▶ Run it live — apps that boot from inside this page</h2>
+        <p class="tldr">
+          Every project page has a <strong>Run it live</strong> button. A static page can't start a
+          server — so it asks a small launcher to wake a <strong>Kubernetes pod on demand</strong>,
+          then embeds the running app right here in the page. Idle apps shut back down automatically.
+        </p>
+        <img src="./assets/run-it-live.gif"
+             alt="Run it live — press one button, a launcher scales a Kubernetes pod 0 to 1, and the real data-analyst agent answers a query in a terminal embedded in the page"
+             style="display:block; width:100%; max-width:760px; border:1px solid var(--border);
+                    border-radius:10px; margin:1.2rem 0;" />
+        <p class="muted">
+          Above: the <a href="./05D-agent.html">data-analyst agent</a> booting on demand and answering a
+          real query — no install. <a href="./launcher.html">How it works →</a>
+        </p>
+      </section>
+
+      <!-- ───────────────── BEHIND THE SITE ───────────────── -->
+      <section id="behind">
+        <h2>Built while learning it — the parts I sweated over</h2>
+        <p class="tldr">
+          I turned my own coursework into a product: a teaching site I'd actually want to learn from,
+          plus the infrastructure to let anyone <em>run</em> the examples. These are the decisions I
+          thought hardest about.
+        </p>
+
+        <div class="concept">
+          <span class="tag">🎓 Teaching as a craft</span>
+          <p>
+            Korean, analogy-first prose for intuition; English diagrams for precision; an
+            instantly-graded quiz at the end of every section. <strong>96 diagrams</strong> across the
+            site, each built to make <em>one</em> idea click — and colored by <strong>shape, not by
+            hand</strong>, so the whole thing stays visually consistent.
+          </p>
+        </div>
+
+        <div class="concept">
+          <span class="tag">✨ Animations that encode meaning</span>
+          <p>
+            Motion carries information, never decoration: a <strong>green ball tours a flow's common
+            path and turns yellow on a special-case branch</strong>; a frozen node sits still while a
+            trained one breathes. Nothing auto-plays a walkthrough — you set the pace.
+          </p>
+        </div>
+
+        <div class="concept">
+          <span class="tag">⚙️ Run real apps on demand</span>
+          <p>
+            A ~120-line launcher scales a <strong>Kubernetes deployment 0→1</strong> when you click,
+            embeds the app in the page, and scales it back to zero when idle — ephemeral and
+            self-hosted, like a throwaway preview deploy. <a href="./launcher.html">The write-up →</a>
+          </p>
+        </div>
+
+        <div class="concept">
+          <span class="tag">🧪 Learn by breaking</span>
+          <p>
+            Every starter ships with <strong>intentional bugs</strong>. I reproduce the failure, explain
+            the mechanism, fix it, and read the diff before accepting — one commit per fix, so the
+            <a href="./history.html">change log</a> is a walkable learning journal.
+          </p>
+        </div>
+      </section>
 
       <!-- ───────────────── WHAT YOU BUILD ───────────────── -->
       <section id="build">
@@ -171,8 +236,8 @@ flowchart TB
       <footer>
         <p>
           llm-app-lab · KSEPT Summer Program — Building with LLMs ·
-          this site is served from <code>docs/</code> on GitHub Pages, and the
-          <a href="./history.html">change log</a> is generated from <code>git log</code> on every push.
+          served from <code>docs/</code> at <a href="https://llm-app-lab.bit-habit.com/">llm-app-lab.bit-habit.com</a>,
+          with the <a href="./history.html">change log</a> generated from <code>git log</code> on every push.
         </p>
       </footer>
     </div>
