@@ -20,9 +20,7 @@
     { href: "index.html", num: "★", label: "Start here", sections: [
       { t: "▶ Run it live", id: "live" },
       { t: "Behind the site", id: "behind" },
-      { t: "What you'll build", id: "build" },
-      { t: "The learning path", id: "path" },
-      { t: "Module by module", id: "modules" },
+      { t: "The seven modules", id: "modules" },
     ] },
     { href: "01-setup.html", num: "1", label: "Setup", sections: [
       { t: "1.1 · Install VSCode", id: "vscode" },
