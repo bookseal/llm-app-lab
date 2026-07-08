@@ -48,16 +48,19 @@ journal and `git show <hash>` narrates any single fix.
 People don't read walls of text, so — the four builds, at a glance. (The animation up top is
 the fifth: any of these can boot live in the browser.)
 
+**RAG over US federal aviation law** — built for the course's RAG tournament: §-cited answers
+over **~1,297 pages of 14 CFR**, tuned by a 45-config overnight grid search instead of vibes —
+and **graded 9/10 by the professor, the top score in the class**. The shot: the same question
+answered twice — single-shot (gaps show as honest "Not specified") vs. an agentic retrieval
+loop that fills every cell with §-cited sources. You *see* the recall-vs-tokens trade-off.
+Full write-up: [Module_04_rag](Projects/Module_04_rag/).
+
+![Module_04 RAG — single-shot leaves Class B/C blank; the agentic loop runs 3 more searches and fills every cell with §-cited sources, at a visible token/cost trade-off](docs/assets/module-04-rag.png)
+
 **⭐ Job-post extractor** — paste a messy posting → structured fields + an auto-drafted
 follow-up email asking only for what's missing. One model, two opposite jobs on one screen.
 
 ![instructor-extractor demo](docs/assets/instructor-extractor.png)
-
-**RAG over an FAA corpus** — the same question answered twice: single-shot (gaps show as
-honest "Not specified") vs. an agentic retrieval loop that fills every cell with §-cited
-sources. You *see* the recall-vs-tokens trade-off.
-
-![Module_04 RAG — single-shot leaves Class B/C blank; the agentic loop runs 3 more searches and fills every cell with §-cited sources, at a visible token/cost trade-off](docs/assets/module-04-rag.png)
 
 **Embedding similarity** — two phrases → cosine similarity, with a local multilingual
 model: `cat`↔`고양이` scores high across languages; `love`↔`hate` is *not* near −1.
@@ -81,6 +84,16 @@ were: **Korean, analogy-first prose** for intuition, **English diagrams** for pr
 an **instantly-graded quiz** at the end of every section. 96 diagrams across the site, each
 built to make *one* concept click — and **colored by shape, not by hand** (the renderer
 infers a node's role from its geometry, so the whole site stays consistent).
+
+**Measure, don't vibe.** For the RAG contest, while most entries were tuned by eyeballing the
+5 practice questions, I built an eval harness that ran **45 retrieval configs overnight**
+(chunking × embedding × retrieval × K) against a blind 14-question holdout, scored by
+coverage/recall/MRR plus a free program check that cited §s really exist in the cited chunks.
+The deployed config was picked by a rule, not a feeling: *within noise, take the cheaper one*
+(~38% fewer tokens than the top-coverage config). Same discipline killed a better-recalling
+agentic loop: 15,954 tokens capped vs ~2,256 single-shot — so single-shot shipped. That entry
+was **graded 9/10 — top of the class — by the professor, Larry Arnstein** (CTO @ Clause;
+ex-Apple, Impinj, Xnor.ai; UW faculty). Details: [Module_04_rag](Projects/Module_04_rag/).
 
 **Animations that encode meaning, never decorate.** A **green ball tours a flow's common
 path and turns yellow on a special-case branch** — so "the loop is the engine" is something
@@ -108,7 +121,7 @@ break. They're the evidence behind the concept notes.
 | **[Module_02_chat-app](Projects/Module_02_chat-app/)** | Minimal Claude chat over `/api/chat` | Stateless single-turn — and the gaps to production |
 | **[Module_03_extractor/starter](Projects/Module_03_extractor/starter/)** | Single-turn structured extraction template | Forced tool call **+ Pydantic validation** as a safety layer |
 | **[Module_03_extractor/webapp](Projects/Module_03_extractor/webapp/)** ⭐ | Messy job post → structured fields + auto follow-up email | Forced `tool_use` **vs.** free-text generation |
-| **[Module_04_rag](Projects/Module_04_rag/)** | Cited answers over a 14 CFR (FAA) corpus | Chunking · embeddings · vector store · citations |
+| **[Module_04_rag](Projects/Module_04_rag/)** | Contest entry: §-cited answers over ~1,297 pages of 14 CFR (FAA) — **graded 9/10, top of class** | §-boundary chunking · 45-config eval harness · token budgeting |
 | **[Module_04_embedding-similarity](Projects/Module_04_embedding-similarity/)** | Two phrases → cosine similarity (local, no API) | What embeddings *measure* (cross-lingual) |
 | **[Module_05B_finetune](Projects/Module_05B_finetune/)** | Route support tickets to 6 teams, three ways | Zero-shot → few-shot → **distilled classifier** (F1 compared) |
 | **[Module_05C_data-agent](Projects/Module_05C_data-agent/)** | Ask a SQLite DB in English; it writes read-only SQL | The ~20-line **agent loop** + read-only-by-construction safety |
@@ -146,7 +159,7 @@ Full curriculum reference: [TUTORIAL.md](TUTORIAL.md).
 ├── Projects/                          one folder per build (each has its own README)
 │   ├── Module_02_chat-app/            minimal Claude chat (/api/chat)
 │   ├── Module_03_extractor/           forced tool_use + Pydantic → web app
-│   ├── Module_04_rag/                 RAG over a 14 CFR corpus (starter + eval harness)
+│   ├── Module_04_rag/                 contest-entry RAG over 14 CFR (app + 45-config eval harness)
 │   ├── Module_04_embedding-similarity/ embeddings playground — cosine similarity
 │   ├── Module_05B_finetune/           distill Claude → a tiny local ticket classifier
 │   └── Module_05C_data-agent/         ~20-line agent loop over a read-only SQLite DB
