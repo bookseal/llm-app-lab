@@ -52,7 +52,7 @@ the fifth: any of these can boot live in the browser.)
 
 **RAG over US federal aviation law** — built for the course's RAG tournament: §-cited answers
 over **~1,297 pages of 14 CFR**, tuned by a 45-config overnight grid search instead of vibes —
-and **graded 9/10 by the professor, the top score in the class**. The shot: the same question
+and **graded 9/10 by the instructor, the top score in the class**. The shot: the same question
 answered twice — single-shot (gaps show as honest "Not specified") vs. an agentic retrieval
 loop that fills every cell with §-cited sources. You *see* the recall-vs-tokens trade-off.
 Full write-up: [Module_04_rag](Projects/Module_04_rag/).
@@ -94,7 +94,7 @@ coverage/recall/MRR plus a free program check that cited §s really exist in the
 The deployed config was picked by a rule, not a feeling: *within noise, take the cheaper one*
 (~38% fewer tokens than the top-coverage config). Same discipline killed a better-recalling
 agentic loop: 15,954 tokens capped vs ~2,256 single-shot — so single-shot shipped. That entry
-was **graded 9/10 — top of the class — by the professor, Larry Arnstein** (CTO @ Clause;
+was **graded 9/10 — top of the class — by the instructor, Larry Arnstein** (CTO @ Clause;
 ex-Apple, Impinj, Xnor.ai; former UW faculty). Details: [Module_04_rag](Projects/Module_04_rag/).
 
 **Animations that encode meaning, never decorate.** A **green ball tours a flow's common
