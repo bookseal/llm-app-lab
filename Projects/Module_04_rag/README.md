@@ -2,7 +2,7 @@
 
 > A citation-grounded RAG chat over **~1,297 pages of U.S. federal aviation law**, built for an
 > in-course RAG tournament — **graded 9/10 by the professor, the top score in the class**
-> (Larry Arnstein — CTO @ Clause; ex-Apple, Impinj, Xnor.ai; UW faculty).
+> (Larry Arnstein — CTO @ Clause; ex-Apple, Impinj, Xnor.ai; former UW faculty).
 > Every retrieval choice was picked by **measurement, not vibes**: a 45-config overnight grid
 > search, a blind holdout set, and a token budget treated as a first-class metric.
 

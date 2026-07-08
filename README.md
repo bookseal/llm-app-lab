@@ -1,7 +1,8 @@
 # llm-app-lab
 
 > **A live, interactive course on building with LLMs — that I built *while taking it*.**
-> I took a **University of Washington CS course on building with LLMs** and, instead of
+> I took **_Building with LLMs_ — a CS course taught by Larry Arnstein (CTO @ Clause;
+> ex-Apple, Impinj, Xnor.ai; former UW faculty)** — and, instead of
 > just following along, rebuilt its material into this as the lectures happened: every
 > idea reworked into an analogy, an animated diagram, and a runnable app you can boot
 > from inside the page. Learning the subject and authoring the textbook at the same time
@@ -30,8 +31,9 @@
 
 ## How it started
 
-The course is a **University of Washington CS professor's _Building with LLMs_** (the KSEPT
-summer program): single API call → tools → RAG → agents. I took it live, and turned the
+The course is **Larry Arnstein's _Building with LLMs_** (the KSEPT summer program) — taught
+by the CTO of Clause, previously at Apple, Impinj, Xnor.ai, and on the UW CS faculty:
+single API call → tools → RAG → agents. I took it live, and turned the
 whole thing into a **product** rather than notes in a drawer — a teaching site I'd actually
 want to learn from, plus the infrastructure to let anyone *run* the examples without
 installing anything. This repo is both the coursework and the platform.
@@ -93,7 +95,7 @@ The deployed config was picked by a rule, not a feeling: *within noise, take the
 (~38% fewer tokens than the top-coverage config). Same discipline killed a better-recalling
 agentic loop: 15,954 tokens capped vs ~2,256 single-shot — so single-shot shipped. That entry
 was **graded 9/10 — top of the class — by the professor, Larry Arnstein** (CTO @ Clause;
-ex-Apple, Impinj, Xnor.ai; UW faculty). Details: [Module_04_rag](Projects/Module_04_rag/).
+ex-Apple, Impinj, Xnor.ai; former UW faculty). Details: [Module_04_rag](Projects/Module_04_rag/).
 
 **Animations that encode meaning, never decorate.** A **green ball tours a flow's common
 path and turns yellow on a special-case branch** — so "the loop is the engine" is something
