@@ -17,5 +17,10 @@ docs/history.html
 *.pkl
 index.meta.json
 
+# Exported Claude Code transcripts — local reference only. They contain raw shell
+# output, absolute paths and env values, and this repo is public. The exporter
+# script itself IS tracked; regenerate with `python3 claude-sessions/export_sessions.py`
+claude-sessions/*.md
+
 # OS
 .DS_Store

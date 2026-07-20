@@ -113,6 +113,60 @@ the diff. The `git log` — and the [auto-generated change log](https://llm-app-
 
 ---
 
+## The session archive — what changed my mind
+
+Every Claude Code session that built this site is exported to Markdown and kept **out of this
+repo on purpose** — 13 transcripts, ~5,600 messages. Raw terminal output drags absolute paths,
+environment values and the occasional credential along with it, and this repo is public; a
+scan of the archive turned up exactly that. So the transcripts stay local and only the
+conclusions land here. The section above is what I settled on. Below are the reversals that
+got me there.
+
+**"Don't write it all for me. We're studying."** The assistant started implementing a module
+outright and I stopped it: *"워워.. 니가 다 짜면 안 된다. 우리는 공부중이고 … 너가 시니어라
+생각하고 나를 가르쳐주면서 같이 파일을 만들고."* The deliverable here is my understanding,
+not the file — so the AI plays senior engineer, I write the code, scaffold first. It started
+leaving me `TODO(human)` blocks with a trade-off to decide (`IntersectionObserver` vs
+`scroll` + `getBoundingClientRect`). I also overrode my own rule when a deadline was closer
+than the lesson — that's a judgment call, not a principle.
+
+**Motion had to mean something, so the step buttons went.** The green ball began as
+decoration: *"나아가는 방향이 가장 일반적인 방향으로 갔으면 좋겠다 … 그외 next버튼이나
+prev버튼으로 구성되는 그건 전부 제대로 안 나오니. 없애버려줘."* Green became *the common
+path*, yellow *the special-case branch*, and the prev/next step-through was deleted rather
+than debugged. That rule is now the header comment in `flow-anim.js`.
+
+**Deleting an honest disclaimer.** An infra page carried a callout — and a whole quiz — whose
+correct answer was "ArgoCD isn't actually installed here." I cut both: *"굳이 없는걸 말할
+필요가 없으니."* Document what exists; a reader doesn't need a tour of absent infrastructure.
+
+**Four rounds of correct evidence for a wrong conclusion.** The sidebar wasn't showing. The
+assistant checked CI (green), `curl`ed `nav.js` (200), grepped the deployed HTML for the
+`<script>` tag (present), then opened a module page in a real browser, screenshotted the rail
+— and concluded my browser cache was at fault. Every check was true. All of them verified the
+wrong URL: I was on the landing page, the one page that deliberately shipped without a
+sidebar. What broke the loop wasn't a better theory but a demand for an artifact —
+*"아니면 스크린샷찍어서 나한테 보여주던지"* — reproduce what the user actually sees. Two fixes
+shipped: `nav.js` on `index.html`, and the hide breakpoint lowered 1000px → 720px so the
+default is *visible*.
+
+**One missing `<script>` is why nothing is hand-maintained.** Quiz buttons were dead on 5 of
+8 pages — markup and CSS were everywhere, but the grading script was inline and had been
+pasted into only 3. Pulling it into a shared file didn't just fix it; it made that class of
+bug structurally impossible. Same instinct as coloring diagram nodes from geometry rather
+than by hand: you can't forget to do what the renderer derives.
+
+**The loop that fills my own gaps.** Reading `similarity.py` I misread a lazy-load guard and
+said so out loud: *"model이 없다는 말은 어떻게 보면 그 embedding space가 없다는 건데??"* The
+answer became a cosine-similarity walkthrough, then a quiz — which I then got wrong, guessing
+that `"I love this movie"` vs `"I hate this movie"` sits near −1. That mistake is now
+[a graded question on the site](https://llm-app-lab.bit-habit.com/04A-context.html), with my
+wrong intuition as the distractor, and the finding is repeated in the module README so no
+reader hits it cold. Ask about a gap, export the conversation, fold the explanation back in —
+this archive is a step in that loop, not a byproduct of it.
+
+---
+
 ## The hands-on builds
 
 Each build isolates *one* LLM concept — small enough to fully understand, real enough to
