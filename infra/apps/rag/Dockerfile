@@ -18,7 +18,8 @@ FROM python:3.11-slim
 
 RUN pip install --no-cache-dir \
     flask flask-cors anthropic python-dotenv \
-    "sentence-transformers>=3.0" "streamlit>=1.58"
+    "sentence-transformers>=3.0" "streamlit>=1.58" \
+    rank-bm25           # harness/retrieval.py — BM25 half of the hybrid retrieve
 
 # Mirror the repo layout EXACTLY — the imports point both ways:
 #   indexer.py       → parent.parent  reaches harness/   (needs harness/ one up)
