@@ -5,16 +5,30 @@
 # the prebuilt index (index.bge.pkl) and embeds queries with sentence-
 # transformers (BGE), downloaded on first run.
 #
-# Build context = Projects/Module_04_rag/rag-starter (see .dockerignore, which
-# drops .venv / node_modules / caches). ANTHROPIC_API_KEY via the k8s secret.
+# Build context = Projects/Module_04_rag  (NOT rag-starter): the app imports the
+# shared `harness` package, a SIBLING of rag-starter one level up. indexer.py
+# runs `sys.path.insert(0, Path(__file__).resolve().parent.parent)` to reach it,
+# so the container must MIRROR the repo layout — indexer.py in a subdir whose
+# parent holds harness/. See Projects/Module_04_rag/.dockerignore for exclusions.
+# ANTHROPIC_API_KEY via the k8s secret.
+#
+#   docker build -f infra/apps/rag/Dockerfile -t llm-app-lab/app-rag:v1 \
+#                Projects/Module_04_rag
 FROM python:3.11-slim
 
 RUN pip install --no-cache-dir \
     flask flask-cors anthropic python-dotenv \
     "sentence-transformers>=3.0" "streamlit>=1.58"
 
-WORKDIR /srv
-COPY . /srv
+# Mirror the repo layout EXACTLY — the imports point both ways:
+#   indexer.py       → parent.parent  reaches harness/   (needs harness/ one up)
+#   harness/retrieval.py → parent.parent/"rag-starter"  imports indexer
+# so the sibling must keep the name `rag-starter`, not a renamed dir.
+#   /srv/rag-starter/indexer.py  ↔  /srv/harness/  as siblings under /srv.
+COPY harness/     /srv/harness/
+COPY rag-starter/ /srv/rag-starter/
+WORKDIR /srv/rag-starter
+
 RUN useradd -m runner && mkdir -p /home/runner/.cache && chown -R runner /srv /home/runner
 USER runner
 

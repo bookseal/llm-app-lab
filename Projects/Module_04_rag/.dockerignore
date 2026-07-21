@@ -1,0 +1,14 @@
+# Build context for the RAG app image is THIS directory (Module_04_rag), not
+# rag-starter — the app imports the sibling `harness/` package, which lives here
+# one level up from rag-starter. Keep the context lean: drop venvs, node_modules,
+# caches, secrets, and the experiment/scratch dirs that never belong in the image.
+rag-starter/.venv
+rag-starter/frontend/node_modules
+rag-starter/.streamlit/secrets.toml
+rag-starter/experiments
+rag-starter/mockups
+rag-starter/todo
+**/__pycache__
+**/*.pyc
+**/.DS_Store
+**/._*
