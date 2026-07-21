@@ -30,9 +30,12 @@
         <ul>
           <li><a href="#why">1 · 왜 신개념처럼 보이나</a></li>
           <li><a href="#flow">2 · The flow — 공을 따라가 보세요</a></li>
-          <li><a href="#pieces">3 · 세 조각의 역할</a></li>
-          <li><a href="#terminal">4 · 터미널 앱을 페이지에 심는 법 (ttyd)</a></li>
-          <li><a href="#key">5 · The key idea</a></li>
+          <li><a href="#timeline">3 · 진짜 타임라인 — 콜드 스타트의 15초</a></li>
+          <li><a href="#pieces">4 · 세 조각의 역할</a></li>
+          <li><a href="#inside">5 · 앱 안에는 뭐가 도나 — RAG를 예로</a></li>
+          <li><a href="#gotcha">6 · 함정 — "200인데 크래시"</a></li>
+          <li><a href="#terminal">7 · 터미널 앱을 페이지에 심는 법 (ttyd)</a></li>
+          <li><a href="#key">8 · The key idea</a></li>
         </ul>
       </nav>
 
@@ -67,8 +70,42 @@ flowchart LR
         </p>
       </section>
 
+      <section id="timeline">
+        <h2>3 · 진짜 타임라인 — 콜드 스타트의 15초</h2>
+        <p class="tldr">위의 흐름도는 <em>어떤 길</em>인지 보여줘요. 이건 <em>언제</em>를 보여줍니다 — 앱이 잠들어 있으면 첫 클릭은 컨테이너가 깨어나는 <strong>~15초</strong>를 기다립니다. 그동안 앱 URL은 <code>503</code>을 뱉고, 페이지는 <code>/status</code>를 폴링하며 버팁니다.</p>
+        <div class="mermaid">
+sequenceDiagram
+    autonumber
+    participant P as Page · run.js
+    participant L as Launcher
+    participant K as k3s
+    participant A as App pod · Streamlit
+    P->>L: POST /launch {app:"rag"}
+    L->>K: scale deploy/app-rag --replicas=1
+    L-->>P: {state:"starting"}
+    Note over K,A: cold start ~15s — pull image,<br/>load BGE model, read index.pkl
+    loop poll every 2.5s — gives up after ~2 min
+        P->>L: GET /status/rag
+        L->>K: readyReplicas?
+        K-->>L: 0 — not yet
+        L-->>P: {state:"starting"}
+    end
+    K->>A: pod Ready (readyReplicas = 1)
+    P->>L: GET /status/rag
+    L-->>P: {state:"ready", url}
+    P->>A: iframe src = rag.bit-habit.com
+    A-->>P: the RAG UI, right in the page
+    Note over P,A: idle 20 min → reaper scales back to 0
+        </div>
+        <p class="muted">
+          그래서 "이미 켜져 있을 때"(<a href="#flow">노란 지름길</a>)는 즉시 뜨지만, <strong>식은 뒤 첫 클릭</strong>은
+          기다림이 정상이에요. 폴링 예산이 2분이라 15초 콜드 스타트는 넉넉히 흡수합니다 —
+          중간에 포기하지만 않으면요.
+        </p>
+      </section>
+
       <section id="pieces">
-        <h2>3 · 세 조각의 역할</h2>
+        <h2>4 · 세 조각의 역할</h2>
         <div class="concept">
           <span class="tag">who does what</span>
           <ul>
@@ -83,8 +120,68 @@ flowchart LR
         </div>
       </section>
 
+      <section id="inside">
+        <h2>5 · 앱 안에는 뭐가 도나 — RAG를 예로</h2>
+        <p class="tldr">런처가 깨우는 컨테이너 안에는 <strong>진짜 앱</strong>이 있어요. 4B의 우승 RAG 앱은 두 국면이에요 — <strong>한 번</strong> 색인을 만들어 디스크에 굳히고(offline), <strong>질문마다</strong> 그 색인으로 근거를 찾아 Claude가 인용과 함께 답합니다(online). 초록 공이 온라인 질의 경로를 돕니다.</p>
+        <div class="mermaid" data-flow="pulse-path" data-cycle="QRY,EMBQ,RETR,CTX,CLAUDE,ANS">
+flowchart LR
+    subgraph OFFLINE["build once — offline indexing"]
+      DOCS[("14 CFR corpus<br/>~1,297 pages")] --> CHUNK["chunk_text()"]
+      CHUNK --> EMB1["BGE embed"]
+      EMB1 --> INDEX[("index.pkl<br/>on disk")]
+    end
+    subgraph ONLINE["every question — online query"]
+      QRY(["your question"]) --> EMBQ["BGE embed query"]
+      EMBQ --> RETR["hybrid retrieve<br/>vectors + BM25"]
+      INDEX --> RETR
+      RETR --> CTX["top-k cited chunks"]
+      CTX --> CLAUDE["Claude answers<br/>from the context"]
+      CLAUDE --> ANS(["answer + sources"])
+    end
+    class RETR core;
+        </div>
+        <p class="muted">
+          디스크의 <code>index.pkl</code>이 두 국면을 잇는 이음매예요 — 컨테이너가 잠들어도(<code>replicas=0</code>)
+          색인은 이미지 안에 그대로라, 다시 깨면 <em>다시 색인하지 않고</em> 바로 답합니다.
+        </p>
+
+        <h3>컨테이너 레이아웃 — 왜 <code>rag-starter/</code>와 <code>harness/</code>가 형제여야 하나</h3>
+        <p>앱 코드(<code>rag-starter/</code>)와 공유 라이브러리(<code>harness/</code>)는 <strong>서로를 가리킵니다</strong>. 그래서 이미지는 레포 레이아웃을 <em>글자 그대로</em> 미러링해야 해요 — 이름 하나만 바꿔도 import가 깨집니다.</p>
+        <div class="mermaid">
+flowchart TD
+    SRV[("/srv")] --> RS["rag-starter/<br/>streamlit_app.py · indexer.py"]
+    SRV --> HN["harness/<br/>retrieval.py · recorder.py"]
+    RS -. "indexer.py: parent.parent → finds harness/" .-> HN
+    HN -. "retrieval.py: parent.parent / 'rag-starter' → finds indexer" .-> RS
+    class SRV core;
+        </div>
+        <p class="muted">
+          예전 이미지는 빌드 컨텍스트를 <code>rag-starter/</code>로 잡고 <code>COPY . /srv</code>만 했어요 —
+          <code>harness/</code>는 컨텍스트 <strong>바깥 한 칸 위</strong>라 이미지에 아예 안 담겼죠.
+          컨텍스트를 <code>Module_04_rag/</code>로 올려 둘을 형제로 복사하면 양방향 import가 모두 풀립니다.
+        </p>
+      </section>
+
+      <section id="gotcha">
+        <h2>6 · 함정 — "200인데 크래시"</h2>
+        <p class="tldr">런처는 파드가 <code>readyReplicas ≥ 1</code>이면 "ready"라고 합니다. 그런데 <strong>떠 있는 것과 멀쩡한 것은 다릅니다</strong> — Streamlit은 앱이 import에서 죽어도 그 트레이스백을 <code>HTTP 200</code>으로 렌더해요. 그래서 런처는 "준비됨"이라 외치는데 화면엔 파이썬 에러만 뜹니다.</p>
+        <div class="concept">
+          <span class="tag">liveness ≠ correctness</span>
+          <ul>
+            <li><strong>증상</strong> — "run live" 눌러도 홈조차 안 뜸. API key 문제로 보이지만 아님(호출은 시작도 못 함).</li>
+            <li><strong>진짜 원인</strong> — <code>from harness.recorder import …</code>가 컨테이너에서 <code>ModuleNotFoundError</code>. import 단계 크래시라 앱이 통째로 죽음.</li>
+            <li><strong>왜 안 잡혔나</strong> — Streamlit이 크래시 페이지를 200으로 서빙 → <code>readyReplicas</code> 기반 헬스체크가 "정상"으로 오판.</li>
+            <li><strong>교훈</strong> — "포트가 200을 준다"는 "앱이 맞게 돈다"가 아니에요. 진짜 준비 신호는 앱 고유의 헬스 엔드포인트라야 합니다.</li>
+          </ul>
+        </div>
+        <p class="muted">
+          이 페이지의 다이어그램들이 곧 그 수리의 지도예요 — <a href="#timeline">타임라인</a>은 콜드 스타트가
+          503을 내는 정상 구간을, <a href="#inside">레이아웃</a>은 import가 깨진 지점을 보여줍니다.
+        </p>
+      </section>
+
       <section id="terminal">
-        <h2>4 · 터미널 앱을 페이지에 심는 법 (ttyd)</h2>
+        <h2>7 · 터미널 앱을 페이지에 심는 법 (ttyd)</h2>
         <p class="tldr">5D의 agent는 웹앱이 아니라 <strong>터미널 REPL</strong>이에요. 래퍼를 새로 짜는 대신 <strong>ttyd</strong>로 <em>진짜 터미널</em>을 웹소켓으로 서빙합니다 — 학생이 로컬에서 보는 그 세션 그대로.</p>
         <div class="mermaid">
 flowchart LR
@@ -100,7 +197,7 @@ flowchart LR
       </section>
 
       <section id="key">
-        <h2>5 · The key idea</h2>
+        <h2>8 · The key idea</h2>
         <p class="tldr">정적 페이지 + 작은 스포너 API + scale-to-zero = <strong>문서가 곧 실행 환경</strong>. 페이지는 실행하지 않아요 — <em>깨우고, 기다리고, 담아서 보여줄</em> 뿐입니다.</p>
         <div class="quiz" data-answer="1">
           <p class="q">"HTML 안에서 앱이 실행된다"에서 실제로 <strong>코드가 도는 곳</strong>은?</p>

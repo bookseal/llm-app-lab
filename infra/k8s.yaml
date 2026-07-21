@@ -219,7 +219,7 @@ spec:
     spec:
       containers:
         - name: rag
-          image: llm-app-lab/app-rag:v1
+          image: llm-app-lab/app-rag:v2
           imagePullPolicy: IfNotPresent
           ports: [{ containerPort: 8501 }]
           envFrom:
