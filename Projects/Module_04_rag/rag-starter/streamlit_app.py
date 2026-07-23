@@ -18,9 +18,9 @@ from datetime import datetime
 from pathlib import Path
 
 import streamlit as st
-from anthropic import Anthropic
 from dotenv import load_dotenv
 
+import llm
 from indexer import (
     CHAMPION_K,
     CHAMPION_METHOD,
@@ -32,7 +32,10 @@ from harness.retrieval import build_bm25, format_context, retrieve, select_conte
 
 load_dotenv(Path(__file__).parent / ".env")  # ANTHROPIC_API_KEY (shared class key)
 
-MODEL = "claude-sonnet-4-6"
+# Model + pricing now come from llm.py, so $LLM_PROVIDER swaps the generation
+# backend (anthropic / deepseek / glm / gemini / groq / openrouter / ollama)
+# without editing a single call site here.
+MODEL = llm.MODEL
 MAX_TOKENS = 1024
 AVATARS = {"user": "🧑", "assistant": "🛩️"}
 
@@ -41,9 +44,8 @@ AVATARS = {"user": "🧑", "assistant": "🛩️"}
 # experiments stream dir (already .gitignore'd) next to prompt_runs.jsonl etc.
 ATTEMPTS_LOG = Path(__file__).resolve().parent.parent / "experiments" / "chat_attempts.jsonl"
 
-# (input, output) USD per million tokens, keyed by model so the cost badge stays
-# correct if the champion model changes. Unknown model → $0 (badge shows ~$0).
-PRICES = {"claude-sonnet-4-6": (3.0, 15.0)}
+# Pricing lives with the provider registry (llm.PROVIDERS) — the same model id can
+# be billed differently depending on who serves it, so price follows the provider.
 
 # Empty-state example questions (from CONTEST.md practice set) — one click to ask.
 EXAMPLES = [
@@ -126,11 +128,11 @@ def get_index_for(model: str):
 
 @st.cache_resource
 def get_client():
-    return Anthropic()
+    return llm.get_client()
 
 
 def _cost_usd(model: str, tin: int, tout: int) -> float:
-    pin, pout = PRICES.get(model, (0.0, 0.0))
+    pin, pout = llm.price_for(model)
     return tin / 1e6 * pin + tout / 1e6 * pout
 
 
@@ -612,6 +614,12 @@ REPORT_TOOL = {
 }
 
 
+# Escalation budget. _MAX_GAP_QUERIES bounds the cost of a turn that DOES escalate;
+# _GAP_GIVE_UP_AT is the "this question isn't in the corpus" tripwire (see below).
+_MAX_GAP_QUERIES = 3
+_GAP_GIVE_UP_AT = 5
+
+
 def select_gap_queries(unmet_parts: list[str]) -> list[str]:
     """The escalation policy: which self-declared gaps are worth an extra retrieval?
 
@@ -619,13 +627,27 @@ def select_gap_queries(unmet_parts: list[str]) -> list[str]:
     how much to spend chasing coverage. Returning [] means "single-shot was good enough
     — don't escalate."
 
-    TODO(human): return the list of queries to actually search. Ideas to weigh:
-      - drop empty/whitespace entries and near-duplicates
-      - cap the count (e.g. at most 3) so cost stays bounded
-      - a very long unmet list often signals out-of-corpus — maybe cap hard or skip
+    Policy, in order:
+      1. Clean: drop blanks and case-insensitive near-duplicates (the model often
+         restates the same gap twice in different words).
+      2. Bail out if the model declared MANY gaps. A long unmet list almost never
+         means "8 cheap lookups away from complete" — it means the question is
+         largely OUT OF CORPUS, and each extra retrieval would just pull in
+         low-similarity noise the model then has to caveat. Escalating there is
+         the worst case: maximum cost, minimum gain.
+      3. Cap the rest so a single turn's cost stays bounded and predictable.
     """
-    # TODO(human)
-    ...
+    seen, queries = set(), []
+    for part in unmet_parts:
+        q = " ".join(part.split())  # collapse whitespace; "" for blank entries
+        key = q.casefold()
+        if not q or key in seen:
+            continue
+        seen.add(key)
+        queries.append(q)
+    if len(queries) > _GAP_GIVE_UP_AT:
+        return []
+    return queries[:_MAX_GAP_QUERIES]
 
 
 def run_gap_aware(q: str, search_query: str, history: list) -> dict:

@@ -17,11 +17,11 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 
-from anthropic import Anthropic
 from dotenv import load_dotenv
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 
+import llm
 from indexer import (
     CHAMPION_K,
     CHAMPION_METHOD,
@@ -32,11 +32,12 @@ from indexer import (
 
 from harness.retrieval import build_bm25, format_context, retrieve, select_context
 
-load_dotenv()  # ANTHROPIC_API_KEY from .env
+load_dotenv()  # provider API key from .env (llm.py loads rag-starter/.env too)
 
 app = Flask(__name__)
 CORS(app)
-client = Anthropic()
+# Provider-agnostic client: set LLM_PROVIDER in .env to swap the generation model.
+client = llm.get_client()
 
 # Load the index once at startup. Fails fast if no index — run `python indexer.py` first.
 INDEX = load_index()
@@ -113,7 +114,7 @@ def chat():
     user_content = f"CONTEXT:\n{format_context(hits)}\n\nQUESTION:\n{user_message}"
 
     resp = client.messages.create(
-        model="claude-sonnet-4-6",
+        model=llm.MODEL,
         max_tokens=700,
         system=SYSTEM_PROMPT,
         messages=[{"role": "user", "content": user_content}],

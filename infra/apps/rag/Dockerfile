@@ -10,7 +10,8 @@
 # runs `sys.path.insert(0, Path(__file__).resolve().parent.parent)` to reach it,
 # so the container must MIRROR the repo layout — indexer.py in a subdir whose
 # parent holds harness/. See Projects/Module_04_rag/.dockerignore for exclusions.
-# ANTHROPIC_API_KEY via the k8s secret.
+# Provider creds come from the k8s secret as env vars (LLM_PROVIDER + that
+# provider's key, e.g. GEMINI_API_KEY); no .env is copied in, so os.environ wins.
 #
 #   docker build -f infra/apps/rag/Dockerfile -t llm-app-lab/app-rag:v1 \
 #                Projects/Module_04_rag
@@ -20,6 +21,12 @@ RUN pip install --no-cache-dir \
     flask flask-cors anthropic python-dotenv \
     "sentence-transformers>=3.0" "streamlit>=1.58" \
     rank-bm25           # harness/retrieval.py — BM25 half of the hybrid retrieve
+
+# Separate layer so the heavy torch/sentence-transformers layer above stays
+# cached when we only add the provider adapter. `openai` is llm.py's client for
+# the OpenAI-compatible providers (Gemini/Groq/OpenRouter/Ollama); the native
+# Anthropic-shaped providers don't touch it. See rag-starter/llm.py.
+RUN pip install --no-cache-dir "openai>=1.60"
 
 # Mirror the repo layout EXACTLY — the imports point both ways:
 #   indexer.py       → parent.parent  reaches harness/   (needs harness/ one up)
